@@ -1458,27 +1458,95 @@ document.getElementById('svgMain').innerHTML = frag.d;
       renderHbarChart_('mr-bar-chart', function(d){ return d.totalKwh; }, 0, '#38bdf8', '#22d3ee');
       renderHbarChart_('mr-line-chart', function(d){ return d.avgKwPerTr; }, 2, '#34d399', '#22d3ee');
 
-      // [แก้ 31/7/69] สลับตาราง — เดือน=แถว, metric=คอลัมน์ (รองรับข้อมูลสะสมหลายเดือนได้ดีกว่า ไม่ต้องเบียดคอลัมน์)
+      // [แก้ - รวมโปรเจค] หัวตารางใหม่ตามที่ confirm: เดือน | Total Area | Total Chiller (TRH) | Total Power (kW) | Total Power (kWh) | TRH/ตร.ม. | kWh/ตร.ม. | Electric Cost
       var metricCols = [
-        { label:'Total (kWh)', getter:function(d){ return d.totalKwh; }, digits:2 },
-        { label:'Total (kW)', getter:function(d){ return d.totalKwAll; }, digits:2 }, // [ใหม่ 31/7/69]
-        { label:'Total (TR)', getter:function(d){ return d.totalTr; }, digits:2 },
-        { label:'kW/TR เฉลี่ย', getter:function(d){ return d.avgKwPerTr; }, digits:2 },
-        { label:'พื้นที่ใช้งานรวม (ตร.ม.)', getter:function(d){ return d.areaUsedTotalSqm; }, digits:0 }, // [แก้ 31/7/69] เปลี่ยนเป็น sum ตรงกับตัวหารจริง
-        { label:'TR ต่อ ตร.ม.', getter:function(d){ return d.trPerSqm; }, digits:2 },
-        { label:'kWh ต่อ ตร.ม.', getter:function(d){ return d.kwPerSqm; }, digits:2 },
-        { label:'ค่าไฟประมาณการ (บาท)', getter:function(d){ return d.costEstimateThb; }, digits:2,
-          extra:function(d){ // [ใหม่ 31/7/69] badge อัตราค่าไฟที่ใช้จริงของเดือนนั้น (ตัวเลขล้วน ไม่มี @ นำหน้า)
+        { label:'Total Area', getter:function(d){ return d.areaUsedTotalSqm; }, digits:0 },
+        { label:'Total Chiller (TRH)', getter:function(d){ return d.totalTrh; }, digits:2 },
+        { label:'Total Power (kW)', getter:function(d){ return d.totalKwAll; }, digits:2 },
+        { label:'Total Power (kWh)', getter:function(d){ return d.totalKwh; }, digits:2 },
+        { label:'TRH/ตร.ม.', getter:function(d){ return (typeof d.trPerSqm === 'number') ? d.trPerSqm*2 : null; }, digits:3 }, // TRH/m² = TR/m² x2 (นิยาม TRH คือ TRx2 อยู่แล้ว)
+        { label:'kWh/ตร.ม.', getter:function(d){ return d.kwPerSqm; }, digits:3 },
+        { label:'Electric Cost', getter:function(d){ return d.costEstimateThb; }, digits:0,
+          extra:function(d){
             return (typeof d.electricityRateUsed === 'number')
               ? ' <span style="font-family:\'JetBrains Mono\',monospace; font-size:8px; font-weight:700; padding:2px 6px; border-radius:20px; background:rgba(242,184,79,.15); color:#f2b84f; border:1px solid rgba(242,184,79,.35); margin-left:6px;">'+fmtNum(d.electricityRateUsed,2)+'</span>'
               : '';
           }
         }
       ];
-      var headHtml = '<tr><th>เดือน</th>' + metricCols.map(function(c){ return '<th style="text-align:right;">'+c.label+'</th>'; }).join('') + '</tr>';
+      var headHtml = '<tr><th></th><th>เดือน</th>' + metricCols.map(function(c){ return '<th style="text-align:right;">'+c.label+'</th>'; }).join('') + '</tr>';
       document.getElementById('monthly-thead').innerHTML = headHtml;
 
-      document.getElementById('monthly-tbody').innerHTML = data.map(function(d){
+      // [ใหม่ - รวมโปรเจค] click แถวเดือน -> ขยาย accordion ตารางรายวัน (getMonthlyData) + comment ต่อวัน (saveComment)
+      var drilldownCache = {}; // key เดือน (พ.ศ. yyyy-MM) -> array ของวัน
+      var openIdx = null;
+
+      function toBuddhistParts_(monthKeyBE){ // 'yyyy-MM' พ.ศ. -> {yearCE, mm}
+        var p = monthKeyBE.split('-');
+        return { yearCE: Number(p[0]) - 543, mm: p[1] };
+      }
+
+      async function loadDrilldown(monthKeyBE){
+        if(drilldownCache[monthKeyBE]) return drilldownCache[monthKeyBE];
+        var parts = toBuddhistParts_(monthKeyBE);
+        var res = await fetch(API_URL + '?action=monthlydata&month=' + parts.mm + '&year=' + parts.yearCE);
+        var json = await res.json();
+        if(json.error) throw new Error(json.message || 'โหลดข้อมูลรายวันไม่สำเร็จ');
+        drilldownCache[monthKeyBE] = json.days || [];
+        return drilldownCache[monthKeyBE];
+      }
+
+      function dayRowHtml(day){
+        var commentVal = (day.comment || '').replace(/"/g,'&quot;');
+        var byVal = (day.commentedBy || '').replace(/"/g,'&quot;');
+        return '<div style="display:grid; grid-template-columns:70px 60px 60px 60px 1fr 90px 60px; gap:6px; align-items:center; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,.05); font-size:9px;">'+
+          '<div style="color:#94a3b8;">'+day.date+(day.isFuture?' <span style="color:#475569;">(อนาคต)</span>':'')+'</div>'+
+          '<div style="text-align:right;">'+fmtNum(day.actualTRH,1)+'</div>'+
+          '<div style="text-align:right;">'+fmtNum(day.actualKwh,1)+'</div>'+
+          '<div style="text-align:right;">'+fmtNum(day.actualCost,0)+'</div>'+
+          '<input type="text" placeholder="คอมเมนต์..." value="'+commentVal+'" id="cmt-'+day.rowIndex+'" style="background:#0d1117; border:1px solid #1e293b; border-radius:4px; padding:3px 6px; color:#e2e8f0; font-size:9px;">'+
+          '<input type="text" placeholder="ชื่อผู้บันทึก" value="'+byVal+'" id="by-'+day.rowIndex+'" style="background:#0d1117; border:1px solid #1e293b; border-radius:4px; padding:3px 6px; color:#e2e8f0; font-size:9px;">'+
+          '<button onclick="window.__saveDayComment('+day.rowIndex+')" style="background:#164e63; border:1px solid #22d3ee; border-radius:4px; padding:3px 6px; color:#67e8f9; font-size:9px; cursor:pointer;">บันทึก</button>'+
+        '</div>';
+      }
+
+      window.__saveDayComment = async function(rowIndex){
+        var cmtEl = document.getElementById('cmt-'+rowIndex);
+        var byEl = document.getElementById('by-'+rowIndex);
+        var comment = cmtEl ? cmtEl.value : '';
+        var commentedBy = byEl ? byEl.value : '';
+        try {
+          var url = API_URL + '?action=savecomment&rowIndex=' + rowIndex +
+            '&commentedBy=' + encodeURIComponent(commentedBy) + '&comment=' + encodeURIComponent(comment);
+          var res = await fetch(url);
+          var json = await res.json();
+          if(json.error) throw new Error(json.message);
+          drilldownCache = {}; // reset cache ทุกเดือน กันข้อมูล comment ค้าง
+        } catch(err){
+          alert('บันทึก comment ไม่สำเร็จ: ' + err.message);
+        }
+      };
+
+      async function toggleMonthRow(monthKeyBE, idx){
+        var isOpening = openIdx !== idx;
+        document.querySelectorAll('.mr-drill-row').forEach(function(el){ el.style.display = 'none'; });
+        openIdx = isOpening ? idx : null;
+        if(!isOpening) return;
+        var rowEl = document.getElementById('mr-drill-'+idx);
+        var bodyEl = document.getElementById('mr-drill-'+idx+'-body');
+        rowEl.style.display = '';
+        bodyEl.innerHTML = '<div style="padding:8px; font-size:9px; color:#475569;">กำลังโหลด...</div>';
+        try {
+          var days = await loadDrilldown(monthKeyBE);
+          bodyEl.innerHTML = days.length
+            ? days.map(dayRowHtml).join('')
+            : '<div style="padding:8px; font-size:9px; color:#475569;">ไม่มีข้อมูลรายวันของเดือนนี้ใน Daily_Archive</div>';
+        } catch(err){
+          bodyEl.innerHTML = '<div style="padding:8px; font-size:9px; color:#f2867a;">โหลดไม่สำเร็จ: ' + err.message + '</div>';
+        }
+      }
+
+      document.getElementById('monthly-tbody').innerHTML = data.map(function(d, idx){
         var rowStyle = d.isCurrent ? ' style="color:#22d3ee;font-weight:700;"' : '';
         var cells = metricCols.map(function(c){
           var v = c.getter(d);
@@ -1486,8 +1554,14 @@ document.getElementById('svgMain').innerHTML = frag.d;
           var extraHtml = c.extra ? c.extra(d) : '';
           return '<td style="text-align:right;">'+txt+extraHtml+'</td>';
         }).join('');
-        return '<tr'+rowStyle+'><td>'+monthLabel(d.month)+(d.isCurrent?'*':'')+'</td>'+cells+'</tr>';
+        var drillId = 'mr-drill-' + idx;
+        return '<tr'+rowStyle+' style="cursor:pointer;" onclick="window.__toggleMonthlyDrilldown_'+idx+'()"><td style="width:16px; color:#475569;">▸</td><td>'+monthLabel(d.month)+(d.isCurrent?'*':'')+'</td>'+cells+'</tr>'+
+          '<tr class="mr-drill-row" id="'+drillId+'" style="display:none;"><td colspan="'+(metricCols.length+2)+'" style="padding:0; background:#0a0d14;"><div id="'+drillId+'-body"></div></td></tr>';
       }).join('');
+
+      data.forEach(function(d, idx){
+        window['__toggleMonthlyDrilldown_'+idx] = function(){ toggleMonthRow(d.month, idx); };
+      });
 
       if(statusEl) statusEl.textContent = '✅ sync ล่าสุด · ' + n + ' เดือน';
     } catch(err){
