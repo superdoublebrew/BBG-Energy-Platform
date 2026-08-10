@@ -1369,17 +1369,15 @@ document.getElementById('svgMain').innerHTML = frag.d;
       window.__lastLzFlat = byLocationZoneFlat;
       lzExpanded = false; // reset ทุกครั้งที่โหลดวันใหม่
 
-      // การ์ดสรุปบน — คำนวณเองจาก byLocationZoneFlat (ไม่พึ่ง data.trPerSqmTotal เดิมที่พึ่ง SCHP)
-      var totalArea_ = byLocationZoneFlat.reduce(function(s,z){ return s + (z.areaSqm||0); }, 0);
-      var totalKwh_  = byLocationZoneFlat.reduce(function(s,z){ return s + (z.kwhAreaBased||0); }, 0);
-      var totalTr_   = byLocationZoneFlat.reduce(function(s,z){ return s + (z.trApprox||0); }, 0);
-
+      // [แก้ล่าสุด] การ์ดสรุปบน — ใช้ค่ารวมทั้งอาคารจริงจาก backend ตรงๆ (data.trPerSqmTotal ฯลฯ)
+      // ไม่ผูกกับ event แล้ว ต่างจาก byLocationZoneFlat ด้านล่างที่ยังต้องผูกกับ event
+      // (มีค่าเสมอถ้า Data_Log ของวันนั้นมีข้อมูล ไม่ว่าจะมี event วันนั้นหรือไม่)
       var trTotalEl = document.getElementById('lz-tr-total-val');
-      if(trTotalEl) trTotalEl.textContent = totalArea_ ? fmtNum(totalTr_/totalArea_,3) : '—';
+      if(trTotalEl) trTotalEl.textContent = (typeof data.trPerSqmTotal === 'number') ? fmtNum(data.trPerSqmTotal,3) : '—';
       var kwhTotalEl = document.getElementById('lz-kwh-total-val');
-      if(kwhTotalEl) kwhTotalEl.textContent = totalArea_ ? fmtNum(totalKwh_/totalArea_,3) : '—';
+      if(kwhTotalEl) kwhTotalEl.textContent = (typeof data.kwhPerSqmTotal === 'number') ? fmtNum(data.kwhPerSqmTotal,3) : '—';
       var areaTotalEl = document.getElementById('lz-area-total-val');
-      if(areaTotalEl) areaTotalEl.textContent = totalArea_ ? fmtNum(totalArea_,0) : '—';
+      if(areaTotalEl) areaTotalEl.textContent = (typeof data.totalAreaSqm === 'number') ? fmtNum(data.totalAreaSqm,0) : '—';
 
       renderLzFlat_(byLocationZoneFlat);
 
