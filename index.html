@@ -1274,26 +1274,6 @@ document.getElementById('svgMain').innerHTML = frag.d;
 
 // [แก้ - รวมโปรเจค] Location Zone panel — เปลี่ยนจาก SCHP-nested เป็น EVENT-based flat list
 // (byLocationZoneFlat จาก backend ใหม่ — ดู powerdata.gs getLocationZoneBreakdown)
-(function(){ ... })(); )
- *
- * เปลี่ยนจากเดิม 4 จุด:
- *   1) ใช้ data.byLocationZoneFlat แทน data.bySchpZoneArea + data.byLocationZone
- *   2) การ์ดสรุปบน (TR/ตร.ม., kWh/ตร.ม., Total Area) คำนวณจาก byLocationZoneFlat
- *      เอง (sum แล้วหารพื้นที่รวม) แทนการอ่าน data.trPerSqmTotal ฯลฯ ที่ตอนนี้
- *      เป็น null/0 เพราะพึ่ง SCHP mapping เดิมที่เราตัดออกจาก panel นี้แล้ว
- *   3) Render เป็น flat list + bar เทียบสัดส่วน + highlight อันดับ 1 +
- *      โชว์ top 5 ก่อน มีปุ่ม "ดูเพิ่มเติม" กดขยาย (ตาม mockup ที่ confirm)
- *   4) __syncLzAccordion (คลิกกล่อง SCHP ในผัง → เด้งไปหา zone ใน panel)
- *      ต้อง "ปิดการเชื่อม" ชั่วคราว เพราะกล่องในผังยังเป็น SCHP_Zone
- *      (Front/Back/ฯลฯ) แต่ panel นี้เป็น Location_Zone แล้ว คนละชื่อกัน
- *      จับคู่กันไม่ได้อีกต่อไป — ไม่ error แค่ไม่มีอะไรเกิดขึ้นตอนคลิก
- *      (คุยเพิ่มทีหลังได้ถ้าอยากทำ mapping ใหม่)
- *
- * ไม่แตะ: window.__bySchpZoneData / window.__bySchpZoneAreaData ยังคง
- * expose เหมือนเดิม เพราะ "Top zone" การ์ด (gap column) + popup คลิก SCHP
- * ยังใช้อยู่ คนละส่วนกับ panel นี้
- * ==============================================================
- */
 (function(){
   var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
   // [สำคัญ] อย่าลืมเปลี่ยน API_URL เป็น URL deploy ของโปรเจคใหม่ (ไฟล์ Operational)
