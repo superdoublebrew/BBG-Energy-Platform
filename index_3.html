@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BITEC Chiller &amp; AHU Management Plant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --p1-1:#22d3ee; --p2-1:#a855f7;
+    --text:#f3f6fb; --text-muted:#a3b0c7; --text-label:#c2cee2; --text-faint:#7c8aa3;
+    --glass:rgba(255,255,255,0.035); --glass-border:rgba(255,255,255,0.10);
+    --hot:#f2867a; --cold:#38bdf8; --return:#f2b84f; --green:#34d399;
+    --sidebar-w:180px; --sidebar-w-collapsed:60px; --topbar-h:52px;
+  }
+  @keyframes flowdash{ to{ stroke-dashoffset:-56; } }
+  .flow-line{ stroke-dasharray:9 7; animation:flowdash 1.4s linear infinite; filter:drop-shadow(0 0 3px currentColor); }
+  @keyframes livepulse{ 0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(52,211,153,0.55); } 50%{ opacity:.55; box-shadow:0 0 0 4px rgba(52,211,153,0); } }
+  .live-dot{ width:6px; height:6px; border-radius:50%; background:var(--green); display:inline-block; margin-right:5px; animation:livepulse 1.8s ease-in-out infinite; }
+  @keyframes kpiIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .kpi-chip{ animation:kpiIn .4s ease both; }
+  .kpi-strip .kpi-chip:nth-child(1){ animation-delay:.02s; } .kpi-strip .kpi-chip:nth-child(2){ animation-delay:.06s; }
+  .kpi-strip .kpi-chip:nth-child(3){ animation-delay:.10s; } .kpi-strip .kpi-chip:nth-child(4){ animation-delay:.14s; }
+  .kpi-strip .kpi-chip:nth-child(5){ animation-delay:.18s; } .kpi-strip .kpi-chip:nth-child(6){ animation-delay:.22s; }
+  .kpi-strip .kpi-chip:nth-child(7){ animation-delay:.26s; } .kpi-strip .kpi-chip:nth-child(8){ animation-delay:.30s; }
+  .kpi-strip .kpi-chip:nth-child(9){ animation-delay:.34s; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{ height:100%; overflow:hidden; }
+  body{
+    background: radial-gradient(circle at 6% 4%, rgba(34,211,238,0.13), transparent 38%),
+      radial-gradient(circle at 96% 10%, rgba(168,85,247,0.12), transparent 40%),
+      linear-gradient(180deg,#05070d 0%,#030408 100%);
+    color:var(--text); font-family:'Inter',sans-serif; font-size:13px;
+  }
+  .glass{ background:var(--glass); border:1px solid var(--glass-border); border-radius:14px;
+    backdrop-filter:blur(24px) saturate(150%); }
+  .sidebar{
+    position:fixed; top:0; left:0; bottom:0; width:var(--sidebar-w);
+    background:rgba(8,10,16,0.75); border-right:1px solid rgba(255,255,255,0.08);
+    display:flex; flex-direction:column; z-index:50; transition:width .2s;
+  }
+  .sidebar.collapsed{ width:var(--sidebar-w-collapsed); }
+  .sb-head{ display:flex; align-items:center; gap:8px; padding:12px; border-bottom:1px solid rgba(255,255,255,0.06); min-height:48px; }
+  .sb-mark{ width:26px; height:26px; flex-shrink:0; border-radius:8px; background:linear-gradient(135deg,var(--p1-1),var(--p2-1)); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11px; color:#05070d; }
+  .sb-title-wrap{ min-width:0; overflow:hidden; }
+  .sb-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sb-version{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:8.5px; color:var(--p2-1); margin-top:1px; }
+  .sidebar.collapsed .sb-title-wrap{ display:none; }
+  .sb-toggle{ position:absolute; top:16px; right:-11px; width:22px; height:22px; border-radius:50%; background:#11151f; border:1px solid rgba(255,255,255,.14); color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:10px; z-index:5; }
+  .sidebar.collapsed .sb-toggle{ transform:rotate(180deg); }
+  .sb-nav{ padding:8px 6px; display:flex; flex-direction:column; gap:3px; }
+  .sb-item{ display:flex; align-items:center; gap:9px; padding:8px 9px; border-radius:8px; cursor:pointer; color:var(--text-muted); white-space:nowrap; overflow:hidden; }
+  .sb-item:hover{ background:rgba(255,255,255,0.04); }
+  .sb-item.active{ background:linear-gradient(120deg, rgba(34,211,238,0.16), rgba(168,85,247,0.16)); color:#fff; border:1px solid rgba(34,211,238,0.25); }
+  .sb-icon{ width:16px; height:16px; flex-shrink:0; border-radius:4px; border:1.5px solid currentColor; opacity:0.85; }
+  .sb-label{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:11px; }
+  .sidebar.collapsed .sb-label{ display:none; }
+  .sb-foot{ padding:10px 12px; border-top:1px solid rgba(255,255,255,0.06); font-family:'JetBrains Mono',monospace; font-size:8.5px; color:var(--text-faint); white-space:nowrap; overflow:hidden; }
+  .sidebar.collapsed .sb-foot{ display:none; }
+
+  .main{ margin-left:var(--sidebar-w); height:100vh; display:flex; flex-direction:column; transition:margin-left .2s; padding:10px 14px; gap:10px; }
+  .sidebar.collapsed ~ .main{ margin-left:var(--sidebar-w-collapsed); }
+  .credit-bar{ flex-shrink:0; display:flex; align-items:center; gap:7px; padding:0 4px; margin:-4px 0 -4px; }
+  .credit-logo{ height:16px; width:auto; flex-shrink:0; display:block; mix-blend-mode:multiply; opacity:.7; }
+  .credit-text{ font-family:'JetBrains Mono',monospace; font-size:7px; color:var(--text-faint); letter-spacing:.2px; }
+
+  .topbar{ flex-shrink:0; height:var(--topbar-h); display:flex; align-items:center; gap:12px; padding:0 16px; flex-wrap:wrap; }
+  .topbar h1{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; }
+  .search-box{ display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); border-radius:7px; padding:4px 9px; }
+  .search-box input{ background:none; border:none; outline:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px; width:130px; }
+  .search-box input::placeholder{ color:var(--text-faint); }
+  .date-filter{ display:flex; align-items:center; gap:6px; margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); }
+  .dm-toggle{ display:flex; background:rgba(255,255,255,0.04); border-radius:8px; padding:2px; gap:2px; }
+  .dm-btn{ padding:5px 10px; border-radius:6px; font-size:10.5px; font-weight:700; font-family:'Space Grotesk',sans-serif; color:var(--text-muted); cursor:pointer; }
+  .dm-btn.active{ color:#0a0612; background:linear-gradient(120deg,var(--p1-1),var(--p2-1)); }
+  .date-filter select{ background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); border-radius:7px; color:var(--text); padding:5px 8px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:11px; }
+  .date-filter input[type=date]{ background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); border-radius:7px; color:var(--text); padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .date-filter .f-btn{ padding:5px 10px; border-radius:7px; font-size:10.5px; font-weight:600; font-family:'Space Grotesk',sans-serif; color:var(--text-muted); border:1px solid var(--glass-border); cursor:pointer; background:rgba(255,255,255,0.02); }
+  .date-filter .f-btn.active{ color:#0a0612; background:linear-gradient(120deg,var(--p1-1),var(--p2-1)); border-color:transparent; }
+  .sync-note{ font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint); }
+
+  .panel{ display:none; flex:1; min-height:0; flex-direction:column; gap:10px; }
+  .panel.active{ display:flex; }
+
+  .kpi-strip{ flex-shrink:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(0, 1fr)); gap:8px; padding:10px 16px; }
+  .kpi-tiles{ flex-shrink:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(88px, 1fr)); gap:6px; padding:8px 16px; }
+  .kpi-tile{ background:rgba(255,255,255,.04); border:1.5px solid; border-top:3px solid; border-radius:8px; padding:7px 9px; text-align:center; animation:kpiIn .4s ease both; }
+  .kpi-tile .lbl{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(6.5px, 0.5vw, 8.5px); text-transform:uppercase; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; justify-content:center; gap:3px; }
+  .kpi-tile .val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(14px, 1.1vw, 19px); color:#fff; margin-top:3px; }
+  .kpi-tile .val .unit{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(9px, 0.7vw, 11px); margin-left:3px; }
+  .kpi-tile.c-chiller{ background:rgba(52,211,153,.05); border-color:rgba(52,211,153,.5); border-top-color:#34d399; }
+  .kpi-tile.c-chiller .lbl, .kpi-tile.c-chiller .unit{ color:#6ee7b7; }
+  .kpi-tile.c-tower{ background:rgba(242,134,122,.05); border-color:rgba(242,134,122,.5); border-top-color:#f2867a; }
+  .kpi-tile.c-tower .lbl, .kpi-tile.c-tower .unit{ color:#f9a8a8; }
+  .kpi-tile.c-pump{ background:rgba(56,189,248,.05); border-color:rgba(56,189,248,.5); border-top-color:#38bdf8; }
+  .kpi-tile.c-pump .lbl, .kpi-tile.c-pump .unit{ color:#7dd3fc; }
+  .kpi-tile.c-cdp{ background:rgba(242,134,122,.05); border-color:rgba(242,134,122,.5); border-top-color:#f2867a; }
+  .kpi-tile.c-cdp .lbl, .kpi-tile.c-cdp .unit{ color:#f9a8a8; }
+  .kpi-tile.c-plant{ background:rgba(242,184,79,.05); border-color:rgba(242,184,79,.5); border-top-color:#f2b84f; }
+  .kpi-tile.c-plant .lbl, .kpi-tile.c-plant .unit{ color:#fbd38d; }
+  .kpi-tile.c-outdoor{ background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.16); border-top-color:rgba(255,255,255,.3); }
+  .kpi-tile.c-outdoor .lbl{ color:var(--text-label); }
+  .kpi-tile.c-outdoor .unit{ color:var(--text-faint); }
+  .kpi-chip{ display:flex; flex-direction:column; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-left:3px solid var(--cold); min-width:0; position:relative; overflow:hidden; transition:box-shadow .25s, border-color .25s; }
+  .kpi-chip.hot{ border-left-color:var(--hot); }
+  .kpi-chip.green{ border-left-color:var(--green); }
+  .kpi-chip.headline{ box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset; padding-bottom:26px; }
+  .kpi-chip.headline:hover{ border-color:rgba(255,255,255,0.22); box-shadow:0 0 18px -6px rgba(34,211,238,0.35); }
+  .kpi-chip .lbl{ font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; color:var(--text-label); display:flex; align-items:center; justify-content:space-between; gap:4px; }
+  .kpi-chip .val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; }
+  .kpi-chip .val span.unit{ font-size:9px; color:var(--text-faint); font-weight:500; margin-left:3px; }
+  .kpi-chip .sub{ font-size:8.5px; color:var(--text-faint); }
+  .kpi-trend{ font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700; display:inline-flex; align-items:center; gap:2px; }
+  .kpi-trend.up{ color:var(--hot); }
+  .kpi-trend.down{ color:var(--green); }
+  .kpi-trend.flat{ color:var(--text-faint); }
+  .kpi-spark{ position:absolute; left:0; right:0; bottom:0; height:22px; opacity:0.55; pointer-events:none; }
+
+  .circuit-area{ flex:1; min-height:0; padding:10px 16px 14px; display:flex; flex-direction:column; position:relative; }
+  .circuit-legend{ flex-shrink:0; display:flex; gap:14px; margin-bottom:6px; flex-wrap:wrap; }
+  .legend-item{ display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--text-muted); }
+  .legend-swatch{ width:16px; height:3px; border-radius:2px; }
+  /* [แก้ 31/7/69] บั๊กราก — เดิม width:100% + aspect-ratio + max-height ทำให้กรอบกว้างเกินสัดส่วนจริงตอนจอกว้าง
+     (max-height ชนเพดานแต่ width ไม่หดตาม) SVG เลย letterbox หดเข้ากลาง แต่ .hz (% ของกรอบเต็ม) ไม่ตรงกับภาพที่เห็นจริง
+     แก้ด้วยการเพิ่ม max-width ที่คำนวณสัมพันธ์กับ max-height แบบเดียวกันเป๊ะ (955/502 เท่ากันทั้งคู่) บังคับสัดส่วนจริงเสมอ */
+  .svg-wrap{ flex:1 1 auto; width:100%; min-height:0; min-width:0; max-width:min(100%, clamp(722.9px, 104.63vh, 1293.6px)); max-height:clamp(380px, 55vh, 680px); aspect-ratio:955/502; position:relative; margin:0; align-self:flex-start; }
+  svg#svgMain{ width:100%; height:100%; display:block; }
+
+  .hz{ position:absolute; cursor:pointer; border-radius:6px; transition:box-shadow .15s; }
+  .hz.search-hit{ box-shadow:0 0 0 2px #fac775, 0 0 14px 2px rgba(250,199,117,0.6); }
+  .hz.active{ box-shadow:0 0 0 2px rgba(255,255,255,0.5); }
+  .stat-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .stat-dot.run{ background:var(--green); box-shadow:0 0 5px var(--green); }
+  .stat-dot.standby{ background:#5b6478; }
+
+  /* [คืนค่า 31/7/69] Location Zone panel — แยกอิสระจาก popup กลับมาเป็น static column ข้างผังเหมือนเดิม
+     (ตอนแก้ overlay/popup รอบก่อนผมลบอันนี้ออกไปทั้งหมดโดยไม่ตั้งใจ — ต้องคืนค่า) */
+  .loczone-panel{ width:clamp(230px, 16vw, 320px); flex-shrink:0; background:#0d1017; border-left:1px solid var(--glass-border); border-radius:14px; display:flex; flex-direction:column; padding:12px; margin-left:8px; overflow:hidden; }
+  .loczone-accordion{ flex:1; min-height:0; overflow-y:auto; }
+  .lz-acc-head{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:7px; padding:6px 8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-family:'JetBrains Mono',monospace; }
+  .lz-acc-head.has-data{ border-color:rgba(56,189,248,.4); }
+  .lz-acc-head .name{ font-size:clamp(8.5px, 0.62vw, 11px); color:#fff; font-weight:700; }
+  .lz-acc-head.no-data .name{ color:var(--text-faint); }
+  .lz-acc-head.inactive-today{ opacity:.55; }
+  .lz-acc-head.inactive-today .name{ color:var(--text-faint); }
+  .lz-acc-head.inactive-today .avg{ color:#5b6478; }
+  /* [ใหม่ 31/7/69] จุด3 — kWh/TR ต้อง "เห็นชัดเจน" ทำเป็น badge เด่น แยกจากบรรทัดสถิติเล็กๆ เดิม */
+  .lz-acc-kwhtr{ display:flex; justify-content:space-between; align-items:center; background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.3); border-radius:6px; padding:4px 8px; margin:0 0 5px; }
+  .lz-acc-kwhtr .lbl{ font-family:'JetBrains Mono',monospace; font-size:clamp(7px, 0.5vw, 8.5px); color:#7dd3fc; text-transform:uppercase; }
+  .lz-acc-kwhtr .val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(12px, 0.9vw, 15px); color:#38bdf8; }
+  .lz-acc-head .avg{ font-size:clamp(7px, 0.5vw, 9px); color:var(--text-faint); }
+  .lz-acc-body{ display:grid; grid-template-columns:1fr 1fr; gap:4px; margin:0 0 8px; }
+  .lz-acc-body.collapsed{ display:none; }
+  .lz-card{ background:rgba(255,255,255,.04); border-radius:6px; padding:5px; text-align:center; font-family:'JetBrains Mono',monospace; }
+  .lz-card .n{ font-size:clamp(6.5px, 0.48vw, 8.5px); color:var(--text-muted); line-height:1.25; }
+  .lz-card .v{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(10px, 0.78vw, 13px); }
+  .loczone-head{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(10.5px, 0.78vw, 14px); color:#fff; margin-bottom:6px; flex-shrink:0; }
+  .lz-tr-total{ background:rgba(168,85,247,0.10); border:1px solid rgba(168,85,247,0.3); border-radius:8px; padding:7px 10px; margin-bottom:8px; flex-shrink:0; }
+  .lz-tr-total-lbl{ font-family:'JetBrains Mono',monospace; font-size:clamp(7.5px, 0.55vw, 9.5px); color:#c9a3f7; text-transform:uppercase; }
+  .lz-tr-total-val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(18px, 1.35vw, 24px); color:#a855f7; }
+  .lz-kwh-total{ background:rgba(56,189,248,0.10); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:7px 10px; margin-bottom:8px; flex-shrink:0; }
+  .lz-kwh-total-lbl{ font-family:'JetBrains Mono',monospace; font-size:clamp(7.5px, 0.55vw, 9.5px); color:#7dd3fc; text-transform:uppercase; }
+  .lz-kwh-total-val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(18px, 1.35vw, 24px); color:#38bdf8; }
+  .lz-area-total{ background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:8px; padding:7px 10px; margin-bottom:8px; flex-shrink:0; }
+  .lz-area-total-lbl{ font-family:'JetBrains Mono',monospace; font-size:clamp(7.5px, 0.55vw, 9.5px); color:var(--text-faint); text-transform:uppercase; }
+  .lz-area-total-val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(18px, 1.35vw, 24px); color:#fff; }
+
+  /* [ใหม่ 31/7/69] ข้อ2 — คอลัมน์ gap ระหว่างผังกับ Location Zone: System status + Alerts + Top zones */
+  .gap-col{ width:170px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; margin-left:8px; }
+  .gc-card{ background:#0d1017; border:1px solid var(--glass-border); border-radius:10px; padding:9px; flex-shrink:0; }
+  .gc-card.alert{ border-color:rgba(251,146,60,.3); }
+  .gc-card .t{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:9.5px; color:#fff; margin-bottom:7px; }
+  .gc-stat-row{ display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.05); font-family:'JetBrains Mono',monospace; }
+  .gc-stat-row:last-child{ border-bottom:none; }
+  .gc-stat-row .grp{ font-size:8px; color:var(--text-faint); }
+  .gc-stat-row .cnt{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11px; }
+  .gc-stat-row .cnt .on{ color:var(--green); }
+  .gc-stat-row .cnt .off{ color:var(--text-faint); }
+  .gc-alert-row{ background:rgba(251,146,60,.08); border-left:2px solid #fb923c; border-radius:0 5px 5px 0; padding:5px 6px; margin-bottom:5px; font-family:'JetBrains Mono',monospace; }
+  .gc-alert-row:last-child{ margin-bottom:0; }
+  .gc-alert-row.ok{ background:rgba(52,211,153,.08); border-left-color:var(--green); }
+  .gc-alert-row .name{ color:#fff; font-weight:700; font-size:8px; }
+  .gc-alert-row .msg{ color:#fb923c; font-size:7px; margin-top:2px; }
+  .gc-alert-row.ok .msg{ color:var(--green); }
+  .gc-trend-row{ margin-bottom:7px; font-family:'JetBrains Mono',monospace; }
+  .gc-trend-row:last-child{ margin-bottom:0; }
+  .gc-trend-row .lbl{ display:flex; justify-content:space-between; font-size:7.5px; color:var(--text-faint); margin-bottom:3px; }
+  .gc-trend-bar{ height:5px; background:rgba(255,255,255,.06); border-radius:3px; overflow:hidden; }
+  .gc-trend-bar i{ display:block; height:100%; border-radius:3px; }
+
+  /* [แก้ 31/7/69] ข้อ7 — เปลี่ยนจาก overlay มุมขวา เป็น popup กลางจอ + backdrop มืดลง
+     ไม่ต้องเผื่อ gutter อีกต่อไป เพราะ backdrop dim ผังไปเลยตอนเปิด ไม่ต้องกังวลเรื่องบังผัง */
+  .diagram-col{ flex:1; min-width:0; display:flex; flex-direction:column; min-height:0; }
+
+  .popup-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,0); pointer-events:none;
+    transition:background .22s ease, backdrop-filter .22s ease; z-index:40; }
+  .popup-backdrop.open{ background:rgba(0,0,0,.6); backdrop-filter:blur(2px); pointer-events:auto; }
+  .popup-modal{ position:absolute; top:50%; left:50%; width:420px; background:#0d1017; border:1px solid var(--glass-border);
+    border-radius:16px; padding:20px; opacity:0; transform:translate(-50%,-46%) scale(.94);
+    transition:opacity .2s cubic-bezier(.2,.8,.3,1), transform .2s cubic-bezier(.2,.8,.3,1), width .2s ease;
+    pointer-events:none; z-index:41; box-shadow:0 24px 60px -14px rgba(0,0,0,.65); display:flex; gap:20px;
+    max-height:calc(100% - 40px); }
+  .popup-modal.open{ opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:auto; }
+  .popup-modal.combo{ width:700px; }
+  .pm-section{ min-width:0; display:flex; flex-direction:column; min-height:0; }
+  .pm-section.pm-zone{ flex:0 0 180px; }
+  .pm-section.pm-unit{ flex:1 1 auto; }
+  .pm-divider{ width:1px; background:var(--glass-border); flex-shrink:0; }
+  .pm-tag{ font-family:'JetBrains Mono',monospace; font-size:8px; text-transform:uppercase; color:var(--p2-1); letter-spacing:.5px; margin-bottom:3px; }
+  .pm-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:#fff; }
+  .pm-hero{ margin:14px 0; }
+  .pm-hero .lbl{ font-family:'JetBrains Mono',monospace; font-size:8px; text-transform:uppercase; color:var(--text-faint); letter-spacing:.4px; margin-bottom:3px; }
+  .pm-hero .val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:30px; color:var(--cold); line-height:1; }
+  .pm-sub{ display:flex; flex-direction:column; gap:8px; padding-bottom:14px; border-bottom:1px solid var(--glass-border); flex-shrink:0; }
+  .pm-sub .lbl{ font-family:'JetBrains Mono',monospace; font-size:7.5px; text-transform:uppercase; color:var(--text-faint); }
+  .pm-sub .val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color:#fff; margin-top:2px; }
+  .pm-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; flex-shrink:0; }
+  .pm-close{ cursor:pointer; color:var(--text-faint); font-size:14px; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; flex-shrink:0; }
+  .pm-close:hover{ background:rgba(255,255,255,.06); }
+  .pm-sec-t{ font-family:'Inter',sans-serif; font-weight:600; font-size:11px; color:var(--text-muted); margin-bottom:6px; flex-shrink:0; }
+  .pm-head-row{ display:flex; align-items:center; padding:0 0 6px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700; letter-spacing:.3px; color:var(--text-label); text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,.14); margin-bottom:2px; flex-shrink:0; gap:8px; }
+  .pm-head-row .hc-unit{ flex:1; min-width:0; }
+  .pm-head-row .hc-status{ width:34px; flex-shrink:0; text-align:center; }
+  .pm-head-row .hc-num{ width:64px; flex-shrink:0; text-align:right; }
+  .pm-unit-rows{ flex:1; min-height:0; overflow-y:auto; }
+  .pm-unit-row{ display:flex; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); font-family:'Inter',sans-serif; font-size:12px; gap:8px; }
+  .pm-unit-row:last-child{ border-bottom:none; }
+  .pm-unit-row.row-hit{ background:rgba(250,199,117,0.14); border-radius:6px; }
+  .pm-unit-row .id{ color:#fff; font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pm-unit-row .c-status{ width:34px; flex-shrink:0; display:flex; justify-content:center; }
+  .pm-pill{ font-family:'JetBrains Mono',monospace; font-size:7.5px; font-weight:700; padding:2px 7px; border-radius:20px; flex-shrink:0; }
+  .pm-pill.on{ background:rgba(52,211,153,.15); color:var(--green); }
+  .pm-pill.off{ background:rgba(255,255,255,.06); color:var(--text-faint); }
+  .pm-unit-row .c-num{ width:64px; flex-shrink:0; text-align:right; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12.5px; color:#fff; white-space:nowrap; }
+  .pm-unit-row .c-num.dim{ color:var(--text-faint); font-weight:600; font-size:10px; }
+
+  .ahu-shell{ flex:1; min-height:0; display:flex; gap:10px; padding:0 16px 14px; }
+  .ahu-side{ width:170px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; }
+  .side-card{ padding:12px; }
+  .side-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:10.5px; margin-bottom:8px; }
+  .month-summary-row{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+  .month-summary-row:last-child{ border-bottom:none; }
+  .month-summary-row .n{ font-family:'Inter',sans-serif; font-size:10px; color:#7dd3fc; font-weight:600; }
+  .month-summary-row .v{ font-family:'Space Grotesk',sans-serif; font-size:11.5px; font-weight:700; color:#fff; }
+  .legend-row2{ display:flex; align-items:center; gap:7px; font-size:10px; color:var(--text-muted); margin-bottom:6px; }
+  .legend-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .ahu-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; min-height:0; }
+  .filter-row{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .f-label{ font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:600; color:var(--text-label); }
+  .f-btn{ padding:5px 12px; border-radius:7px; font-size:10px; font-weight:600; font-family:'Space Grotesk',sans-serif; color:var(--text-muted); border:1px solid var(--glass-border); cursor:pointer; background:rgba(255,255,255,0.02); }
+  .f-btn.active{ color:#0a0612; background:linear-gradient(120deg,var(--p1-1),var(--p2-1)); border-color:transparent; }
+  .hall-scroll{ flex:1; min-height:0; overflow-y:auto; }
+  .wing-label{ font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:1.4px; color:var(--text-label); margin:10px 0 6px; }
+  .wing-label:first-child{ margin-top:0; }
+  .hall-cards{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:8px; }
+  .hall-card{ border-radius:10px; background:rgba(255,255,255,0.025); border:1px solid var(--glass-border); overflow:hidden; }
+  .hall-card.p1{ border-top:3px solid var(--p1-1); }
+  .hall-card.p2{ border-top:3px solid var(--p2-1); }
+  .hc-head{ padding:8px 10px 4px; display:flex; justify-content:space-between; }
+  .hc-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11.5px; }
+  .hc-phase{ font-family:'JetBrains Mono',monospace; font-size:8px; padding:2px 6px; border-radius:20px; }
+  .hall-card.p1 .hc-phase{ color:var(--p1-1); background:rgba(34,211,238,0.12); }
+  .hall-card.p2 .hc-phase{ color:var(--p2-1); background:rgba(168,85,247,0.12); }
+  .hc-count{ font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint); padding:0 10px 8px; }
+
+  /* [AHU Option 2] Compact Pill List */
+  .pill-row{ display:flex; flex-wrap:wrap; gap:4px; padding:0 10px 10px; }
+  .pill{ display:flex; align-items:center; gap:4px; padding:3px 7px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-size:8.5px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); cursor:default; }
+  .pill-dot{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); flex-shrink:0; }
+
+  .monthly-shell{ flex:1; min-height:0; display:flex; flex-direction:column; margin:0 16px 14px; padding:14px; }
+  .table-scroll{ flex:1; min-height:0; overflow-y:auto; margin-top:8px; }
+  .mr-summary-banner{ background:rgba(242,134,122,0.08); border:1px solid rgba(242,134,122,0.25); border-radius:7px; padding:6px 12px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text); margin-top:8px; flex-shrink:0; }
+  .mr-summary-banner.down{ background:rgba(52,211,153,0.08); border-color:rgba(52,211,153,0.25); }
+  .mr-charts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; flex-shrink:0; }
+  .mr-charts.mr-charts-3{ grid-template-columns:1fr 1fr; }
+  .mr-chart-card{ background:#0d1017; border:1px solid var(--glass-border); border-radius:12px; padding:12px; margin-bottom:0; min-width:0; }
+  .mr-chart-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px; }
+  .mr-chart-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:10px; color:#fff; }
+  .mr-legend{ display:flex; gap:8px; }
+  .mr-legend .item{ display:flex; align-items:center; gap:3px; font-family:'JetBrains Mono',monospace; font-size:7px; color:var(--text-faint); }
+  .mr-legend .sw{ width:10px; height:2.5px; border-radius:2px; display:inline-block; }
+  .hbar-chart{ display:flex; flex-direction:column; gap:9px; }
+  .hbar-row{ display:flex; align-items:center; gap:8px; }
+  .hbar-m{ width:52px; font-family:'JetBrains Mono',monospace; font-size:8.5px; color:var(--text-faint); flex-shrink:0; }
+  .hbar-row.current .hbar-m{ color:#22d3ee; font-weight:700; }
+  .hbar-track{ flex:1; height:14px; background:rgba(255,255,255,.04); border-radius:4px; overflow:hidden; }
+  .hbar-fill{ height:100%; border-radius:4px; }
+  .hbar-val{ width:66px; text-align:right; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:10px; flex-shrink:0; }
+  .hbar-row.current .hbar-val{ color:#22d3ee; }
+  table{ width:100%; border-collapse:collapse; font-size:11px; }
+  th{ text-align:left; font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:.3px; color:var(--text-label); text-transform:uppercase; padding:8px 12px; position:sticky; top:0; background:#0c0f18; }
+  td{ padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; }
+  #monthly-tbody tr:nth-child(even){ background:rgba(255,255,255,.015); }
+  .hc-kwm2{ display:flex; align-items:baseline; gap:5px; padding:6px 10px 0; }
+  .hc-kwm2 .val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; }
+  .hc-kwm2 .unit{ font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint); }
+  .hc-event-badge{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:8px; padding:2px 6px; border-radius:20px; color:var(--return); background:rgba(242,184,79,0.16); cursor:default; flex-shrink:0; }
+  .hall-card.no-area{ opacity:0.55; }
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sb-head"><div class="sb-mark">B</div><div class="sb-title-wrap"><div class="sb-title">BITEC Chiller &amp; AHU Management Plant</div><div class="sb-version">V1.1</div></div></div>
+  <div class="sb-toggle" id="sbToggle">‹</div>
+  <div class="sb-nav">
+    <div class="side-tab sb-item active" data-tab="plant"><div class="sb-icon"></div><div class="sb-label">Chiller circuit</div></div>
+    <div class="side-tab sb-item" data-tab="ahu"><div class="sb-icon"></div><div class="sb-label">AHU floor plan</div></div>
+    <div class="side-tab sb-item" data-tab="report"><div class="sb-icon"></div><div class="sb-label">Monthly report</div></div>
+  </div>
+  <div class="sb-foot" id="sbFoot">ยังไม่ได้ sync</div>
+</div>
+
+<div class="main">
+  <div class="credit-bar">
+    <img class="credit-logo" src="data:image/png;base64,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" alt="BHIRAJ BURI GROUP">
+    <span class="credit-text">PSD Group : Process Improvement Division · By Suvisit Suwannaram (PI Team)</span>
+  </div>
+  <div class="topbar glass">
+    <h1>BITEC Chiller &amp; AHU</h1>
+    <span id="liveClock" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted);">—</span>
+    <div class="search-box">
+      <span style="color:var(--text-faint); font-size:11px;">🔍</span>
+      <input type="text" id="unitSearch" placeholder="ค้นหา unit id เช่น H-SCHP-04">
+    </div>
+    <div class="date-filter">
+      <div class="dm-toggle">
+        <span class="dm-btn active" data-mode="day">รายวัน</span>
+        <span class="dm-btn" data-mode="month">รายเดือน</span>
+      </div>
+      <span style="color:var(--glass-border);">|</span>
+      <div id="dayModeControls" style="display:flex; align-items:center; gap:6px;">
+        <span class="f-btn active" data-range="today">วันนี้</span>
+        <span class="f-btn" data-range="yesterday">เมื่อวาน</span>
+        <input type="date" id="dateFilter" title="จากวันที่">
+        <span style="font-size:9.5px; color:var(--text-faint);">ถึง</span>
+        <input type="date" id="dateFilterEnd" title="ถึงวันที่ (เว้นว่าง = วันเดียว)">
+      </div>
+      <div id="monthModeControls" style="display:none; align-items:center; gap:6px;">
+        <select id="monthFilter"></select>
+      </div>
+      <span id="sync-status" class="sync-note"><span class="live-dot" id="liveDot" style="display:none;"></span><span id="syncText">ยังไม่ได้ sync</span></span>
+    </div>
+  </div>
+
+  <div class="panel active" id="panel-plant">
+    <div class="kpi-tiles">
+      <div class="kpi-tile c-chiller"><div class="lbl">Main Chiller<span class="kpi-trend" id="trend-chl"></span></div><div class="val"><span id="kpi-chl">—</span><span class="unit">kWh</span></div></div>
+      <div class="kpi-tile c-chiller"><div class="lbl">Capacity<span class="kpi-trend" id="trend-tr"></span></div><div class="val"><span id="kpi-tr">—</span><span class="unit">TR</span></div></div>
+      <div class="kpi-tile c-tower"><div class="lbl">Cooling Tower<span class="kpi-trend" id="trend-ct"></span></div><div class="val"><span id="kpi-ct">—</span><span class="unit">kWh</span></div></div>
+      <div class="kpi-tile c-tower"><div class="lbl">Thermal Eff.<span class="kpi-trend" id="trend-thermaleff"></span></div><div class="val"><span id="kpi-thermaleff">—</span><span class="unit">%</span></div></div>
+      <div class="kpi-tile c-cdp"><div class="lbl">Condenser Pump<span class="kpi-trend" id="trend-cdp"></span></div><div class="val"><span id="kpi-cdp">—</span><span class="unit">kWh</span></div></div>
+      <div class="kpi-tile c-pump"><div class="lbl">SCHP I<span class="kpi-trend" id="trend-schp1"></span></div><div class="val"><span id="kpi-schp1">—</span><span class="unit">kWh</span></div></div>
+      <div class="kpi-tile c-pump"><div class="lbl">SCHP II<span class="kpi-trend" id="trend-schp2"></span></div><div class="val"><span id="kpi-schp2">—</span><span class="unit">kWh</span></div></div>
+    </div>
+    <div class="kpi-tiles">
+      <div class="kpi-tile c-plant"><div class="lbl">Total (ไม่รวม SCHP)<span class="kpi-trend" id="trend-totalkw"></span></div><div class="val"><span id="kpi-totalkw">—</span><span class="unit">kWh</span></div></div>
+      <div class="kpi-tile c-plant"><div class="lbl">Total Plant<span class="kpi-trend" id="trend-totalkwplant"></span></div><div class="val"><span id="kpi-totalkwplant">—</span><span class="unit">kWh</span></div></div>
+      <div class="kpi-tile c-plant"><div class="lbl">Efficiency<span class="kpi-trend" id="trend-eff"></span></div><div class="val"><span id="kpi-eff">—</span><span class="unit">kW/TR</span></div></div>
+      <div class="kpi-tile c-outdoor"><div class="lbl">Outdoor Temp</div><div class="val"><span id="kpi-oat">—</span><span class="unit">C</span></div></div>
+      <div class="kpi-tile c-outdoor"><div class="lbl">Outdoor Humidity</div><div class="val"><span id="kpi-rh">—</span><span class="unit">%</span></div></div>
+      <div class="kpi-tile c-outdoor"><div class="lbl">Wet Bulb</div><div class="val"><span id="kpi-wetbulb">—</span><span class="unit">F</span></div></div>
+      <div class="kpi-tile c-plant"><div class="lbl">Electric Cost<span class="kpi-trend" id="trend-cost"></span></div><div class="val"><span id="kpi-cost">—</span><span class="unit">บาท</span></div></div>
+
+    </div>
+
+    <div class="circuit-area glass" style="flex-direction:row;">
+      <div class="diagram-col">
+        <div class="circuit-legend">
+          <div class="legend-item"><span class="legend-swatch" style="background:var(--hot);"></span>Condenser Water Loop</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:var(--cold);"></span>Chill Evaporator Water Supply Loop</div>
+          <div class="legend-item"><span class="legend-swatch" style="background:var(--return);"></span>Chilled Water Return Loop</div>
+          <div class="legend-item" style="margin-left:auto;">คลิกกล่องเพื่อดูรายเครื่อง · พิมพ์ค้นหาด้านบนเพื่อไฮไลต์เครื่อง</div>
+        </div>
+        <div class="svg-wrap">
+          <svg id="svgMain" viewBox="0 0 955 502" xmlns="http://www.w3.org/2000/svg"></svg>
+
+          <div class="hz" data-key="ct" style="left:2.09%; top:1.99%; width:13.61%; height:9.96%;"></div>
+          <div class="hz" data-key="cdp" style="left:30.79%; top:1.99%; width:13.61%; height:9.96%;"></div>
+          <div class="hz" data-key="chl" style="left:30.79%; top:35.86%; width:13.61%; height:7.17%;"></div>
+          <div class="hz" data-key="pchp" style="left:30.79%; top:73.41%; width:13.61%; height:9.96%;"></div>
+          <div class="hz" data-key="schp1" style="left:53.82%; top:58.86%; width:10.58%; height:5.78%;"></div>
+          <div class="hz" data-key="schp2" style="left:80.10%; top:58.86%; width:10.58%; height:5.78%;"></div>
+          <div class="hz" data-key="front" style="left:46.60%; top:73.41%; width:7.54%; height:7.97%;"></div>
+          <div class="hz" data-key="back" style="left:55.39%; top:73.41%; width:7.54%; height:7.97%;"></div>
+          <div class="hz" data-key="eh105" style="left:64.08%; top:73.41%; width:7.54%; height:7.97%;"></div>
+          <div class="hz" data-key="support" style="left:72.88%; top:73.41%; width:7.54%; height:7.97%;"></div>
+          <div class="hz" data-key="sale" style="left:81.57%; top:73.41%; width:7.54%; height:7.97%;"></div>
+          <div class="hz" data-key="exhibition" style="left:90.37%; top:73.41%; width:7.54%; height:7.97%;"></div>
+        </div>
+      </div>
+      <div class="gap-col">
+        <div class="gc-card alert" id="gcAlerts">
+          <div class="t">Alerts วันนี้</div>
+          <div id="gcAlertsBody"><div class="gc-alert-row ok"><div class="name">กำลังโหลด...</div></div></div>
+        </div>
+        <div class="gc-card" id="gcStatus">
+          <div class="t">System status</div>
+          <div id="gcStatusBody"></div>
+        </div>
+        <div class="gc-card" id="gcTopZones">
+          <div class="t">Top zone · kWh/m²</div>
+          <div id="gcTopZonesBody"></div>
+        </div>
+      </div>
+      <div class="loczone-panel">
+        <div class="loczone-head"><span>Location Zone</span><span class="sync-note" id="loczone-sync-status" style="font-size:8px;">ยังไม่ได้ sync</span></div>
+        <div class="lz-tr-total">
+          <div class="lz-tr-total-lbl">TR/ตร.ม. รวมทั้งอาคาร</div>
+          <div class="lz-tr-total-val"><span id="lz-tr-total-val">—</span></div>
+        </div>
+        <div class="lz-kwh-total">
+          <div class="lz-kwh-total-lbl">kWh/ตร.ม. รวมทั้งอาคาร</div>
+          <div class="lz-kwh-total-val"><span id="lz-kwh-total-val">—</span></div>
+        </div>
+        <div class="lz-area-total">
+          <div class="lz-area-total-lbl">Total Area ของวันที่เลือก</div>
+          <div class="lz-area-total-val"><span id="lz-area-total-val">—</span><span style="font-size:11px; color:var(--text-faint); font-weight:600;"> ตร.ม.</span></div>
+        </div>
+        <div class="loczone-accordion" id="loczoneAccordion"></div>
+
+      </div>
+      <div class="popup-backdrop" id="popupBackdrop"></div>
+      <div class="popup-modal" id="popupModal">
+        <div class="pm-section pm-zone" id="pmZoneSection" style="display:none;">
+          <div class="pm-tag" id="pmZoneTag">SCHP zone</div>
+          <div class="pm-name" id="pmZoneName">—</div>
+          <div class="pm-hero">
+            <div class="lbl">kWh</div>
+            <div class="val"><span id="pmZoneKwm2">—</span></div>
+          </div>
+          <div class="pm-sub">
+            <div><div class="lbl">TR รวม</div><div class="val" id="pmZoneTr">—</div></div>
+            <div><div class="lbl">Unit ทำงาน</div><div class="val" id="pmZoneOnCount">—</div></div>
+          </div>
+        </div>
+        <div class="pm-divider" id="pmDivider" style="display:none;"></div>
+        <div class="pm-section pm-unit">
+          <div class="pm-head">
+            <div><div class="pm-tag" id="pmUnitTag">—</div><div class="pm-name" id="pmUnitName">—</div></div>
+            <div class="pm-close" id="popupClose">✕</div>
+          </div>
+          <div class="pm-sec-t" id="pmUnitSecT">Unit ในกลุ่มนี้</div>
+          <div class="pm-head-row" id="pmHeadRow"></div>
+          <div class="pm-unit-rows" id="pmUnitRows"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-ahu">
+    <div class="kpi-tiles" style="margin-bottom:8px;">
+      <div class="kpi-tile c-chiller"><div class="lbl">Total AHU</div><div class="val"><span id="ahu-total-count">—</span></div></div>
+      <div class="kpi-tile c-pump"><div class="lbl">Phase 1</div><div class="val"><span id="ahu-p1-count">—</span><span class="unit">หน่วย</span></div></div>
+      <div class="kpi-tile c-plant"><div class="lbl">Phase 2</div><div class="val"><span id="ahu-p2-count">—</span><span class="unit">หน่วย</span></div></div>
+      <div class="kpi-tile c-outdoor"><div class="lbl">kWh/m² รวมอาคาร</div><div class="val"><span id="ahu-avgkwm2">—</span></div></div>
+      <div class="kpi-tile c-tower"><div class="lbl">Event วันนี้</div><div class="val"><span id="ahu-event-count">—</span><span class="unit">hall</span></div></div>
+    </div>
+    <div class="ahu-shell">
+      <div class="ahu-side">
+        <div class="side-card glass"><div class="side-title">FILTER</div>
+          <div class="filter-row" style="flex-wrap:wrap;">
+            <div class="f-btn active" data-phase="all">ทั้งหมด</div>
+            <div class="f-btn" data-phase="p1">Phase 1</div>
+            <div class="f-btn" data-phase="p2">Phase 2</div>
+          </div>
+        </div>
+        <div class="side-card glass" style="margin-top:10px;">
+          <div class="side-title">สรุปเดือนนี้ · kWh</div>
+          <div id="ahuMonthSummary" style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint);">กำลังโหลด...</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:7px; color:var(--text-faint); margin-top:8px; line-height:1.5;">เรียงจากมากไปน้อย · สะสมตั้งแต่ต้นเดือนถึงวันล่าสุดที่มีข้อมูล</div>
+        </div>
+      </div>
+      <div class="ahu-main glass" style="padding:12px;">
+        <div class="hall-scroll" id="hallScroll"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-report">
+    <div class="monthly-shell glass">
+      <div class="kpi-tiles" style="padding:0; margin-bottom:8px;">
+        <div class="kpi-tile c-chiller"><div class="lbl">Total Energy</div><div class="val"><span id="mr-kwh">—</span><span class="unit">kWh</span></div></div>
+        <div class="kpi-tile c-outdoor"><div class="lbl">kW/TR เฉลี่ย</div><div class="val"><span id="mr-kwtr">—</span></div></div>
+        <div class="kpi-tile c-plant"><div class="lbl">TR ต่อ ตร.ม.</div><div class="val"><span id="mr-trsqm">—</span></div></div>
+        <div class="kpi-tile c-plant"><div class="lbl">kWh ต่อ ตร.ม.</div><div class="val"><span id="mr-kwsqm">—</span></div></div>
+      </div>
+      <div class="kpi-tiles" style="padding:0; margin-bottom:8px;">
+        <div class="kpi-tile c-pump"><div class="lbl">พื้นที่ใช้งานเฉลี่ย/วัน</div><div class="val"><span id="mr-areaused">—</span><span class="unit">ตร.ม.</span></div></div>
+        <div class="kpi-tile c-chiller"><div class="lbl">เทียบเดือนก่อน</div><div class="val" id="mr-trend">—</div></div>
+        <div class="kpi-tile c-tower"><div class="lbl">ค่าไฟประมาณการ</div><div class="val"><span id="mr-cost">—</span><span class="unit">บาท</span></div></div>
+      </div>
+      <div id="mr-summary" class="mr-summary-banner">—</div>
+      <div id="monthly-sync-status" class="sync-note" style="margin-top:4px;">ยังไม่ได้ sync</div>
+      <div class="mr-charts mr-charts-3">
+        <div class="mr-chart-card">
+          <div class="mr-chart-head">
+            <div class="mr-chart-title">Total kWh — รายเดือน</div>
+            <div class="mr-legend"><div class="item"><span class="sw" style="background:#38bdf8;"></span>kWh</div></div>
+          </div>
+          <div id="mr-bar-chart" class="hbar-chart"></div>
+        </div>
+        <div class="mr-chart-card">
+          <div class="mr-chart-head">
+            <div class="mr-chart-title">kW/TR เฉลี่ย — รายเดือน</div>
+            <div class="mr-legend"><div class="item"><span class="sw" style="background:#34d399;"></span>kW/TR</div></div>
+          </div>
+          <div id="mr-line-chart" class="hbar-chart"></div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead id="monthly-thead"><tr><th>รายการ</th></tr></thead>
+          <tbody id="monthly-tbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('sbToggle').addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('collapsed'); });
+// [ข้อ F] 23/7/69 — นาฬิกา live ที่ topbar (ยืมมาจาก Option B ตามที่ตกลง)
+(function(){
+  var clockEl = document.getElementById('liveClock');
+  function tick(){
+    if(!clockEl) return;
+    var now = new Date();
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    clockEl.textContent = pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+document.querySelectorAll(".side-tab").forEach(function(tab){
+  tab.addEventListener("click", function(){
+    document.querySelectorAll(".side-tab").forEach(t=>t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-"+tab.dataset.tab).classList.add("active");
+  });
+});
+document.querySelectorAll('[data-phase]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('[data-phase]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    var phase = btn.dataset.phase;
+    document.querySelectorAll('.hall-card').forEach(function(card){
+      card.style.display = (phase==='all'||card.classList.contains(phase)) ? '' : 'none';
+    });
+  });
+});
+
+// [ทศนิยม/คอมม่า] ตัวช่วยแสดงตัวเลขใช้ร่วมกันทั้งหน้า — ทศนิยม 2 ตำแหน่งเสมอ + คอมม่าเมื่อเกินพัน
+function fmtNum(v, digits){
+  if(v === null || v === undefined || (typeof v === 'number' && isNaN(v))) return '—';
+  digits = (digits === undefined) ? 2 : digits;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:digits, maximumFractionDigits:digits});
+}
+
+var CT_IDS = ["P1-CT-01","P1-CT-02","P1-CT-03","P1-CT-04","H-CT-01","H-CT-02","H-CT-03","H-CT-04","H-CT-05","H-CT-06","H-CT-07"];
+var CDP_IDS = ["P1-CDP-01","P1-CDP-02","P1-CDP-03","P1-CDP-04","H-CDP-01","H-CDP-02","H-CDP-03","H-CDP-04","H-CDP-05","H-CDP-06","H-CDP-07","H-CDP-08","RFUP-01","RFUP-02"];
+var PCHP_IDS = ["P1-PCHP-01","P1-PCHP-02","P1-PCHP-03","P1-PCHP-04","H-PCHP-01","H-PCHP-02","H-PCHP-03","H-PCHP-04","H-PCHP-05","H-PCHP-06","H-PCHP-07","H-PCHP-08"];
+var SCHP1_IDS = ["SCHP-01","SCHP-02","SCHP-03","SCHP-04","SCHP-05","SCHP-06","SCHP-07"];
+var SCHP2_IDS = ["H-SCHP-01","H-SCHP-02","H-SCHP-03","H-SCHP-04","H-SCHP-05","H-SCHP-06","H-SCHP-07","H-SCHP-08","H-SCHP-09"];
+var CHL_IDS = ["P1-CH-01","P1-CH-02","P1-CH-03","P1-CH-04","H1-CH-01","H1-CH-02","H1-CH-03","H1-CH-04","H1-CH-05","H1-CH-06","H1-CH-07","H1-CH-08"];
+var ZONE_MEMBERS = {
+  front: ["SCHP-01","SCHP-02","SCHP-03"], back: ["SCHP-04","SCHP-05"], eh105: ["SCHP-06","SCHP-07"],
+  support: ["H-SCHP-01","H-SCHP-02","H-SCHP-03"], sale: ["H-SCHP-04","H-SCHP-05","H-SCHP-06"], exhibition: ["H-SCHP-07","H-SCHP-08","H-SCHP-09"]
+};
+
+// [ใหม่] นิยามแต่ละกล่อง -> ใช้สร้างเนื้อหา side panel แบบ dynamic ตอนคลิก (ไม่ render ค้างไว้ล่วงหน้าเหมือนเดิม)
+var PANEL_DEFS = {
+  // [แก้ 23/7/69] ยกเลิกข้อจำกัดเดิม (เหลือแค่ Main Chiller/SCHP) — กลับมาเปิดดีเทลรายเครื่องได้ครบทุกกล่อง
+  ct:     { title:'Cooling Tower',      kind:'unit', group:'CT',   ids:CT_IDS,   totalKey:'ctTotal' },
+  cdp:    { title:'Condenser Pump',     kind:'unit', group:'CDP',  ids:CDP_IDS,  totalKey:'cdpTotal' },
+  chl:    { title:'Main Chiller',       kind:'chl',  ids:CHL_IDS },
+  pchp:   { title:'Primary Water Pump', kind:'unit', group:'PCHP', ids:PCHP_IDS, totalKey:'pchpTotal' },
+  schp1:  { title:'SCHP Phase I',       kind:'unit', group:'SCHP', ids:SCHP1_IDS, totalKey:'schpPhase1Total' },
+  schp2:  { title:'SCHP Phase II',      kind:'unit', group:'SCHP', ids:SCHP2_IDS, totalKey:'schpPhase2Total' },
+  front:      { title:'Front Zone',       kind:'unit', group:'SCHP', ids:ZONE_MEMBERS.front,      zoneName:'Front' },
+  back:       { title:'Back Zone',        kind:'unit', group:'SCHP', ids:ZONE_MEMBERS.back,       zoneName:'Back' },
+  eh105:      { title:'EH105-106 Zone',   kind:'unit', group:'SCHP', ids:ZONE_MEMBERS.eh105,       zoneName:'EH105-106' },
+  support:    { title:'Support Zone',     kind:'unit', group:'SCHP', ids:ZONE_MEMBERS.support,     zoneName:'Support Area' },
+  sale:       { title:'Sale Zone',        kind:'unit', group:'SCHP', ids:ZONE_MEMBERS.sale,        zoneName:'Sale Area' },
+  exhibition: { title:'Exhibition Zone',  kind:'unit', group:'SCHP', ids:ZONE_MEMBERS.exhibition,  zoneName:'Exhibition Area' }
+};
+// ลำดับความสำคัญตอนค้นหา (roster หลักก่อน แล้วค่อยโซนย่อย เพราะ id บางตัวซ้ำกันได้ระหว่าง roster กับโซน)
+var SEARCH_PRIORITY = ['ct','cdp','chl','pchp','schp1','schp2','front','back','eh105','support','sale','exhibition'];
+
+var currentPanelKey = null;
+
+// [ข้อ6] สถานะใช้ pill แบบ Style2
+function statusPill_(on){
+  return '<span class="pm-pill '+(on?'on':'off')+'">'+(on?'ON':'OFF')+'</span>';
+}
+
+function renderPanel(key){
+  var def = PANEL_DEFS[key];
+  if(!def) return;
+  var summary = window.__latestPowerSummary || {};
+  var totals = summary.totals || {};
+  var perUnit = summary.perUnit || {};
+
+  document.getElementById('pmUnitTag').textContent = def.zoneName ? 'Unit detail' : (def.group || 'Equipment');
+  document.getElementById('pmUnitName').textContent = def.title;
+
+  var onCount = 0;
+
+  if(def.kind === 'chl'){
+    var chlSums = perUnit.CHL || {};
+    var chlTr = perUnit.CHL_TR || {};
+    var chlPct = perUnit.CHL_PCT || {};
+    onCount = def.ids.filter(function(id){ return chlSums[id] !== undefined && chlSums[id] !== null; }).length;
+    document.getElementById('pmUnitSecT').textContent = def.ids.length+' หน่วย · sum สะสมของวัน';
+    // [แก้ 31/7/69] คอลัมน์แรกเปลี่ยนเป็น kWh (=kW×2) ตามที่ confirm — TR กับ % คงเดิม ไม่แตะ
+    document.getElementById('pmHeadRow').innerHTML = '<span class="hc-unit">Unit</span><span class="hc-status">สถานะ</span><span class="hc-num">kWh</span><span class="hc-num">TR</span><span class="hc-num">%load</span>';
+    document.getElementById('pmUnitRows').innerHTML = def.ids.map(function(id){
+      var v = chlSums[id], tr = chlTr[id], pct = chlPct[id];
+      var hasVal = (v !== undefined && v !== null);
+      return '<div class="pm-unit-row" data-unit="'+id+'"><span class="id">'+id+'</span><span class="c-status">'+statusPill_(hasVal)+'</span>'+
+        '<span class="c-num">'+(hasVal?fmtNum(v*2,1):'—')+'</span>'+
+        '<span class="c-num dim">'+((tr!==undefined&&tr!==null)?fmtNum(tr,1):'—')+'</span>'+
+        '<span class="c-num dim">'+((pct!==undefined&&pct!==null)?(fmtNum(pct,1)+'%'):'—')+'</span></div>';
+    }).join('');
+  } else {
+    var groupObj = (perUnit[def.group]) || {};
+    var totalVal = def.totalKey ? totals[def.totalKey] : null;
+    onCount = def.ids.filter(function(id){ return groupObj[id] !== undefined && groupObj[id] !== null; }).length;
+    // [แก้ 31/7/69] เปลี่ยนเป็น kWh (=kW×2) ตามที่ confirm
+    document.getElementById('pmUnitSecT').textContent = def.ids.length+' หน่วย · average ของวัน' +
+      ((typeof totalVal==='number') ? (' · รวม '+fmtNum(totalVal*2,1)+' kWh') : '');
+    document.getElementById('pmHeadRow').innerHTML = '<span class="hc-unit">Unit</span><span class="hc-status">สถานะ</span><span class="hc-num">kWh</span>';
+    document.getElementById('pmUnitRows').innerHTML = def.ids.map(function(id){
+      var v = groupObj[id];
+      var hasVal = (v !== undefined && v !== null);
+      return '<div class="pm-unit-row" data-unit="'+id+'"><span class="id">'+id+'</span><span class="c-status">'+statusPill_(hasVal)+'</span>'+
+        '<span class="c-num">'+(hasVal?fmtNum(v*2,1):'—')+'</span></div>';
+    }).join('');
+  }
+
+  // [ใหม่ 31/7/69] ข้อ9 — popup แบบ combo: โซนย่อย SCHP (front/back/eh105/support/sale/exhibition) เท่านั้นที่มี zoneName
+  // ส่วน SCHP Phase I/II คลิกแล้วโชว์แค่ unit เหมือน CT/CDP (ตามที่ confirm — phase ไม่มีโซนเดี่ยวให้จับคู่)
+  if(def.zoneName){
+    // [แก้ 31/7/69] เปลี่ยนมาใช้ bySchpZoneArea (kWh, area-based, ไม่พึ่ง SCHP mapping) แทน bySchpZone เดิม
+    // แก้บั๊ก mapping ที่ Front zone ไปในตัว + ให้สอดคล้องกับ Location Zone panel ที่ใช้ area-based แล้ว
+    var zoneData = (window.__bySchpZoneAreaData || []).find(function(z){ return z.schpZone === def.zoneName; });
+    document.getElementById('pmZoneName').textContent = def.zoneName;
+    document.getElementById('pmZoneKwm2').textContent = zoneData && typeof zoneData.kwhAreaBased === 'number' ? fmtNum(zoneData.kwhAreaBased,1) : '—';
+    document.getElementById('pmZoneTr').textContent = zoneData && typeof zoneData.trAreaBased === 'number' ? ('≈'+fmtNum(zoneData.trAreaBased,0)) : '—';
+    document.getElementById('pmZoneOnCount').textContent = onCount + ' / ' + def.ids.length;
+    document.getElementById('pmZoneSection').style.display = '';
+    document.getElementById('pmDivider').style.display = '';
+    document.getElementById('popupModal').classList.add('combo');
+  } else {
+    document.getElementById('pmZoneSection').style.display = 'none';
+    document.getElementById('pmDivider').style.display = 'none';
+    document.getElementById('popupModal').classList.remove('combo');
+  }
+}
+
+function openPanel(key){
+  currentPanelKey = key;
+  document.querySelectorAll('.hz').forEach(h=>h.classList.remove('active'));
+  var hz = document.querySelector('.hz[data-key="'+key+'"]');
+  if(hz) hz.classList.add('active');
+  var def = PANEL_DEFS[key];
+  renderPanel(key);
+  // [ใหม่ 31/7/69] ข้อ1 — คลิกกล่องโซน (front/back/eh105/support/sale/exhibition) sync Location Zone panel ให้เปิดตรงโซนนั้น
+  if(def && def.zoneName && window.__syncLzAccordion) window.__syncLzAccordion(def.zoneName);
+  document.getElementById('popupBackdrop').classList.add('open');
+  document.getElementById('popupModal').classList.add('open');
+}
+function closePanel(){
+  currentPanelKey = null;
+  document.getElementById('popupBackdrop').classList.remove('open');
+  document.getElementById('popupModal').classList.remove('open');
+  document.querySelectorAll('.hz').forEach(h=>h.classList.remove('active'));
+}
+
+document.querySelectorAll('.hz').forEach(function(hz){
+  hz.addEventListener('click', function(e){
+    e.stopPropagation();
+    var key = hz.dataset.key;
+    if(currentPanelKey === key){ closePanel(); return; }
+    openPanel(key);
+  });
+});
+document.getElementById('popupClose').addEventListener('click', closePanel);
+document.getElementById('popupBackdrop').addEventListener('click', closePanel);
+
+document.getElementById('unitSearch').addEventListener('input', function(){
+  var q = this.value.trim().toUpperCase();
+  document.querySelectorAll('.hz').forEach(h=>h.classList.remove('search-hit'));
+  if(!q) return;
+  var foundKey = null, foundId = null;
+  for(var i=0;i<SEARCH_PRIORITY.length && !foundKey;i++){
+    var def = PANEL_DEFS[SEARCH_PRIORITY[i]];
+    for(var j=0;j<def.ids.length;j++){
+      if(def.ids[j].toUpperCase().indexOf(q) !== -1){ foundKey=SEARCH_PRIORITY[i]; foundId=def.ids[j]; break; }
+    }
+  }
+  if(!foundKey) return;
+  var hz = document.querySelector('.hz[data-key="'+foundKey+'"]');
+  if(hz) hz.classList.add('search-hit');
+  openPanel(foundKey);
+  setTimeout(function(){
+    var row = document.querySelector('.pm-unit-row[data-unit="'+foundId+'"]');
+    if(row){
+      row.classList.add('row-hit');
+      row.scrollIntoView({block:'center'});
+      setTimeout(function(){ row.classList.remove('row-hit'); }, 2000);
+    }
+  }, 30);
+});
+
+var HOT='#f2867a', COLD='#38bdf8', RET='#f2b84f';
+function sp(pts){ return pts.map((p,i)=>(i===0?'M':'L')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' '); }
+function box(x,y,w,h){ return {x,y,w,h}; }
+function topPt(n,f){ f=f===undefined?0.5:f; return {x:n.x+n.w*f,y:n.y}; }
+function botPt(n,f){ f=f===undefined?0.5:f; return {x:n.x+n.w*f,y:n.y+n.h}; }
+function leftPt(n,f){ f=f===undefined?0.5:f; return {x:n.x,y:n.y+n.h*f}; }
+function rightPt(n,f){ f=f===undefined?0.5:f; return {x:n.x+n.w,y:n.y+n.h*f}; }
+var frag = {d:'<defs>'+['h','c','r'].map(k=>{var c=k==='h'?HOT:(k==='c'?COLD:RET);return '<marker id="M-'+k+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1L8 5L1 9" fill="none" stroke="'+c+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>';}).join('')+'</defs>'};
+function stroke(pts,color,key,w,id){ frag.d+='<path'+(id?' id="'+id+'"':'')+' d="'+sp(pts)+'" stroke="'+color+'" stroke-width="'+(w||1.8)+'" fill="none" stroke-linecap="round" stroke-linejoin="round"'+(key?' marker-end="url(#M-'+key+')"':'')+'/>'; }
+function industrialShell(n,color){
+  frag.d+='<rect x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="'+n.h+'" rx="6" fill="rgba(255,255,255,.03)" stroke="'+color+'" stroke-width="2"/>';
+  frag.d+='<rect x="'+(n.x+3)+'" y="'+(n.y+3)+'" width="'+(n.w-6)+'" height="'+(n.h-6)+'" rx="4" fill="none" stroke="'+color+'" stroke-width="0.7" opacity=".45"/>';
+  frag.d+='<circle cx="'+(n.x+10)+'" cy="'+(n.y+10)+'" r="2.5" fill="'+color+'"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>';
+  frag.d+='<rect x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="14" rx="6" fill="'+color+'" opacity=".15"/>';
+}
+function smallNode(n,title,kwText,color,rgb,id){
+  industrialShell(n,color);
+  frag.d+='<text x="'+(n.x+n.w/2)+'" y="'+(n.y+n.h/2-4)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="8" fill="#fff">'+title+'</text>';
+  frag.d+='<text'+(id?' id="'+id+'"':'')+' x="'+(n.x+n.w/2)+'" y="'+(n.y+n.h/2+10)+'" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="10.5" fill="rgb('+rgb+')">'+(kwText||'—')+'</text>';
+}
+// [แก้ 31/7/69] ป้ายอุณหภูมิ — ตัดกล่องพื้นหลังออก เหลือแค่ข้อความลอย (F เด่น, C รอง)
+// วางตามแนวท่อ: เส้นแนวนอน (dir='above') -> ข้อความอยู่เหนือเส้น กึ่งกลาง / เส้นแนวตั้ง (dir='right') -> ข้อความอยู่ด้านขวาของเส้น ชิดซ้าย
+// เก็บสีเส้นเดิมไว้ที่ data-color บน text หลัก เพื่อคืนค่าตอนกลับเป็นสถานะปกติ
+function tempChip(cx,cy,id,color,dir){
+  dir = dir || 'above';
+  var tx, tyMain, tySub, anchor;
+  if(dir === 'right'){
+    tx = cx + 10; tyMain = cy - 2; tySub = cy + 10; anchor = 'start';
+  } else {
+    tx = cx; tyMain = cy - 20; tySub = cy - 7; anchor = 'middle';
+  }
+  frag.d+='<text id="'+id+'" data-color="'+color+'" x="'+tx+'" y="'+tyMain+'" text-anchor="'+anchor+'" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11" fill="'+color+'">—</text>';
+  frag.d+='<text id="'+id+'-sub" x="'+tx+'" y="'+tySub+'" text-anchor="'+anchor+'" font-family="JetBrains Mono,monospace" font-weight="600" font-size="6.8" fill="rgba(255,255,255,.5)">—</text>';
+}
+// [ตัดออก 23/7/69] วงแหวน % โหลด Main Chiller (gaugeRing) — ผู้ใช้ขอตัดออก
+// [แก้ 23/7/69 รอบ 8] กลับมาใช้กล่องโซน SCHP_ZONE เดิม 6 กล่อง (เรียบง่าย ไม่มี mock AHU count/pill แล้ว
+// เพราะข้อมูล Location Zone ย้ายไปอยู่ panel ข้างผังแบบ fix ต่างหาก)
+function zoneBox(n,title,color){
+  industrialShell(n,color);
+  frag.d+='<text x="'+(n.x+n.w/2)+'" y="'+(n.y+n.h/2+4)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="8" fill="#fff">'+title+'</text>';
+}
+// SCHP_ZONE -> Phase ยังใช้กับ panel ข้าง (ไม่มีคอลัมน์นี้ในชีตไหนเลย เหมือนกรณี Wing เดิม)
+var SCHP_ZONE_PHASE = { 'Front':'p1', 'Back':'p1', 'EH105-106':'p1', 'Exhibition Area':'p2', 'Sale Area':'p2', 'Support Area':'p2' };
+
+// [แก้ 23/7/69 รอบ 8] กลับไปโครงสร้างเดิมที่เส้นถูกต้องหมด (ก่อนเริ่มเรื่อง Location Zone) — ย่อขนาด+ขยับซ้าย/ขึ้น
+// ด้วย "สเกลเดียวกันทุกจุด" (S=0.72) รักษาสัดส่วน/เส้นทางเดินท่อเดิมไว้เป๊ะ ไม่เสี่ยงบั๊กจากการคำนวณใหม่
+var ct=box(20,10,130,50), cdp=box(294,10,130,50);
+var CDP_GAP_EXTRA = 40;                             // [แก้ 23/7/69 รอบ 9] เพิ่มช่องว่าง CDP->Condenser ให้เห็นเส้น+ป้ายอุณหภูมิชัด (เดิมป้ายบังเส้นเกือบหมด)
+var chlCond=box(294,97+CDP_GAP_EXTRA,130,43), chlMid=box(294,140+CDP_GAP_EXTRA,130,36), chlEvap=box(294,176+CDP_GAP_EXTRA,130,50);
+var evapCenterY = chlEvap.y + chlEvap.h/2;
+var hsup=box(643,evapCenterY-14.5,94,29);
+var GAP = 22;                                       // สเกลจาก 30 เดิม (0.72x)
+var midY = hsup.y + hsup.h + GAP;
+var schp1=box(514,midY+18,101,29), schp2=box(765,midY+18,101,29);
+var trunkY = schp1.y + schp1.h + GAP;
+var front=box(445,trunkY+GAP,72,40), back=box(529,trunkY+GAP,72,40), eh105=box(612,trunkY+GAP,72,40);
+var support=box(696,trunkY+GAP,72,40), sale=box(779,trunkY+GAP,72,40), exhibition=box(863,trunkY+GAP,72,40);
+var convergeY = front.y + front.h + GAP;
+var hret=box(643,convergeY+GAP,94,29);
+var ylow = hret.y + hret.h + 18;
+var pchp=box(294,front.y,130,50);
+
+stroke([rightPt(ct),leftPt(cdp)],HOT,'h');
+stroke([botPt(cdp),topPt(chlCond)],HOT,'h',undefined,'flowline-cdpToCond');
+stroke([leftPt(chlCond,0.5),{x:ct.x+ct.w/2,y:leftPt(chlCond,0.5).y},{x:ct.x+ct.w/2,y:botPt(ct).y}],HOT,'h',undefined,'flowline-condToCT');
+stroke([rightPt(chlEvap,0.5),leftPt(hsup,0.5)],COLD,'c',undefined,'flowline-evapToHsup');
+stroke([botPt(hsup),{x:botPt(hsup).x,y:midY}],COLD,0);
+[schp1,schp2].forEach(n=>stroke([{x:botPt(hsup).x,y:midY},{x:topPt(n).x,y:midY},topPt(n)],COLD,'c'));
+stroke([botPt(schp1),{x:botPt(schp1).x,y:trunkY}],COLD,0);
+[front,back,eh105].forEach(n=>stroke([{x:botPt(schp1).x,y:trunkY},{x:topPt(n).x,y:trunkY},topPt(n)],COLD,'c'));
+stroke([botPt(schp2),{x:botPt(schp2).x,y:trunkY}],COLD,0);
+[support,sale,exhibition].forEach(n=>stroke([{x:botPt(schp2).x,y:trunkY},{x:topPt(n).x,y:trunkY},topPt(n)],COLD,'c'));
+[front,back,eh105,support,sale,exhibition].forEach(function(n){
+  stroke([botPt(n),{x:botPt(n).x,y:convergeY}],RET,0,1.3);
+  frag.d+='<circle cx="'+botPt(n).x+'" cy="'+convergeY+'" r="2" fill="'+RET+'"/>';
+});
+stroke([{x:front.x+front.w/2,y:convergeY},{x:exhibition.x+exhibition.w/2,y:convergeY}],RET,0,1.6);
+stroke([{x:hret.x+hret.w/2,y:convergeY},topPt(hret)],RET,'r',1.6);
+stroke([botPt(hret),{x:botPt(hret).x,y:ylow},{x:botPt(pchp,0.5).x,y:ylow},botPt(pchp,0.5)],RET,'r',1.6);
+stroke([topPt(pchp),botPt(chlEvap)],RET,'r',1.6,'flowline-pchpToEvap');
+
+industrialShell(ct,HOT);
+frag.d+='<text x="'+(ct.x+ct.w/2)+'" y="'+(ct.y+ct.h/2-5)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="9" fill="#fff">Cooling Tower</text><text id="hdrval-CoolingTower" x="'+(ct.x+ct.w/2)+'" y="'+(ct.y+ct.h/2+15)+'" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="12.5" fill="rgb(242,134,122)">—</text>';
+industrialShell(cdp,HOT);
+frag.d+='<text x="'+(cdp.x+cdp.w/2)+'" y="'+(cdp.y+cdp.h/2-5)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="9" fill="#fff">Condenser Pump</text><text id="hdrval-CondenserPump" x="'+(cdp.x+cdp.w/2)+'" y="'+(cdp.y+cdp.h/2+15)+'" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="12.5" fill="rgb(242,134,122)">—</text>';
+industrialShell(chlCond,HOT);
+frag.d+='<text x="'+(chlCond.x+chlCond.w/2)+'" y="'+(chlCond.y+chlCond.h/2+3)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="8.5" fill="#fff">Condenser · น้ำร้อน</text>';
+industrialShell(chlMid,'#8892a8');
+frag.d+='<text x="'+(chlMid.x+chlMid.w/2)+'" y="'+(chlMid.y+chlMid.h/2-6)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="9" fill="#fff">Main Chiller</text><text id="hdrval-MainChiller" x="'+(chlMid.x+chlMid.w/2)+'" y="'+(chlMid.y+chlMid.h/2+9)+'" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="12" fill="'+'#34d399'+'">—</text>';
+industrialShell(chlEvap,COLD);
+frag.d+='<text x="'+(chlEvap.x+chlEvap.w/2)+'" y="'+(chlEvap.y+chlEvap.h/2+4)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="8.5" fill="#fff">Evaporator · น้ำเย็น</text>';
+industrialShell(pchp,RET);
+frag.d+='<text x="'+(pchp.x+pchp.w/2)+'" y="'+(pchp.y+pchp.h/2-5)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="9" fill="#fff">Primary Water Pump</text><text id="hdrval-PrimaryWaterPump" x="'+(pchp.x+pchp.w/2)+'" y="'+(pchp.y+pchp.h/2+15)+'" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="12.5" fill="rgb(242,184,79)">—</text>';
+smallNode(hsup,'Header Supply',null,COLD,'56,189,248');
+smallNode(hret,'Header Return',null,RET,'242,184,79');
+smallNode(schp1,'SCHP Phase I',null,COLD,'56,189,248','hdrval-SCHP1');
+smallNode(schp2,'SCHP Phase II',null,COLD,'56,189,248','hdrval-SCHP2');
+zoneBox(front,'Front',COLD); zoneBox(back,'Back',COLD); zoneBox(eh105,'EH105-106',COLD);
+zoneBox(support,'Support',COLD); zoneBox(sale,'Sale',COLD); zoneBox(exhibition,'Exhibition',COLD);
+
+// [ข้อ2-3] 23/7/69 — ป้ายอุณหภูมิ 4 เส้น คำนวณตำแหน่งกลางเส้นจากพิกัดกล่องจริง (ไม่ hardcode ตัวเลข)
+// [แก้ 31/7/69] ข้อ7 — ระบุทิศทางตามแนวท่อจริง: เส้นแนวตั้ง 3 เส้น -> 'right', เส้นแนวนอน 1 เส้น -> 'above'
+tempChip(ct.x+ct.w/2, (leftPt(chlCond,0.5).y+botPt(ct).y)/2, 'temp-condToCT', HOT, 'right');                  // Condenser -> Cooling Tower (แนวตั้ง)
+tempChip(botPt(cdp).x, (botPt(cdp).y+topPt(chlCond).y)/2, 'temp-cdpToCond', HOT, 'right');                    // Condenser Pump -> Condenser (แนวตั้ง)
+tempChip((rightPt(chlEvap,0.5).x+leftPt(hsup,0.5).x)/2, rightPt(chlEvap,0.5).y, 'temp-evapToHsup', COLD, 'above'); // Evaporator -> Header Supply (แนวนอน)
+tempChip(topPt(pchp).x, (topPt(pchp).y+botPt(chlEvap).y)/2, 'temp-pchpToEvap', RET, 'right');                 // Primary Water Pump -> Evaporator (แนวตั้ง)
+
+document.getElementById('svgMain').innerHTML = frag.d;
+
+(function(){
+  var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+  var syncStatus = document.getElementById('sync-status');
+  var dateInput = document.getElementById('dateFilter');
+  var currentDateStr = null;
+
+  // [แก้ 31/7/69] บั๊ก timezone — เดิมใช้ .toISOString() แปลงเป็น UTC ก่อนเสมอ ถ้าเปิดแดชบอร์ดช่วงเที่ยงคืน-7โมงเช้า (เวลาไทย)
+  // ปุ่ม "วันนี้" จะดึงข้อมูลของ "เมื่อวาน" มาแสดงแทนโดยไม่รู้ตัว (เพราะ UTC ยังเป็นวันก่อนหน้าอยู่) แก้ด้วย local date components ตรงๆ
+  function localDateStr_(d){
+    var y = d.getFullYear();
+    var mo = String(d.getMonth()+1).padStart(2,'0');
+    var da = String(d.getDate()).padStart(2,'0');
+    return y+'-'+mo+'-'+da;
+  }
+  function todayStr(){ return localDateStr_(new Date()); }
+  function yesterdayStr(){ var d=new Date(); d.setDate(d.getDate()-1); return localDateStr_(d); }
+  dateInput.value = todayStr();
+
+  var __kpiRAF = {};
+  function setText(id, val, digits){
+    var el = document.getElementById(id);
+    if(!el) return;
+    digits = digits===undefined?2:digits;
+    var noData = (val === null || val === undefined || val === '' || typeof val !== 'number');
+    if(noData){
+      el.textContent = (val === null || val === undefined || val === '') ? '—' : val;
+      el.removeAttribute('data-raw');
+      if(__kpiRAF[id]) cancelAnimationFrame(__kpiRAF[id]);
+      return;
+    }
+    // [ข้อ B] 23/7/69 — count-up animation แทนการเปลี่ยนตัวเลขวูบเดียว ให้ความรู้สึก "มีชีวิต"
+    var prevRaw = el.getAttribute('data-raw');
+    var from = (prevRaw !== null && !isNaN(parseFloat(prevRaw))) ? parseFloat(prevRaw) : val;
+    el.setAttribute('data-raw', val);
+    if(__kpiRAF[id]) cancelAnimationFrame(__kpiRAF[id]);
+    if(from === val){ el.textContent = fmtNum(val, digits); return; }
+    var start = performance.now(), dur = 650;
+    function step(now){
+      var t = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = fmtNum(from + (val - from) * eased, digits);
+      if(t < 1){ __kpiRAF[id] = requestAnimationFrame(step); }
+    }
+    __kpiRAF[id] = requestAnimationFrame(step);
+  }
+  // [แก้ 31/7/69] ผังวงจร — เปลี่ยนจาก kW เป็น kWh (=kW×2) ตามที่ confirm ทุกกล่อง (CT/CDP/Chiller/PCHP/SCHP1/SCHP2)
+  function setHdr(id, val){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = (val===null||val===undefined) ? '—' : (fmtNum(val*2,2)+' (kWh)');
+  }
+  // [แก้ 23/7/69] ป้ายอุณหภูมิ 2 หน่วย (F เด่น, C รอง) + 3 สถานะ ร้อน/ปกติ/หนาว ตาม threshold จาก Config
+  // [แก้ 31/7/69] ข้อ7 — ไม่มี bg rect แล้ว สถานะร้อน/ปกติ/หนาว แสดงผ่าน "สีตัวเลข" แทนสีพื้นหลัง
+  // [ใหม่ 31/7/69] ข้อ2 — ชื่อเรียกมิตรของเส้นอุณหภูมิแต่ละเส้น สำหรับการ์ด Alerts
+  var TEMP_LABELS = {
+    'temp-condToCT': 'Condenser → CT',
+    'temp-cdpToCond': 'CDP → Condenser',
+    'temp-evapToHsup': 'Evaporator → Hsup',
+    'temp-pchpToEvap': 'PCHP → Evaporator'
+  };
+  window.__tempAlerts = window.__tempAlerts || {};
+
+  function setTemp(idPrefix, cVal, fVal, hotThresholdF, coldBandF){
+    var mainEl = document.getElementById(idPrefix);
+    var subEl = document.getElementById(idPrefix+'-sub');
+    if(!mainEl || !subEl) return;
+    var lineEl = document.getElementById('flowline-'+idPrefix.replace(/^temp-/,'')); // [ใหม่ 23/7/69] เส้นท่อที่จับคู่กับป้ายนี้
+    var origColor = mainEl.getAttribute('data-color') || '#38bdf8';
+    if(fVal===null || fVal===undefined || cVal===null || cVal===undefined || typeof hotThresholdF!=='number'){
+      mainEl.textContent = '—'; subEl.textContent = '—';
+      mainEl.setAttribute('fill', origColor); subEl.setAttribute('fill', 'rgba(255,255,255,.5)');
+      if(lineEl) lineEl.classList.remove('flow-line'); // ไม่มีข้อมูล = เส้นนิ่ง
+      window.__tempAlerts[idPrefix] = { label: TEMP_LABELS[idPrefix]||idPrefix, status:'nodata', text:'ไม่มีข้อมูล' };
+      return;
+    }
+    var band = (typeof coldBandF==='number') ? coldBandF : 5;
+    var coldThreshold = hotThresholdF - band;
+    var status = 'normal';
+    if(fVal > hotThresholdF) status = 'hot';
+    else if(fVal < coldThreshold) status = 'cold';
+    window.__tempAlerts[idPrefix] = { label: TEMP_LABELS[idPrefix]||idPrefix, status:status,
+      text: (status==='hot' ? ('ร้อนไป '+fmtNum(fVal,1)+'°F') : status==='cold' ? ('หนาวไป '+fmtNum(fVal,1)+'°F') : ('ปกติ '+fmtNum(fVal,1)+'°F')) };
+
+    mainEl.textContent = fmtNum(fVal,1) + '°F';
+    subEl.textContent = '(' + fmtNum(cVal,1) + '°C)' + (status==='hot' ? ' ร้อนไป' : status==='cold' ? ' หนาวไป' : '');
+
+    // [แก้ 23/7/69] เส้นท่อ "หยุดนิ่ง" ตามปกติ วิ่ง (flow-line) เฉพาะตอนร้อน/หนาวเกิน threshold เท่านั้น
+    if(lineEl) lineEl.classList.toggle('flow-line', status === 'hot' || status === 'cold');
+
+    // [แก้ 31/7/69] req5 Option A — ปกติ=เขียว, ผิดปกติ(ร้อนหรือหนาว)=ส้ม ทั้งคู่ (เดิมแยกแดง/ฟ้า)
+    if(status === 'hot' || status === 'cold'){
+      mainEl.setAttribute('fill', '#fb923c'); subEl.setAttribute('fill', '#fb923c');
+    } else {
+      mainEl.setAttribute('fill', '#34d399'); subEl.setAttribute('fill', 'rgba(255,255,255,.5)');
+    }
+  }
+
+  // [ใหม่ 31/7/69] ข้อ2 — การ์ด Alerts: ดึงสถานะเส้นอุณหภูมิ 4 เส้น โชว์เฉพาะจุดที่ร้อน/หนาวเกินเกณฑ์
+  function renderAlerts(){
+    var body = document.getElementById('gcAlertsBody');
+    if(!body) return;
+    var order = ['temp-condToCT','temp-cdpToCond','temp-evapToHsup','temp-pchpToEvap'];
+    var abnormal = [];
+    order.forEach(function(k){
+      var a = window.__tempAlerts[k];
+      if(a && (a.status === 'hot' || a.status === 'cold')) abnormal.push(a);
+    });
+    if(abnormal.length === 0){
+      body.innerHTML = '<div class="gc-alert-row ok"><div class="name">ทุกจุดปกติ</div><div class="msg">ไม่มีจุดร้อน/หนาวเกินเกณฑ์</div></div>';
+    } else {
+      body.innerHTML = abnormal.map(function(a){
+        return '<div class="gc-alert-row"><div class="name">'+a.label+'</div><div class="msg">'+a.text+'</div></div>';
+      }).join('');
+    }
+  }
+
+  // [ใหม่ 31/7/69] ข้อ2 — การ์ด System status: นับจำนวนเครื่อง ON (มีค่า)/ทั้งหมด แยกตามกลุ่ม
+  function renderSystemStatus(perUnit){
+    var body = document.getElementById('gcStatusBody');
+    if(!body) return;
+    perUnit = perUnit || {};
+    function count(ids, groupObj){
+      groupObj = groupObj || {};
+      var on = 0;
+      ids.forEach(function(id){ if(groupObj[id] !== undefined && groupObj[id] !== null) on++; });
+      return { on: on, total: ids.length };
+    }
+    var rows = [
+      { label:'Cooling Tower', c: count(CT_IDS, perUnit.CT) },
+      { label:'Condenser Pump', c: count(CDP_IDS, perUnit.CDP) },
+      { label:'Primary Pump', c: count(PCHP_IDS, perUnit.PCHP) },
+      { label:'SCHP I', c: count(SCHP1_IDS, perUnit.SCHP) },
+      { label:'SCHP II', c: count(SCHP2_IDS, perUnit.SCHP) }
+    ];
+    body.innerHTML = rows.map(function(r){
+      return '<div class="gc-stat-row"><span class="grp">'+r.label+'</span><span class="cnt"><span class="on">'+r.c.on+'</span>/<span class="off">'+r.c.total+'</span></span></div>';
+    }).join('');
+  }
+
+  // [ใหม่ 31/7/69] ข้อ2 — การ์ด Top zone: เรียง kW/m² มากสุด 4 อันดับแรก จาก bySchpZone (ข้อมูลวันนี้ ไม่ใช่ trend ย้อนหลัง
+  // เพราะ backend ยังไม่มี history ระดับโซน — ถ้าต้องการ trend จริงต้องเพิ่ม endpoint ใหม่)
+  // [แก้ 31/7/69] เปลี่ยนเป็น kWh/m² (=kW/m²×2) ตามที่ confirm ให้ล้อไปทางเดียวกับกล่องในผัง
+  function renderTopZones(){
+    var body = document.getElementById('gcTopZonesBody');
+    if(!body) return;
+    var data = (window.__bySchpZoneData || []).filter(function(z){ return typeof z.kwPerSqm === 'number'; });
+    if(data.length === 0){ body.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:8px;color:var(--text-faint);">ไม่มีข้อมูล</div>'; return; }
+    data = data.slice().sort(function(a,b){ return b.kwPerSqm - a.kwPerSqm; }).slice(0,4);
+    var max = data[0].kwPerSqm || 1;
+    var colors = ['#f2867a','#f2b84f','#34d399','#38bdf8'];
+    body.innerHTML = data.map(function(z, i){
+      var pct = max ? Math.round((z.kwPerSqm/max)*100) : 0;
+      return '<div class="gc-trend-row"><div class="lbl"><span>'+z.schpZone+'</span><span>'+fmtNum(z.kwPerSqm*2,3)+'</span></div><div class="gc-trend-bar"><i style="width:'+pct+'%;background:'+colors[i%colors.length]+';"></i></div></div>';
+    }).join('');
+  }
+  window.__renderTopZones = renderTopZones; // [ใหม่ 31/7/69] ข้อ2 — expose ให้ loadLocationZone() (คนละ IIFE) เรียกใช้ได้
+
+  async function fetchSummary(dateStr, endDateStr){
+    var url = API_URL + '?action=summary' + (dateStr ? ('&date=' + dateStr) : '') + (endDateStr ? ('&end=' + endDateStr) : '');
+    var res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+
+  // [ข้อ C] 23/7/69 — sparkline 7 วัน + ลูกศรเทรนด์เทียบเมื่อวาน เฉพาะ 4 การ์ดหลัก
+  async function fetchDailyTrend(){
+    var res = await fetch(API_URL + '?action=dailytrend&days=7');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+  function renderSparkline(svgId, values, color){
+    var svg = document.getElementById(svgId);
+    if(!svg) return;
+    var nums = values.filter(function(v){ return typeof v === 'number'; });
+    if(nums.length < 2){ svg.innerHTML = ''; return; }
+    var min = Math.min.apply(null, nums), max = Math.max.apply(null, nums);
+    var range = (max - min) || 1;
+    var w = 100, h = 22, pad = 2;
+    var stepX = (w - pad*2) / (values.length - 1);
+    var pts = values.map(function(v, i){
+      if(typeof v !== 'number') return null;
+      var x = pad + i * stepX;
+      var y = h - pad - ((v - min) / range) * (h - pad*2);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    }).filter(Boolean).join(' ');
+    svg.innerHTML = '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+  function renderTrend(elId, todayVal, yestVal){
+    var el = document.getElementById(elId);
+    if(!el) return;
+    if(typeof todayVal !== 'number' || typeof yestVal !== 'number' || yestVal === 0){
+      el.textContent = ''; el.className = 'kpi-trend'; return;
+    }
+    var diffPct = ((todayVal - yestVal) / Math.abs(yestVal)) * 100;
+    var dir = diffPct > 0.5 ? 'up' : (diffPct < -0.5 ? 'down' : 'flat');
+    el.className = 'kpi-trend ' + dir;
+    el.textContent = (dir==='up'?'▲':(dir==='down'?'▼':'—')) + ' ' + fmtNum(Math.abs(diffPct),1) + '%';
+  }
+  // [แก้ 31/7/69] แปลง CE date string -> Buddhist yyyy-MM-dd (สำหรับหา entry ใน dailytrend/monthlytrend ที่ key เป็น พ.ศ.)
+  function toBuddhistKeyFE_(ceDateStr){
+    var d = new Date(ceDateStr);
+    d.setFullYear(d.getFullYear() + 543);
+    return localDateStr_(d);
+  }
+  var ALL_TREND_IDS = ['trend-chl','trend-tr','trend-ct','trend-cdp','trend-schp1','trend-schp2','trend-totalkw','trend-totalkwplant','trend-eff','trend-thermaleff','trend-cost'];
+  function clearAllTrends_(){
+    ALL_TREND_IDS.forEach(function(id){ var el = document.getElementById(id); if(el){ el.textContent=''; el.className='kpi-trend'; } });
+  }
+  // [แก้ 31/7/69] เปลี่ยนชื่อ+รื้อ logic ทั้งหมด — เดิมรันครั้งเดียวตอนโหลดหน้า ไม่ผูกกับ filter ที่เลือก (บั๊กที่เจอ)
+  // ตอนนี้: โหมดรายวัน เทียบ "วันที่เลือก vs วันก่อนหน้า" / โหมดรายเดือน เทียบ "เดือนที่เลือก vs เดือนก่อนหน้า"
+  async function syncTrends(){
+    try {
+      var dmBtn = document.querySelector('.dm-toggle .dm-btn.active');
+      var isMonth = dmBtn && dmBtn.dataset.mode === 'month';
+
+      if(isMonth){
+        var res = await fetch(API_URL + '?action=monthlytrend&months=24');
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        var data = await res.json();
+        if(!Array.isArray(data) || data.length === 0){ clearAllTrends_(); return; }
+        var targetKey = monthSelect.value || (data[data.length-1] && data[data.length-1].month);
+        var idx = data.findIndex(function(d){ return d.month === targetKey; });
+        if(idx < 0) idx = data.length - 1;
+        var cur = data[idx], prev = idx > 0 ? data[idx-1] : null;
+        if(!prev){ clearAllTrends_(); return; }
+        // [หมายเหตุ] ชื่อฟิลด์ฝั่ง monthlytrend ต่างจาก dailytrend บางตัว (schp1Total ไม่ใช่ schpPhase1Total, totalTr ไม่ใช่ chillerCapacityTr)
+        renderTrend('trend-chl', cur.mainChillerKw, prev.mainChillerKw);
+        renderTrend('trend-tr', cur.totalTr, prev.totalTr);
+        renderTrend('trend-ct', cur.ctTotal, prev.ctTotal);
+        renderTrend('trend-cdp', cur.cdpTotal, prev.cdpTotal);
+        renderTrend('trend-schp1', cur.schp1Total, prev.schp1Total);
+        renderTrend('trend-schp2', cur.schp2Total, prev.schp2Total);
+        renderTrend('trend-totalkw', cur.totalKwAll, prev.totalKwAll);
+        renderTrend('trend-totalkwplant', cur.totalKwh, prev.totalKwh); // Total Plant ไม่มีในรายเดือน ใช้ totalKwh (kWh จริง) แทนที่ใกล้เคียงที่สุด
+        renderTrend('trend-eff', cur.avgKwPerTr, prev.avgKwPerTr);
+        renderTrend('trend-thermaleff', cur.thermalEfficiency, prev.thermalEfficiency);
+        renderTrend('trend-cost', cur.costEstimateThb, prev.costEstimateThb);
+      } else {
+        var trend = await fetchDailyTrend(); // days=7 เดิม (ใช้กับ sparkline ด้วย)
+        var res2 = await fetch(API_URL + '?action=dailytrend&days=45'); // ดึงช่วงกว้างกว่า กันวันที่เลือกเก่ากว่า 7 วันหาไม่เจอ
+        var trend45 = res2.ok ? await res2.json() : trend;
+        if(!Array.isArray(trend) || trend.length === 0){ clearAllTrends_(); return; }
+        renderSparkline('spark-chl', trend.map(function(d){return d.mainChillerKw;}), '#34d399');
+        renderSparkline('spark-tr', trend.map(function(d){return d.chillerCapacityTr;}), '#34d399');
+        renderSparkline('spark-totalkwplant', trend.map(function(d){return d.totalKwPlant;}), '#38bdf8');
+        renderSparkline('spark-eff', trend.map(function(d){return d.plantEfficiency;}), '#38bdf8');
+
+        var targetDay = toBuddhistKeyFE_(currentDateStr || todayStr());
+        var list = Array.isArray(trend45) ? trend45 : trend;
+        var idx2 = list.findIndex(function(d){ return d.date === targetDay; });
+        if(idx2 < 0) idx2 = list.length - 1; // หาไม่เจอ (เช่นวันนั้นไม่มีข้อมูล) fallback ไปวันล่าสุดที่มี
+        var cur2 = list[idx2], prev2 = idx2 > 0 ? list[idx2-1] : null;
+        if(!prev2){ clearAllTrends_(); return; }
+        renderTrend('trend-chl', cur2.mainChillerKw, prev2.mainChillerKw);
+        renderTrend('trend-tr', cur2.chillerCapacityTr, prev2.chillerCapacityTr);
+        renderTrend('trend-totalkwplant', cur2.totalKwPlant, prev2.totalKwPlant);
+        renderTrend('trend-eff', cur2.plantEfficiency, prev2.plantEfficiency);
+        renderTrend('trend-ct', cur2.ctTotal, prev2.ctTotal);
+        renderTrend('trend-cdp', cur2.cdpTotal, prev2.cdpTotal);
+        renderTrend('trend-schp1', cur2.schpPhase1Total, prev2.schpPhase1Total);
+        renderTrend('trend-schp2', cur2.schpPhase2Total, prev2.schpPhase2Total);
+        renderTrend('trend-totalkw', cur2.totalKwAll, prev2.totalKwAll);
+        renderTrend('trend-thermaleff', cur2.thermalEfficiency, prev2.thermalEfficiency);
+        renderTrend('trend-cost', cur2.electricCostThb, prev2.electricCostThb);
+      }
+    } catch(err){ console.error('syncTrends failed:', err.message); /* เงียบไว้ — trend พลาดไม่ควรทำให้ sync หลักพัง */ }
+  }
+
+  async function syncNow(){
+    var syncTextInit = document.getElementById('syncText');
+    if(syncTextInit) syncTextInit.textContent = 'กำลัง sync...';
+    try {
+      var summary = await fetchSummary(currentDateStr, window.__currentEndDateStr);
+      window.__latestPowerSummary = summary;
+      var totals = summary.totals || {};
+      var averages = summary.averages || {};
+      var perUnit = summary.perUnit || {};
+      var latest = summary.latest || {};
+
+      // [ใหม่ 31/7/69] helper คูณ 2 แบบปลอดภัย — null*2 จะได้ 0 ใน JS (ผิดความหมาย) ต้องกันไว้ให้ null ยังเป็น null
+      function x2safe_(v){ return (typeof v === 'number') ? v*2 : v; }
+      // [แก้ 31/7/69] KPI แถวบนสุด — เปลี่ยนเป็น kWh (=kW×2) ตามที่ confirm (CF)
+      setText('kpi-ct', x2safe_(totals.ctTotal), 1);
+      setText('kpi-chl', x2safe_(totals.mainChillerKw), 1);
+      setText('kpi-tr', x2safe_(totals.chillerCapacityTr), 1); // [แก้ 31/7/69] คูณ 2 ตามคำสั่งหัวหน้า (หน่วยยังเป็น TR)
+      setText('kpi-cdp', x2safe_(totals.cdpTotal), 1); // [ใหม่] Condenser Pump KPI (มีค่าอยู่แล้วใน totals แค่ไม่เคยขึ้น KPI card)
+      setText('kpi-schp1', x2safe_(totals.schpPhase1Total), 1);
+      setText('kpi-schp2', x2safe_(totals.schpPhase2Total), 1);
+      setText('kpi-totalkw', x2safe_(totals.totalKwAll), 1);
+      setText('kpi-totalkwplant', x2safe_(totals.totalKwPlant), 1);
+      setText('kpi-eff', averages.plantEfficiency, 3); // [แก้] ทศนิยม 3 ตำแหน่งเฉพาะ Efficiency (kW/TR)
+      setText('kpi-oat', averages.outdoorTemp, 1); // [ใหม่] ข้อ6 — Outdoor Temp KPI
+      // [แก้ 31/7/69] ข้อมูลดิบเป็น fraction (0-1) จริง ต้อง ×100 ก่อนแสดงเป็น % (ยืนยันจากค่าจริงหน้าจอ 0.5%/0.7% ที่ผิดปกติ)
+      setText('kpi-thermaleff', typeof averages.thermalEfficiency === 'number' ? averages.thermalEfficiency * 100 : averages.thermalEfficiency, 1);
+      setText('kpi-rh', typeof averages.outdoorRh === 'number' ? averages.outdoorRh * 100 : averages.outdoorRh, 1);
+      setText('kpi-wetbulb', averages.outdoorWetBulbF, 1); // [ใหม่] ไม่แปลงหน่วย โชว์ F ตรงๆ
+      setText('kpi-cost', totals.electricCostThb, 2); // [ใหม่ 31/7/69] Electric Cost — kWh ของวัน/ช่วงที่เลือก × อัตราค่าไฟของเดือนนั้น
+
+      var chlSub = document.getElementById('kpi-chl-sub');
+      if(chlSub) chlSub.textContent = latest.chillerRunning ? ('เครื่องที่วิ่งอยู่ล่าสุด: ' + latest.chillerRunning) : 'ไม่มีข้อมูลของวันนี้';
+
+      setHdr('hdrval-CoolingTower', totals.ctTotal);
+      setHdr('hdrval-CondenserPump', totals.cdpTotal);
+      setHdr('hdrval-PrimaryWaterPump', totals.pchpTotal);
+      setHdr('hdrval-SCHP1', totals.schpPhase1Total);
+      setHdr('hdrval-SCHP2', totals.schpPhase2Total);
+      setHdr('hdrval-MainChiller', totals.mainChillerKw);
+
+      // [แก้ 23/7/69] ป้ายอุณหภูมิน้ำ 4 เส้น — โชว์ 2 หน่วย + เช็ค threshold ร้อน/หนาว จาก Config
+      var temps = summary.temps || {};
+      var th = summary.tempThresholds || {};
+      setTemp('temp-condToCT', temps.condToCT, temps.condToCT_F, th.condToCT_hotF, th.condToCT_coldBandF);
+      setTemp('temp-cdpToCond', temps.cdpToCond, temps.cdpToCond_F, th.cdpToCond_hotF, th.cdpToCond_coldBandF);
+      setTemp('temp-evapToHsup', temps.evapToHsup, temps.evapToHsup_F, th.evapToHsup_hotF, th.evapToHsup_coldBandF);
+      setTemp('temp-pchpToEvap', temps.pchpToEvap, temps.pchpToEvap_F, th.pchpToEvap_hotF, th.pchpToEvap_coldBandF);
+      renderAlerts(); // [ใหม่ 31/7/69] ข้อ2
+      renderSystemStatus(perUnit); // [ใหม่ 31/7/69] ข้อ2
+
+      // [ใหม่] ถ้า side panel เปิดอยู่ ให้ re-render ด้วยข้อมูลใหม่ (ไม่ต้องปิดแล้วเปิดใหม่)
+      if(currentPanelKey) renderPanel(currentPanelKey);
+
+      var dateStr = summary.date || '';
+      var dateEndStr = summary.dateEnd || null; // [ใหม่ 23/7/69] มีค่าเฉพาะตอนเลือกช่วงวันที่
+      var timeStr = latest.time || '';
+      var liveDot = document.getElementById('liveDot');
+      var syncText = document.getElementById('syncText');
+      if(liveDot) liveDot.style.display = dateStr ? 'inline-block' : 'none';
+      var dateLabel = dateEndStr ? (dateStr + ' \u2192 ' + dateEndStr) : dateStr;
+      if(syncText) syncText.textContent = (dateStr ? ('✅ ' + dateLabel + ' ') : '⚠️ ไม่มีข้อมูล ') + (dateEndStr ? '' : timeStr);
+      var sbFoot = document.getElementById('sbFoot');
+      if(sbFoot) sbFoot.textContent = 'Last sync ' + (timeStr || dateStr || '-');
+    } catch(err){
+      var liveDot2 = document.getElementById('liveDot');
+      var syncText2 = document.getElementById('syncText');
+      if(liveDot2) liveDot2.style.display = 'none';
+      if(syncText2) syncText2.textContent = '❌ sync ล้มเหลว: ' + err.message;
+    }
+  }
+
+  var dateEndInput = document.getElementById('dateFilterEnd');
+  var monthSelect = document.getElementById('monthFilter');
+  var dayControls = document.getElementById('dayModeControls');
+  var monthControls = document.getElementById('monthModeControls');
+
+  // [แก้ 23/7/69 รอบ 9] รวม logic "รีเฟรชทุกอย่างที่ผูกกับวันที่" ไว้จุดเดียว กันลืมเรียกจุดใดจุดหนึ่ง
+  function refreshAllDateDependent(){
+    window.__currentDateStr = currentDateStr;
+    window.__currentEndDateStr = window.__currentEndDateStr || null;
+    syncNow();
+    syncTrends(); // [แก้ 31/7/69] แก้บั๊ก — เดิมไม่เคยเรียกซ้ำตอนเปลี่ยนวันที่/โหมด ทำให้ trend % ค้างอยู่ค่าแรกที่โหลดตลอด
+    if(window.__loadAhuData) window.__loadAhuData();
+    if(window.__loadLocationZone) window.__loadLocationZone();
+  }
+
+  document.querySelectorAll('.date-filter [data-range]').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.date-filter [data-range]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      currentDateStr = b.dataset.range === 'yesterday' ? yesterdayStr() : null;
+      dateInput.value = b.dataset.range === 'yesterday' ? yesterdayStr() : todayStr();
+      dateEndInput.value = ''; // ปุ่มด่วนวันนี้/เมื่อวาน = วันเดียวเสมอ เคลียร์ช่วงทิ้ง
+      window.__currentEndDateStr = null;
+      refreshAllDateDependent();
+    });
+  });
+  dateInput.addEventListener('change', function(){
+    document.querySelectorAll('.date-filter [data-range]').forEach(x=>x.classList.remove('active'));
+    currentDateStr = dateInput.value || null;
+    // [ใหม่] ถ้าวันเริ่มมากกว่าวันสิ้นสุดที่ตั้งไว้ เคลียร์วันสิ้นสุดทิ้งกันเลือกช่วงกลับด้าน
+    if(dateEndInput.value && dateEndInput.value < dateInput.value) dateEndInput.value = '';
+    window.__currentEndDateStr = dateEndInput.value || null;
+    refreshAllDateDependent();
+  });
+  dateEndInput.addEventListener('change', function(){
+    document.querySelectorAll('.date-filter [data-range]').forEach(x=>x.classList.remove('active'));
+    window.__currentEndDateStr = dateEndInput.value || null;
+    refreshAllDateDependent();
+  });
+
+  // [ใหม่ 23/7/69] Toggle รายวัน/รายเดือน — สลับชุดควบคุมที่โชว์ ไม่ได้เปลี่ยนวิธีคำนวณ (ยังยิง summary/locationzone เดิม)
+  document.querySelectorAll('.dm-toggle .dm-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.dm-toggle .dm-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      var isMonth = btn.dataset.mode === 'month';
+      dayControls.style.display = isMonth ? 'none' : 'flex';
+      monthControls.style.display = isMonth ? 'flex' : 'none';
+      if(isMonth && monthSelect.options.length && monthSelect.value){
+        monthSelect.dispatchEvent(new Event('change')); // โหลดช่วงของเดือนที่ select ค้างอยู่ทันที
+      } else if(!isMonth){
+        // [แก้ 31/7/69] เดิมสลับกลับมา "รายวัน" ไม่มีการ refresh อะไรเลย (currentDateStr/trend ค้างจากโหมดเดือน)
+        window.__currentEndDateStr = null;
+        dateEndInput.value = '';
+        refreshAllDateDependent();
+      }
+    });
+  });
+
+  // [ใหม่ 23/7/69] เติม dropdown เดือนที่มีข้อมูลจริง จาก endpoint เดียวกับ Monthly Report
+  async function populateMonthFilter(){
+    try {
+      var res = await fetch(API_URL + '?action=monthlytrend&months=12');
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      if(!Array.isArray(data) || data.length === 0) return;
+      monthSelect.innerHTML = data.slice().reverse().map(function(d){
+        return '<option value="'+d.month+'">'+monthLabelFull(d.month)+(d.isCurrent?' (ล่าสุด)':'')+'</option>';
+      }).join('');
+    } catch(err){ /* เงียบไว้ — dropdown ว่างแค่นั้น ไม่ต้องพังทั้งหน้า */ }
+  }
+  function monthLabelFull(mk){
+    var th = {'01':'มกราคม','02':'กุมภาพันธ์','03':'มีนาคม','04':'เมษายน','05':'พฤษภาคม','06':'มิถุนายน','07':'กรกฎาคม','08':'สิงหาคม','09':'กันยายน','10':'ตุลาคม','11':'พฤศจิกายน','12':'ธันวาคม'};
+    var parts = mk.split('-'); // 'yyyy-MM' ปี พ.ศ.
+    return (th[parts[1]]||parts[1]) + ' ' + parts[0];
+  }
+  // แปลงเดือน พ.ศ. (จาก backend) -> ช่วงวันที่ ค.ศ. (ที่ frontend ใช้คุยกับ API เสมอ)
+  function monthKeyToCeRange(mk){
+    var parts = mk.split('-');
+    var yBE = Number(parts[0]), m = Number(parts[1]);
+    var yCE = yBE - 543;
+    var first = new Date(yCE, m-1, 1);
+    var last = new Date(yCE, m, 0); // วันสุดท้ายของเดือน
+    var todayCE = new Date();
+    if(last > todayCE) last = todayCE; // กันเลือกเดือนปัจจุบันแล้ววิ่งไปวันในอนาคตที่ยังไม่มีข้อมูล
+    // [แก้ 31/7/69] บั๊ก timezone — ห้ามใช้ .toISOString() เพราะแปลงเป็น UTC ก่อนเสมอ ทำให้วันที่เลื่อนไป 1 วัน
+    // (เที่ยงคืนไทย UTC+7 พอแปลง UTC จะกลายเป็นวันก่อนหน้า) ใช้ localDateStr_ ตัวเดียวกับ todayStr/yesterdayStr แทน
+    return { start: localDateStr_(first), end: localDateStr_(last) };
+  }
+  monthSelect.addEventListener('change', function(){
+    if(!monthSelect.value) return;
+    var range = monthKeyToCeRange(monthSelect.value);
+    currentDateStr = range.start;
+    dateInput.value = range.start;
+    dateEndInput.value = range.end;
+    window.__currentEndDateStr = range.end;
+    refreshAllDateDependent();
+  });
+  populateMonthFilter();
+
+  syncNow();
+  syncTrends();
+  setInterval(syncNow, 600000); // [แก้ตามที่ confirm] auto-refresh ทุก 10 นาที (ลดจาก 60 วิ เพื่อลดการเรียก API)
+  setInterval(syncTrends, 600000); // [ข้อ C] 23/7/69 — sparkline/เทรนด์ ไม่ต้องขึ้นบ่อยเท่า ใช้รอบเดียวกันพอ
+  window.__syncCircuitNow = syncNow;
+})();
+
+// [แก้ - รวมโปรเจค] Location Zone panel — เปลี่ยนจาก SCHP-nested เป็น EVENT-based flat list
+// (byLocationZoneFlat จาก backend ใหม่ — ดู powerdata.gs getLocationZoneBreakdown)
+(function(){ ... })(); )
+ *
+ * เปลี่ยนจากเดิม 4 จุด:
+ *   1) ใช้ data.byLocationZoneFlat แทน data.bySchpZoneArea + data.byLocationZone
+ *   2) การ์ดสรุปบน (TR/ตร.ม., kWh/ตร.ม., Total Area) คำนวณจาก byLocationZoneFlat
+ *      เอง (sum แล้วหารพื้นที่รวม) แทนการอ่าน data.trPerSqmTotal ฯลฯ ที่ตอนนี้
+ *      เป็น null/0 เพราะพึ่ง SCHP mapping เดิมที่เราตัดออกจาก panel นี้แล้ว
+ *   3) Render เป็น flat list + bar เทียบสัดส่วน + highlight อันดับ 1 +
+ *      โชว์ top 5 ก่อน มีปุ่ม "ดูเพิ่มเติม" กดขยาย (ตาม mockup ที่ confirm)
+ *   4) __syncLzAccordion (คลิกกล่อง SCHP ในผัง → เด้งไปหา zone ใน panel)
+ *      ต้อง "ปิดการเชื่อม" ชั่วคราว เพราะกล่องในผังยังเป็น SCHP_Zone
+ *      (Front/Back/ฯลฯ) แต่ panel นี้เป็น Location_Zone แล้ว คนละชื่อกัน
+ *      จับคู่กันไม่ได้อีกต่อไป — ไม่ error แค่ไม่มีอะไรเกิดขึ้นตอนคลิก
+ *      (คุยเพิ่มทีหลังได้ถ้าอยากทำ mapping ใหม่)
+ *
+ * ไม่แตะ: window.__bySchpZoneData / window.__bySchpZoneAreaData ยังคง
+ * expose เหมือนเดิม เพราะ "Top zone" การ์ด (gap column) + popup คลิก SCHP
+ * ยังใช้อยู่ คนละส่วนกับ panel นี้
+ * ==============================================================
+ */
+(function(){
+  var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+  // [สำคัญ] อย่าลืมเปลี่ยน API_URL เป็น URL deploy ของโปรเจคใหม่ (ไฟล์ Operational)
+  // ตอนย้ายไป repo ใหม่จริง — อันนี้ยังเป็น URL เดิมของโปรเจค BITEC เก่า
+  var statusEl = document.getElementById('loczone-sync-status');
+
+  var LZ_TOP_N = 5; // จำนวนที่โชว์ก่อนกดขยาย ตามที่ confirm ใน mockup
+  var lzExpanded = false; // state เก็บว่ากด "ดูเพิ่มเติม" ไปหรือยัง (reset ทุกครั้งที่ sync ใหม่)
+
+  window.__toggleLzExpand = function(){
+    lzExpanded = !lzExpanded;
+    if (window.__lastLzFlat) renderLzFlat_(window.__lastLzFlat);
+  };
+
+  // [แก้] คลิกกล่อง SCHP ในผัง — panel นี้ไม่ผูกกับ SCHP แล้ว จึงไม่มีอะไรให้ sync
+  // เก็บฟังก์ชันไว้เฉยๆ กัน error จากที่อื่นที่ยังเรียกอยู่ (เช่น onclick กล่องในผัง)
+  window.__syncLzAccordion = function(zoneName){
+    // no-op — Location Zone panel ตัดการพึ่งพา SCHP_Zone ออกแล้ว (ดูคอมเมนต์หัวไฟล์)
+  };
+
+  function colorForRank_(idx, total){
+    if(total <= 1) return '#38bdf8';
+    var pct = idx / (total - 1);
+    if(pct <= 1/3) return '#34d399';
+    if(pct <= 2/3) return '#f2b84f';
+    return '#f2867a';
+  }
+
+  function renderLzFlat_(list){
+    var accEl = document.getElementById('loczoneAccordion');
+    if(!accEl) return;
+
+    if(!list.length){
+      accEl.innerHTML = '<div style="color:var(--text-faint); padding:10px 2px; font-family:JetBrains Mono,monospace; font-size:9px;">ไม่มีข้อมูลของวันที่เลือก (ไม่มี event วันนี้)</div>';
+      return;
+    }
+
+    var maxKwh = list[0].kwhAreaBased || 0; // list เรียง kWh มาก→น้อยจาก backend อยู่แล้ว
+    var visible = lzExpanded ? list : list.slice(0, LZ_TOP_N);
+    var hiddenCount = list.length - visible.length;
+
+    var html = '';
+    visible.forEach(function(zone, idx){
+      var isTop = (idx === 0);
+      var kwhTxt = (typeof zone.kwhAreaBased === 'number') ? fmtNum(zone.kwhAreaBased,1) : '—';
+      var areaTxt = (typeof zone.areaSqm === 'number') ? fmtNum(zone.areaSqm,0) : '—';
+      var pct = (maxKwh > 0 && typeof zone.kwhAreaBased === 'number') ? Math.round((zone.kwhAreaBased/maxKwh)*100) : 0;
+      var barColor = isTop ? '#38bdf8' : colorForRank_(idx, list.length);
+
+      html += '<div class="lz-card-flat"'
+            + ' style="padding:7px 9px; border-radius:7px; margin-bottom:5px;'
+            + ' background:' + (isTop ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.03)') + ';'
+            + ' border:1px solid ' + (isTop ? 'rgba(56,189,248,0.5)' : 'var(--glass-border)') + ';"'
+            + ' title="' + zone.locationZone + ': ' + kwhTxt + ' kWh · ' + areaTxt + ' m²">'
+            +   '<div style="display:flex; justify-content:space-between; align-items:baseline; font-family:JetBrains Mono,monospace;">'
+            +     '<span style="font-size:10px; color:var(--text-normal);">' + zone.locationZone + '</span>'
+            +     '<span style="font-size:11px; font-weight:600; color:' + barColor + ';">' + kwhTxt + '<span style="font-size:7px; color:var(--text-faint);"> kWh</span></span>'
+            +   '</div>'
+            +   '<div style="height:4px; border-radius:2px; background:rgba(255,255,255,0.06); margin-top:4px; overflow:hidden;">'
+            +     '<div style="height:100%; width:' + pct + '%; background:' + barColor + '; border-radius:2px;"></div>'
+            +   '</div>'
+            +   '<div style="font-family:JetBrains Mono,monospace; font-size:7px; color:var(--text-faint); margin-top:2px;">' + areaTxt + ' m²</div>'
+            + '</div>';
+    });
+
+    if(hiddenCount > 0 || lzExpanded){
+      html += '<button onclick="window.__toggleLzExpand()" style="width:100%; margin-top:2px; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--glass-border); color:var(--text-faint); font-family:JetBrains Mono,monospace; font-size:9px; cursor:pointer;">'
+            + (lzExpanded ? '▴ ย่อกลับ' : ('▾ ดูเพิ่มเติม (' + hiddenCount + ' zone)'))
+            + '</button>';
+    }
+
+    accEl.innerHTML = html;
+  }
+
+  async function loadLocationZone(){
+    if(statusEl) statusEl.textContent = 'กำลัง sync...';
+    try {
+      var dateParam = window.__currentDateStr ? ('&date=' + window.__currentDateStr) : '';
+      if(window.__currentEndDateStr) dateParam += '&end=' + window.__currentEndDateStr;
+      var res = await fetch(API_URL + '?action=locationzone' + dateParam);
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+
+      // [ไม่แตะ] ยัง expose ให้ "Top zone" การ์ด + popup คลิก SCHP ใช้เหมือนเดิม
+      var bySchpZone = Array.isArray(data.bySchpZone) ? data.bySchpZone : [];
+      window.__bySchpZoneData = bySchpZone;
+      if(window.__renderTopZones) window.__renderTopZones();
+      var bySchpZoneArea = Array.isArray(data.bySchpZoneArea) ? data.bySchpZoneArea : [];
+      window.__bySchpZoneAreaData = bySchpZoneArea;
+
+      // [ใหม่] Location Zone panel — ใช้ byLocationZoneFlat (event-based) ล้วนๆ
+      var byLocationZoneFlat = Array.isArray(data.byLocationZoneFlat) ? data.byLocationZoneFlat : [];
+      window.__lastLzFlat = byLocationZoneFlat;
+      lzExpanded = false; // reset ทุกครั้งที่โหลดวันใหม่
+
+      // การ์ดสรุปบน — คำนวณเองจาก byLocationZoneFlat (ไม่พึ่ง data.trPerSqmTotal เดิมที่พึ่ง SCHP)
+      var totalArea_ = byLocationZoneFlat.reduce(function(s,z){ return s + (z.areaSqm||0); }, 0);
+      var totalKwh_  = byLocationZoneFlat.reduce(function(s,z){ return s + (z.kwhAreaBased||0); }, 0);
+      var totalTr_   = byLocationZoneFlat.reduce(function(s,z){ return s + (z.trApprox||0); }, 0);
+
+      var trTotalEl = document.getElementById('lz-tr-total-val');
+      if(trTotalEl) trTotalEl.textContent = totalArea_ ? fmtNum(totalTr_/totalArea_,3) : '—';
+      var kwhTotalEl = document.getElementById('lz-kwh-total-val');
+      if(kwhTotalEl) kwhTotalEl.textContent = totalArea_ ? fmtNum(totalKwh_/totalArea_,3) : '—';
+      var areaTotalEl = document.getElementById('lz-area-total-val');
+      if(areaTotalEl) areaTotalEl.textContent = totalArea_ ? fmtNum(totalArea_,0) : '—';
+
+      renderLzFlat_(byLocationZoneFlat);
+
+      if(statusEl) statusEl.textContent = '✅ sync ล่าสุด' + (data.date ? (' · ' + data.date) : '');
+    } catch(err){
+      if(statusEl) statusEl.textContent = '❌ sync ล้มเหลว: ' + err.message;
+    }
+  }
+
+  window.__loadLocationZone = loadLocationZone;
+  loadLocationZone();
+})();
+
+// [ใหม่ 23/7/69] Monthly Report — Executive Summary (แทนที่ตารางเดิมทั้งหมด)
+// ยืนยันแล้วในแชท: rate 4.26 บาท/kWh, เทียบเดือนนี้(สะสม)กับเดือนก่อนแบบเต็มเดือน, ย้อนหลัง 6 เดือน
+(function(){
+  var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+  var statusEl = document.getElementById('monthly-sync-status');
+  var monthLabelTH = {'01':'ม.ค.','02':'ก.พ.','03':'มี.ค.','04':'เม.ย.','05':'พ.ค.','06':'มิ.ย.','07':'ก.ค.','08':'ส.ค.','09':'ก.ย.','10':'ต.ค.','11':'พ.ย.','12':'ธ.ค.'};
+  function monthLabel(key){ var mm = key.slice(5,7); return (monthLabelTH[mm]||mm) + '-' + key.slice(2,4); }
+
+  async function loadMonthlyReport(){
+    if(statusEl) statusEl.textContent = 'กำลัง sync...';
+    try {
+      var res = await fetch(API_URL + '?action=monthlytrend&months=6');
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      if(!Array.isArray(data) || data.length === 0){ if(statusEl) statusEl.textContent = '⚠️ ไม่พบข้อมูล'; return; }
+
+      var n = data.length;
+      var current = data[n-1];
+      var prev = n >= 2 ? data[n-2] : null;
+
+      // KPI tiles
+      document.getElementById('mr-kwh').textContent = fmtNum(current.totalKwh);
+      document.getElementById('mr-kwtr').textContent = current.avgKwPerTr !== null ? fmtNum(current.avgKwPerTr) : '—';
+      document.getElementById('mr-trsqm').textContent = current.trPerSqm !== null ? fmtNum(current.trPerSqm) : '—';
+      document.getElementById('mr-kwsqm').textContent = current.kwPerSqm !== null ? fmtNum(current.kwPerSqm) : '—'; // [ใหม่]
+      document.getElementById('mr-areaused').textContent = current.areaUsedAvgSqm !== null ? fmtNum(current.areaUsedAvgSqm,0) : '—'; // [ใหม่]
+      document.getElementById('mr-cost').textContent = current.costEstimateThb !== null ? fmtNum(current.costEstimateThb) : '—';
+
+      var trendEl = document.getElementById('mr-trend');
+      var bannerEl = document.getElementById('mr-summary');
+      if(prev && typeof prev.totalKwh === 'number' && prev.totalKwh !== 0 && typeof current.totalKwh === 'number'){
+        var diffPct = ((current.totalKwh - prev.totalKwh) / Math.abs(prev.totalKwh)) * 100;
+        var up = diffPct >= 0;
+        trendEl.textContent = (up ? '▲ ' : '▼ ') + fmtNum(Math.abs(diffPct),1) + '%';
+        trendEl.style.color = up ? '#f2867a' : '#34d399';
+        bannerEl.textContent = 'เดือนนี้ใช้ไฟสะสม ' + fmtNum(current.totalKwh) + ' kWh ' + (up ? 'สูงกว่า' : 'ต่ำกว่า') +
+          'เดือนก่อน (' + fmtNum(prev.totalKwh) + ' kWh) อยู่ ' + fmtNum(Math.abs(diffPct),1) + '%';
+        bannerEl.className = 'mr-summary-banner' + (up ? '' : ' down');
+      } else {
+        trendEl.textContent = '—';
+        bannerEl.textContent = 'ยังไม่มีข้อมูลเดือนก่อนหน้าสำหรับเทียบ';
+        bannerEl.className = 'mr-summary-banner';
+      }
+
+      // [แก้ 31/7/69] Axis chart ใหม่ — มีแกน Y/X, gridline, legend, ไฮไลต์เดือนปัจจุบัน (ตามภาพอ้างอิงที่เลือก)
+      // [แก้ 31/7/69] เปลี่ยนจาก axis line chart เป็น Horizontal Bar (Option 2 ที่เลือก) — ไม่มีปัญหายืด/บิดเบี้ยวอีกเลย
+      function renderHbarChart_(elId, getVal, digits, colorMain, colorCurrent){
+        var vals = data.map(getVal).filter(function(v){ return typeof v === 'number'; });
+        var max = vals.length ? Math.max.apply(null, vals) : 1;
+        if(max <= 0) max = 1;
+        var html = data.map(function(d){
+          var v = getVal(d);
+          var hasVal = typeof v === 'number';
+          var pct = hasVal ? Math.max(2, Math.round((v/max)*100)) : 0;
+          var fillColor = d.isCurrent ? colorCurrent : colorMain;
+          return '<div class="hbar-row'+(d.isCurrent?' current':'')+'">'+
+            '<div class="hbar-m">'+monthLabel(d.month)+(d.isCurrent?'*':'')+'</div>'+
+            '<div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%; background:linear-gradient(90deg,'+fillColor+','+fillColor+'88);"></div></div>'+
+            '<div class="hbar-val">'+(hasVal?fmtNum(v,digits):'—')+'</div>'+
+          '</div>';
+        }).join('');
+        var el = document.getElementById(elId);
+        if(el) el.innerHTML = html;
+      }
+      renderHbarChart_('mr-bar-chart', function(d){ return d.totalKwh; }, 0, '#38bdf8', '#22d3ee');
+      renderHbarChart_('mr-line-chart', function(d){ return d.avgKwPerTr; }, 2, '#34d399', '#22d3ee');
+
+      // [แก้ 31/7/69] สลับตาราง — เดือน=แถว, metric=คอลัมน์ (รองรับข้อมูลสะสมหลายเดือนได้ดีกว่า ไม่ต้องเบียดคอลัมน์)
+      var metricCols = [
+        { label:'Total (kWh)', getter:function(d){ return d.totalKwh; }, digits:2 },
+        { label:'Total (kW)', getter:function(d){ return d.totalKwAll; }, digits:2 }, // [ใหม่ 31/7/69]
+        { label:'Total (TR)', getter:function(d){ return d.totalTr; }, digits:2 },
+        { label:'kW/TR เฉลี่ย', getter:function(d){ return d.avgKwPerTr; }, digits:2 },
+        { label:'พื้นที่ใช้งานรวม (ตร.ม.)', getter:function(d){ return d.areaUsedTotalSqm; }, digits:0 }, // [แก้ 31/7/69] เปลี่ยนเป็น sum ตรงกับตัวหารจริง
+        { label:'TR ต่อ ตร.ม.', getter:function(d){ return d.trPerSqm; }, digits:2 },
+        { label:'kWh ต่อ ตร.ม.', getter:function(d){ return d.kwPerSqm; }, digits:2 },
+        { label:'ค่าไฟประมาณการ (บาท)', getter:function(d){ return d.costEstimateThb; }, digits:2,
+          extra:function(d){ // [ใหม่ 31/7/69] badge อัตราค่าไฟที่ใช้จริงของเดือนนั้น (ตัวเลขล้วน ไม่มี @ นำหน้า)
+            return (typeof d.electricityRateUsed === 'number')
+              ? ' <span style="font-family:\'JetBrains Mono\',monospace; font-size:8px; font-weight:700; padding:2px 6px; border-radius:20px; background:rgba(242,184,79,.15); color:#f2b84f; border:1px solid rgba(242,184,79,.35); margin-left:6px;">'+fmtNum(d.electricityRateUsed,2)+'</span>'
+              : '';
+          }
+        }
+      ];
+      var headHtml = '<tr><th>เดือน</th>' + metricCols.map(function(c){ return '<th style="text-align:right;">'+c.label+'</th>'; }).join('') + '</tr>';
+      document.getElementById('monthly-thead').innerHTML = headHtml;
+
+      document.getElementById('monthly-tbody').innerHTML = data.map(function(d){
+        var rowStyle = d.isCurrent ? ' style="color:#22d3ee;font-weight:700;"' : '';
+        var cells = metricCols.map(function(c){
+          var v = c.getter(d);
+          var txt = (v===null||v===undefined) ? '—' : fmtNum(v, c.digits);
+          var extraHtml = c.extra ? c.extra(d) : '';
+          return '<td style="text-align:right;">'+txt+extraHtml+'</td>';
+        }).join('');
+        return '<tr'+rowStyle+'><td>'+monthLabel(d.month)+(d.isCurrent?'*':'')+'</td>'+cells+'</tr>';
+      }).join('');
+
+      if(statusEl) statusEl.textContent = '✅ sync ล่าสุด · ' + n + ' เดือน';
+    } catch(err){
+      if(statusEl) statusEl.textContent = '❌ sync ล้มเหลว: ' + err.message;
+    }
+  }
+  loadMonthlyReport();
+  window.__loadMonthlyReport = loadMonthlyReport;
+})();
+
+// [แก้ 23/7/69] ดึง roster ของ hall/AHU จาก getStructure() จริงแล้ว (แก้งานค้างเดิม — เคย hardcode ไว้)
+// ทั้ง hall, phase, wing, และรายชื่อ AHU unit id มาจากชีต AHU_Floor ตรงๆ ไม่มี hardcode รายชื่อในหน้าเว็บอีกแล้ว
+var ALL_HALLS = []; // เติมค่าหลัง fetch เสร็จ — ใช้ต่อโดย loadAhuData() (kW/m² + event) ด้านล่าง
+function hallLocationKey(name){ return 'BITEC-' + name.replace(/\s+/g,'-'); }
+function hallCard(h){
+  var loc = hallLocationKey(h.hall);
+  var phaseNum = (h.phase === 'p2') ? '2' : '1';
+  var pills = h.ahus.map(function(u){
+    return '<div class="pill" title="ยังไม่มีข้อมูลสถานะ real-time"><span class="pill-dot"></span>'+u+'</div>';
+  }).join('');
+  return '<div class="hall-card '+h.phase+'" id="hc-'+loc+'" data-location="'+loc+'">'+
+    '<div class="hc-head"><span class="hc-name">'+h.hall+'</span>'+
+      '<div style="display:flex; gap:4px; flex-shrink:0;">'+
+        '<span class="hc-phase">P'+phaseNum+'</span>'+
+        '<span class="hc-event-badge" id="hcevent-'+loc+'" style="display:none;">EVENT</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="hc-kwm2"><span class="val" id="hckw-'+loc+'" style="color:var(--text-faint);">—</span><span class="unit">(kWh)</span></div>'+
+    '<div class="hc-count">'+h.ahus.length+' หน่วย</div><div class="pill-row">'+pills+'</div></div>';
+}
+
+(function(){
+  var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+  var WING_ORDER = ['Exhibition Wing', 'Convention Wing']; // ลำดับที่รู้จักโชว์ก่อน ที่เหลือ (เช่น 'อื่นๆ') ต่อท้าย
+
+  async function loadAhuStructure(){
+    try {
+      var res = await fetch(API_URL + '?action=structure');
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      var halls = (data.ahu && Array.isArray(data.ahu.halls)) ? data.ahu.halls : [];
+      ALL_HALLS = halls;
+
+      var groups = {}, order = [];
+      halls.forEach(function(h){
+        var wing = h.wing || 'อื่นๆ';
+        if(!groups[wing]){ groups[wing] = []; order.push(wing); }
+        groups[wing].push(h);
+      });
+      order.sort(function(a,b){
+        var ia = WING_ORDER.indexOf(a); if(ia === -1) ia = 99;
+        var ib = WING_ORDER.indexOf(b); if(ib === -1) ib = 99;
+        return ia - ib;
+      });
+
+      document.getElementById('hallScroll').innerHTML = order.map(function(wing){
+        return '<div class="wing-label">'+wing.toUpperCase()+'</div><div class="hall-cards">'+groups[wing].map(hallCard).join('')+'</div>';
+      }).join('');
+
+      var pc = (data.ahu && data.ahu.phaseCount) || { p1: 0, p2: 0 };
+      var p1El = document.getElementById('ahu-p1-count'), p2El = document.getElementById('ahu-p2-count');
+      if(p1El) p1El.textContent = pc.p1;
+      if(p2El) p2El.textContent = pc.p2;
+      var totalEl = document.getElementById('ahu-total-count'), hallCountEl = document.getElementById('ahu-hall-count');
+      if(totalEl) totalEl.textContent = (data.ahu && data.ahu.totalCount) || 0;
+      if(hallCountEl) hallCountEl.textContent = halls.length + ' hall';
+
+      // roster พร้อมแล้ว (มี element ในหน้าให้เติมค่า) ค่อยดึง kW/m² + event มาเติมทับ
+      if(window.__loadAhuData) window.__loadAhuData();
+    } catch(err){
+      document.getElementById('hallScroll').innerHTML = '<div style="color:var(--text-faint); padding:20px; font-family:JetBrains Mono,monospace; font-size:11px;">โหลดรายชื่อ hall ไม่สำเร็จ: '+err.message+'</div>';
+    }
+  }
+  loadAhuStructure();
+})();
+
+// [ใหม่ 23/7/69] kW ต่อพื้นที่ + event badge บนการ์ด hall — ใช้ ?action=zonekw + ?action=eventlocations
+(function(){
+  var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+
+  // สีไล่ตามลำดับ kW/m² จริงในชุดข้อมูลนั้นๆ (percentile) ไม่ hardcode threshold ตายตัว
+  // เพราะยังไม่รู้ค่ามาตรฐานที่เหมาะสมของอาคารนี้ — สูงสุด 1/3 = แดง, กลาง = เหลือง, ต่ำสุด = เขียว
+  function colorForRank_(idx, total){
+    if(total <= 1) return '#38bdf8';
+    var pct = idx / (total - 1);
+    if(pct <= 1/3) return '#f2867a';
+    if(pct <= 2/3) return '#f2b84f';
+    return '#34d399';
+  }
+
+  async function loadAhuData(){
+    if(!ALL_HALLS.length) return; // roster ยังไม่พร้อม (loadAhuStructure จะเรียกซ้ำให้เองตอนพร้อม)
+    try {
+      var dateParam = window.__currentDateStr ? ('&date=' + window.__currentDateStr) : '';
+      var results = await Promise.all([
+        fetch(API_URL + '?action=zonekw' + dateParam).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }),
+        fetch(API_URL + '?action=eventlocations' + dateParam).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      ]);
+      var zoneData = results[0] || {};
+      var eventData = results[1] || {};
+      var byLocation = Array.isArray(zoneData.byLocation) ? zoneData.byLocation : [];
+      var eventLocations = eventData.locations || {};
+
+      var kwhByLoc = {};
+      byLocation.forEach(function(l){ kwhByLoc[l.location] = l.kwh; });
+      var ranked = byLocation.filter(function(l){ return typeof l.kwh === 'number'; })
+        .sort(function(a,b){ return b.kwh - a.kwh; });
+      var rankIndex = {};
+      ranked.forEach(function(l, i){ rankIndex[l.location] = i; });
+
+      ALL_HALLS.forEach(function(h){
+        var loc = hallLocationKey(h.hall);
+        var kwEl = document.getElementById('hckw-'+loc);
+        var cardEl = document.getElementById('hc-'+loc);
+        var kwh = kwhByLoc[loc];
+        // [แก้ 31/7/69] req8 — ใช้หลักเดียวกับ Location Zone panel: โซนไม่ active (ไม่มี kwh เพราะไม่มี SCHP รันวันนั้น) ซ่อนการ์ดไปเลย ไม่ใช่แค่จาง
+        if(cardEl) cardEl.style.display = (typeof kwh === 'number') ? '' : 'none';
+        if(kwEl){
+          if(typeof kwh === 'number'){
+            kwEl.textContent = fmtNum(kwh,1);
+            kwEl.style.color = colorForRank_(rankIndex[loc], ranked.length);
+          } else {
+            kwEl.textContent = '—';
+            kwEl.style.color = 'var(--text-faint)';
+          }
+        }
+        var evEl = document.getElementById('hcevent-'+loc);
+        var events = eventLocations[loc];
+        if(evEl){
+          if(Array.isArray(events) && events.length){
+            evEl.style.display = '';
+            evEl.title = events.join('\n');
+            evEl.textContent = events.length > 1 ? ('EVENT (' + events.length + ')') : 'EVENT';
+          } else {
+            evEl.style.display = 'none';
+          }
+        }
+      });
+
+      // [แก้ 31/7/69] KPI tile ด้านบน — ใช้ kwhPerSqmTotal (ค่าคงที่รวมทั้งอาคาร) ตรงๆ จาก backend ไม่ต้องเฉลี่ยเอง
+      var avgKwEl = document.getElementById('ahu-avgkwm2');
+      if(avgKwEl){
+        avgKwEl.textContent = (typeof zoneData.kwhPerSqmTotal === 'number') ? fmtNum(zoneData.kwhPerSqmTotal,3) : '—';
+      }
+      var eventCountEl = document.getElementById('ahu-event-count');
+      if(eventCountEl){
+        var hallsWithEvent = new Set();
+        ALL_HALLS.forEach(function(h){
+          var loc = hallLocationKey(h.hall);
+          var ev = eventLocations[loc];
+          if(Array.isArray(ev) && ev.length) hallsWithEvent.add(loc);
+        });
+        eventCountEl.textContent = hallsWithEvent.size;
+      }
+    } catch(err){
+      // เงียบไว้ — ถ้าดึงไม่ได้ การ์ดยังโชว์ roster ปกติ แค่ไม่มี kW/m²/event badge
+      console.error('loadAhuData failed:', err.message);
+    }
+  }
+
+  window.__loadAhuData = loadAhuData;
+
+  // [ใหม่ 31/7/69] สรุปเดือนนี้ (kWh สะสมต่อ location) — คงที่ "เดือนปัจจุบัน" เสมอ ไม่ผูกกับ date filter บนสุด
+  async function loadAhuMonthSummary(){
+    var el = document.getElementById('ahuMonthSummary');
+    if(!el) return;
+    try {
+      var now = new Date();
+      function localStr_(d){ var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+da; }
+      var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      var res = await fetch(API_URL + '?action=zonekw&date=' + localStr_(monthStart) + '&end=' + localStr_(now));
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      var data = await res.json();
+      var byLocation = Array.isArray(data.byLocation) ? data.byLocation : [];
+      var ranked = byLocation.filter(function(l){ return typeof l.kwh === 'number'; }).sort(function(a,b){ return b.kwh - a.kwh; });
+      if(ranked.length === 0){ el.textContent = 'ไม่มีข้อมูล'; return; }
+      el.innerHTML = ranked.map(function(l){
+        var name = String(l.location||'').replace('BITEC-','');
+        return '<div class="month-summary-row"><span class="n">'+name+'</span><span class="v">'+fmtNum(l.kwh,1)+'</span></div>';
+      }).join('');
+    } catch(err){
+      el.textContent = 'โหลดไม่สำเร็จ';
+      console.error('loadAhuMonthSummary failed:', err.message);
+    }
+  }
+  loadAhuMonthSummary();
+})();
+</script>
+</body>
+</html>
