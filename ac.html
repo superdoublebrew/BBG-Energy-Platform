@@ -126,6 +126,11 @@ body{background:#0D1117;color:#E6EDF3;min-height:100vh}
 
   <div class="sec-divider"><span class="sec-divider-label">สำหรับช่าง</span><div class="sec-line"></div></div>
 
+  <div class="card">
+    <div class="card-hd"><div class="card-hd-title">พยากรณ์ Peak load 7 วันข้างหน้า</div></div>
+    <div id="forecastStrip" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:10px 14px;"></div>
+  </div>
+
   <div class="metric-grid">
     <div class="metric-card"><div class="metric-lbl">Events วันนี้</div><div class="metric-val" id="mEvents">—</div><div class="metric-sub" id="mEventsSub">—</div></div>
     <div class="metric-card"><div class="metric-lbl">Zones ที่ใช้</div><div class="metric-val" id="mZones">—</div><div class="metric-sub" id="mZonesSub">—</div></div>
@@ -224,7 +229,7 @@ setInterval(updateTime, 1000); updateTime();
 (function init(){
   var now = new Date();
   var from = new Date(now); from.setDate(from.getDate()-1);
-  var to = new Date(now); to.setDate(to.getDate()+3);
+  var to = new Date(now); to.setDate(to.getDate()+7); // [แก้ - ยืนยันล่าสุด] ขยายเป็น +7 วัน ให้ครอบคลุมแถบพยากรณ์
   document.getElementById('dateFrom').value = from.toISOString().slice(0,10);
   document.getElementById('dateTo').value = to.toISOString().slice(0,10);
   load();
@@ -291,11 +296,39 @@ function filteredForDate(){
 
 function renderAll(){
   var dayData = filteredForDate();
+  renderForecastStrip();
   renderMetrics(dayData);
   renderBookingMix();
   renderChillerStatus();
   renderChillerSchedule();
   renderEventTable(dayData);
+}
+
+/* [ใหม่ - ยืนยันล่าสุด] แถบพยากรณ์ peak load 7 วันข้างหน้า — ใช้ allData ที่ fetch มาแล้ว
+   (ไม่ยิง fetch เพิ่ม) คำนวณ peak ต่อวันด้วย logic เดียวกับ metric card "Peak load"
+   คลิกวันไหน → เปลี่ยน dateSelect ไปวันนั้นแล้ว renderAll() ใหม่ */
+function renderForecastStrip(){
+  var wrap = document.getElementById('forecastStrip');
+  var todayD = new Date(todayStr);
+  var days = [];
+  for(var i=0;i<7;i++){ var d=new Date(todayD); d.setDate(d.getDate()+i); days.push(d.toISOString().slice(0,10)); }
+  var CAP_TOTAL = CHILLER_LIST.reduce(function(s,c){ return s+c.cap; },0);
+  var curSel = getTimelineDate();
+  wrap.innerHTML = days.map(function(d, idx){
+    var dd = filtered().filter(function(r){ return r.date===d; });
+    var loads = calcHourlyLoads(dd);
+    var peak = loads.length ? Math.max.apply(null, loads.concat([0])) : 0;
+    var over = peak > CAP_TOTAL;
+    var label = idx===0 ? 'วันนี้' : new Date(d).toLocaleDateString('th-TH',{weekday:'short',day:'numeric'});
+    var isSel = d===curSel;
+    return '<div onclick="document.getElementById(\'dateSelect\').value=\''+d+'\';renderAll();" '
+      + 'style="cursor:pointer;text-align:center;padding:8px 4px;border-radius:8px;'
+      + (over ? 'background:#2D1214;border:1px solid #F85149;' : (isSel ? 'background:#0D1E36;border:1px solid #1F6FEB;' : 'background:#13171F;border:0.5px solid #21262D;'))
+      + '">'
+      + '<div style="font-size:10px;color:'+(over?'#F85149':'#7D8590')+';margin-bottom:2px;">'+label+'</div>'
+      + '<div style="font-size:13px;font-weight:700;color:'+(over?'#F85149':'#E6EDF3')+';">'+(dd.length?fmtR1(peak):'—')+'</div>'
+      + '</div>';
+  }).join('');
 }
 
 function renderMetrics(dayData){
@@ -380,17 +413,37 @@ function renderChillerStatus(){
   document.getElementById('chillerStatusWrap').style.display = chillerRunningCache.length ? '' : 'none';
 }
 
+/* [แก้ - ยืนยันล่าสุด] Peak (TR) ต้องเป็นค่าดิบ ไม่คูณ margin — คำนวณจาก dayData ตรงๆ
+   (เหมือนต้นฉบับ ac.gs) รวม Common Area 4 zone อัตโนมัติเพราะเป็นแค่อีกแถวนึงใน dayData
+   คนละตัวกับ predTRMargin/predKwhMargin ที่ยังใช้กับ "Pred TRH"/"Pred kWh" เหมือนเดิม */
+var CHILLER_SLOTS = [{from:6,to:12},{from:12,to:18},{from:18,to:24}];
+function calcRawPeakPerSlot(dayData){
+  var loads = TL_HOURS.map(function(h){
+    return dayData.reduce(function(s,r){
+      var sh=parseHr(r.startTime), eh=parseHr(r.endTime);
+      return s + (h>=sh && h<eh ? (r.tonsOLS||r.tonsCalc||0) : 0);
+    },0);
+  });
+  return CHILLER_SLOTS.map(function(slot){
+    var sl = loads.slice(slot.from, slot.to);
+    return Math.max.apply(null, sl.concat([0]));
+  });
+}
+
 function renderChillerSchedule(){
   var grid = document.getElementById('chillerScheduleGrid');
   var shifts = shiftsCache || {};
+  var dayData = filteredForDate(); // [ใหม่] ใช้คำนวณ Peak TR ดิบ (รวม Common Area อัตโนมัติ)
+  var rawPeaks = calcRawPeakPerSlot(dayData); // [เช้า, บ่าย, ค่ำ]
   var defs = [
     {key:'morning', label:'เช้า', time:'06:00 – 12:00'},
     {key:'midday', label:'บ่าย', time:'12:00 – 18:00'},
     {key:'night', label:'ค่ำ', time:'18:00 – 24:00'}
   ];
-  grid.innerHTML = defs.map(function(d){
+  grid.innerHTML = defs.map(function(d,i){
     var s = shifts[d.key] || {predTRMargin:null, predKwhMargin:null, actualTR:null, actualKwh:null};
-    var rec = calcChillerRec(s.predTRMargin || 0);
+    var rawPeak = rawPeaks[i] || 0; // [แก้ - ยืนยันล่าสุด] ใช้ Peak TR ดิบ ไม่ใช่ predTRMargin
+    var rec = calcChillerRec(rawPeak);
     var pills = '';
     if(rec.u1000>0) pills += '<span class="chp chp-1000">'+rec.u1000+' × 1000TR</span>';
     if(rec.u500>0) pills += '<span class="chp chp-500">'+rec.u500+' × 500TR</span>';
@@ -404,7 +457,7 @@ function renderChillerSchedule(){
       +     '<div><div class="slot-stat-lbl">Actual TR</div><div class="slot-stat-val s-act">'+(s.actualTR?fmtR1(s.actualTR):'—')+'</div></div>'
       +   '</div>'
       +   '<div style="font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Peak (TR)</div>'
-      +   '<div class="chiller-slot-peak">'+fmtR1(s.predTRMargin)+'</div>'
+      +   '<div class="chiller-slot-peak">'+fmtR1(rawPeak)+'</div>'
       +   '<div class="chiller-slot-pills">'+pills+'</div>'
       + '</div></div>';
   }).join('');
@@ -412,8 +465,10 @@ function renderChillerSchedule(){
 
 function renderEventTable(dayData){
   var tbody = document.getElementById('evTableBody');
-  if(!dayData.length){ tbody.innerHTML = '<tr><td colspan="7" class="empty">ไม่มีข้อมูลสำหรับวันที่เลือก</td></tr>'; return; }
-  var sorted = dayData.slice().sort(function(a,b){ return parseHr(a.startTime)-parseHr(b.startTime); });
+  // [แก้ - ยืนยันล่าสุด] filter เหลือแค่ Type=Event เท่านั้น (Move In/Move Out ยังนับใน Booking Mix % แต่ไม่โชว์ในตารางนี้)
+  var eventOnly = dayData.filter(function(r){ return r.type==='Event'; });
+  if(!eventOnly.length){ tbody.innerHTML = '<tr><td colspan="7" class="empty">ไม่มีข้อมูลสำหรับวันที่เลือก</td></tr>'; return; }
+  var sorted = eventOnly.slice().sort(function(a,b){ return parseHr(a.startTime)-parseHr(b.startTime); });
   tbody.innerHTML = sorted.map(function(r){
     var typeCls = r.type==='Event'?'type-ev':(r.type==='Move In'?'type-mi':'type-mo');
     var phTag = r.phase==='1' ? '<span class="ph-tag ph1-tag">P1</span>' : (r.phase==='2' ? '<span class="ph-tag ph2-tag">P2</span>' : '');
