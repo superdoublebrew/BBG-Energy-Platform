@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AC Cooling Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Google Sans',Arial,sans-serif}
+body{background:#0D1117;color:#E6EDF3;min-height:100vh}
+.topbar{background:#13171F;border-bottom:1px solid #1F6FEB;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.topbar-title{font-size:16px;font-weight:700;color:#FFFFFF}
+.topbar-sub{font-size:11px;color:#79C0FF;margin-top:1px;font-weight:600}
+.now-pill{background:#21262D;border:0.5px solid #30363D;border-radius:20px;padding:4px 14px;font-size:11px;color:#C9D1D9;display:flex;align-items:center;gap:6px;font-weight:500}
+.ndot{width:6px;height:6px;border-radius:50%;background:#3FB950;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.filterbar{background:#13171F;border-bottom:0.5px solid #21262D;padding:8px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fchip{background:#21262D;border:0.5px solid #30363D;border-radius:8px;padding:5px 12px;font-size:12px;color:#8B949E;display:flex;align-items:center;gap:5px}
+.fchip b{color:#79C0FF;font-weight:600}
+.fchip select,.fchip input[type=date]{background:transparent;border:none;color:#79C0FF;font-size:12px;font-weight:600;outline:none;cursor:pointer}
+.content{padding:14px 20px;display:flex;flex-direction:column;gap:12px;max-width:1280px;margin:0 auto}
+.sec-divider{display:flex;align-items:center;gap:10px;margin-top:4px}
+.sec-divider-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;padding:2px 10px;border-radius:99px;background:#122620;color:#3FB950;border:0.5px solid #2EA043}
+.sec-line{flex:1;height:0.5px;background:#21262D}
+.card{background:#161B22;border:0.5px solid #21262D;border-radius:10px;overflow:hidden}
+.card-hd{padding:8px 14px;border-bottom:0.5px solid #21262D;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.card-hd-title{font-size:12px;font-weight:700;color:#F0F6FC}
+.metric-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.metric-card{background:#13171F;border:0.5px solid #21262D;border-radius:10px;padding:12px 14px}
+.metric-lbl{font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;font-weight:700}
+.metric-val{font-size:15px;font-weight:700;color:#F0F6FC;margin-bottom:2px;line-height:1}
+.metric-sub{font-size:10px;color:#7D8590;font-weight:400}
+.metric-peak .metric-val{color:#FF7B72}
+.metric-eff{border-color:#3C3489}.metric-eff .metric-val{color:#D2A8FF}
+.zu-row{display:flex;align-items:baseline;gap:8px}
+.zu-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.zu-green{background:#3FB950}.zu-yellow{background:#D29922}.zu-red{background:#F85149}
+.zu-pct{font-size:22px;font-weight:700;color:#F0F6FC;line-height:1}
+@media(max-width:900px){.metric-grid{grid-template-columns:repeat(3,1fr)}}
+.bm-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bm-pill{background:#13171F;border:0.5px solid #21262D;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+.bm-pill.major{border:1px solid var(--mc)}
+.bm-ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.bm-ico-event{background:#122620;color:#3FB950}.bm-ico-movein{background:#0D1E36;color:#79C0FF}.bm-ico-moveout{background:#1F1500;color:#FFA657}
+.bm-pill-lbl{font-size:10px;color:#7D8590;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;margin-bottom:2px}
+.bm-pill-val{font-size:13px;font-weight:700;color:#F0F6FC;line-height:1}
+.bm-pill.major.ev{--mc:#2EA043}.bm-pill.major.mi{--mc:#1F6FEB}.bm-pill.major.mo{--mc:#D97706}
+.chiller-status-wrap{padding:12px 14px}
+.cs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cs-title{font-size:11px;font-weight:500;color:#7D8590;letter-spacing:.08em;text-transform:uppercase}
+.cs-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:#5DCAA5;background:#041a0e;border:0.5px solid #1D9E75;border-radius:99px;padding:3px 10px}
+.cs-pulse{width:5px;height:5px;border-radius:50%;background:#1D9E75;animation:cspulse 2s infinite}
+@keyframes cspulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:7px;margin-bottom:7px}
+.cs-ch{border-radius:7px;overflow:hidden;display:flex;flex-direction:column}
+.cs-top{padding:9px 4px 7px;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;flex:1}
+.cs-bar{height:2.5px}
+.cs-ch.on .cs-top{background:#051c10;border:0.5px solid #1D9E75;border-bottom:none}
+.cs-ch.on .cs-bar{background:#1D9E75}
+.cs-ch.on .cs-name{color:#9FE1CB;font-size:9px;font-weight:600;text-align:center}
+.cs-ch.on .cs-cap{color:#4db892;font-size:8px}
+.cs-ch.off .cs-top{background:#161B22;border:0.5px solid #21262D;border-bottom:none}
+.cs-ch.off .cs-bar{background:#21262D}
+.cs-ch.off .cs-name{color:#484F58;font-size:9px;font-weight:500;text-align:center}
+.cs-ch.off .cs-cap{color:#30363D;font-size:8px}
+.cs-dot{position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%}
+.cs-ch.on .cs-dot{background:#1D9E75;box-shadow:0 0 4px #1D9E75}
+.cs-ch.off .cs-dot{background:#30363D}
+.cs-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:0.5px solid #21262D}
+.cs-legs{display:flex;gap:12px}
+.cs-leg{display:flex;align-items:center;gap:5px;font-size:10px;color:#7D8590}
+.cs-ld{width:5px;height:5px;border-radius:50%}.cs-ld.on{background:#1D9E75}.cs-ld.off{background:#30363D}
+.cs-sum{font-size:10px;color:#7D8590}.cs-sum b{font-weight:500;color:#8B949E}
+.cs-primary-lbl{font-size:9px;font-weight:700;color:#FFA657;text-transform:uppercase;letter-spacing:0.05em;margin:2px 0}
+.chiller-schedule{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.chiller-slot{background:#222836;border:1px solid #6B4A2B;border-radius:10px;overflow:hidden}
+.chiller-slot-hd{padding:7px 12px;border-bottom:0.5px solid #21262D;display:flex;align-items:center;justify-content:space-between;background:#161B22}
+.chiller-slot-label{font-size:11px;font-weight:700;color:#F0F6FC}
+.chiller-slot-time{font-size:9px;color:#7D8590;font-weight:500}
+.chiller-slot-body{padding:8px 12px}
+.slot-shift-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;padding-bottom:6px;border-bottom:0.5px solid #353D4F}
+.slot-stat-lbl{font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:0.04em;font-weight:700;white-space:nowrap}
+.slot-stat-val{font-size:11px;font-weight:700;line-height:1.4;white-space:nowrap}
+.s-pred-tr{color:#79C0FF}.s-pred-kwh{color:#D2A8FF}.s-act{color:#56D364}
+.chiller-slot-peak{font-size:22px;font-weight:700;color:#FF7B72;line-height:1}
+.chiller-slot-pills{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+.chp{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;display:flex;align-items:center;gap:4px}
+.chp-1000{background:#1A1040;color:#D2A8FF;border:0.5px solid #6E40C9}
+.chp-500{background:#0D1E36;color:#79C0FF;border:0.5px solid #1F6FEB}
+.chp-none{background:#21262D;color:#7D8590;border:0.5px solid #30363D;font-size:10px;font-weight:500}
+.ev-table{width:100%;border-collapse:collapse}
+.ev-table th{font-size:10px;color:#7D8590;font-weight:700;padding:7px 12px;text-align:left;border-bottom:0.5px solid #21262D;background:#161B22;white-space:nowrap;text-transform:uppercase;letter-spacing:0.04em}
+.ev-table td{font-size:12px;padding:7px 12px;border-bottom:0.5px solid #21262D;color:#C9D1D9;white-space:nowrap}
+.ev-table tr:hover td{background:#1C2333}
+.zone-name{font-weight:700;color:#E6EDF3}
+.ph-tag{font-size:9px;padding:1px 6px;border-radius:4px;margin-left:4px;font-weight:600}
+.ph1-tag{background:#122620;color:#56D364}.ph2-tag{background:#0D1E36;color:#79C0FF}
+.tr-pred{font-weight:700;color:#E6EDF3}
+.type-ev{color:#56D364}.type-mi{color:#79C0FF}.type-mo{color:#FFA657}
+.legend{display:flex;gap:10px;font-size:10px;color:#8B949E;flex-wrap:wrap}
+.loading{text-align:center;padding:32px;color:#7D8590;font-size:13px}
+.empty{text-align:center;padding:20px;color:#888;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">❄ AC Cooling Planner</div>
+    <div class="topbar-sub">Chiller work order · synced with event data</div>
+  </div>
+  <div class="now-pill"><div class="ndot"></div><span id="nowLabel">Loading...</span></div>
+</div>
+
+<div class="filterbar">
+  <div class="fchip">📅 <b><input type="date" id="dateFrom"></b> – <b><input type="date" id="dateTo"></b></div>
+  <div class="fchip">🕐 Timeline <select id="dateSelect"><option value="">— select date —</option></select></div>
+  <div class="fchip">Phase
+    <select id="phaseFilter">
+      <option value="all">1 + 2</option><option value="1">Phase 1</option><option value="2">Phase 2</option>
+    </select>
+  </div>
+  <div class="fchip">Zone <select id="zoneFilter"><option value="all">All zones</option></select></div>
+</div>
+
+<div class="content">
+
+  <div class="sec-divider"><span class="sec-divider-label">สำหรับช่าง</span><div class="sec-line"></div></div>
+
+  <div class="metric-grid">
+    <div class="metric-card"><div class="metric-lbl">Events วันนี้</div><div class="metric-val" id="mEvents">—</div><div class="metric-sub" id="mEventsSub">—</div></div>
+    <div class="metric-card"><div class="metric-lbl">Zones ที่ใช้</div><div class="metric-val" id="mZones">—</div><div class="metric-sub" id="mZonesSub">—</div></div>
+    <div class="metric-card metric-peak"><div class="metric-lbl">Peak load</div><div class="metric-val" id="mPeak">—</div><div class="metric-sub" id="mPeakSub">—</div></div>
+    <div class="metric-card"><div class="metric-lbl">Peak period</div><div class="metric-val" id="mPeakTime" style="font-size:13px;">—</div><div class="metric-sub" id="mPeakZones">—</div></div>
+    <div class="metric-card"><div class="metric-lbl">Temp (°C)</div><div class="metric-val" id="mOAT" style="color:#79C0FF">—</div><div class="metric-sub">avg วันนี้</div></div>
+    <div class="metric-card">
+      <div class="metric-lbl">Zone utilization</div>
+      <div class="zu-row"><span class="zu-dot" id="zuDot"></span><span class="zu-pct" id="zuPct">—</span></div>
+      <div class="metric-sub" id="zuFrac">—</div>
+    </div>
+    <div class="metric-card metric-eff"><div class="metric-lbl">Efficiency (kW/TR)</div><div class="metric-val" id="mEff">—</div><div class="metric-sub">Actual/Actual</div></div>
+  </div>
+
+  <div class="bm-row" id="bmRow">
+    <div class="bm-pill" id="bmEvent"><div class="bm-ico bm-ico-event">🎪</div><div><div class="bm-pill-lbl">Event</div><div class="bm-pill-val" id="bmEventPct">—</div></div></div>
+    <div class="bm-pill" id="bmMoveIn"><div class="bm-ico bm-ico-movein">↑</div><div><div class="bm-pill-lbl">Move in</div><div class="bm-pill-val" id="bmMoveInPct">—</div></div></div>
+    <div class="bm-pill" id="bmMoveOut"><div class="bm-ico bm-ico-moveout">↓</div><div><div class="bm-pill-lbl">Move out</div><div class="bm-pill-val" id="bmMoveOutPct">—</div></div></div>
+  </div>
+
+  <div class="card chiller-status-wrap" id="chillerStatusWrap" style="display:none;">
+    <div class="cs-header">
+      <div class="cs-title">Chiller status — วันที่เลือก</div>
+      <div class="cs-pill"><div class="cs-pulse"></div><span id="csRunningCount">—</span></div>
+    </div>
+    <div class="cs-grid" id="csGrid1"></div>
+    <div class="cs-grid" id="csGrid2"></div>
+    <div class="cs-footer">
+      <div class="cs-legs"><div class="cs-leg"><div class="cs-ld on"></div>รันอยู่</div><div class="cs-leg"><div class="cs-ld off"></div>ปิด</div></div>
+      <div class="cs-sum">Total capacity <b id="csTotalCap">—</b></div>
+    </div>
+  </div>
+
+  <div class="cs-primary-lbl">⭐ Chiller schedule (แนะนำจำนวนเครื่องต่อ shift)</div>
+  <div class="chiller-schedule" id="chillerScheduleGrid"></div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-hd-title">รายการ Event — วันที่เลือก</div>
+      <div class="legend">
+        <span class="type-ev">● Event</span> <span class="type-mi">● Move In</span> <span class="type-mo">● Move Out</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="ev-table">
+        <thead><tr><th>เวลา</th><th>Zone</th><th>ห้อง</th><th>Event</th><th>Type</th><th style="text-align:right;">Pred TR</th><th style="text-align:right;">Cost (฿)</th></tr></thead>
+        <tbody id="evTableBody"><tr><td colspan="7" class="loading">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+var CAP_1000 = 1000, CAP_500 = 500;
+var CHILLER_LIST = [
+  {id:'P1-CH-01',cap:1000},{id:'P1-CH-02',cap:1000},{id:'P1-CH-03',cap:1000},{id:'P1-CH-04',cap:1000},
+  {id:'H1-CH-01',cap:1000},{id:'H1-CH-02',cap:1000},{id:'H1-CH-03',cap:1000},{id:'H1-CH-04',cap:1000},
+  {id:'H1-CH-05',cap:1000},{id:'H1-CH-06',cap:1000},{id:'H1-CH-07',cap:500},{id:'H1-CH-08',cap:500}
+];
+var allData = [], acTotalsCache = [], shiftsCache = null, chillerRunningCache = [];
+var todayStr = new Date().toISOString().slice(0,10);
+
+function parseHr(t){ if(!t) return 0; var p = String(t).trim().split(':'); var h = Number(p[0]), m = Number(p[1]||0); if(isNaN(h)) return 0; return h + m/60; }
+function fmtR1(v){ if(v===null||v===undefined||isNaN(v)) return '—'; return Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1}); }
+function fmtCost(v){ if(v===null||v===undefined) return '—'; return '฿' + Math.round(v).toLocaleString(); }
+
+/* แนะนำ chiller: < 450 → 1×500TR, ≥ 450 → 1000TR ก่อน ไม่ใช้ 500TR สองตัว (ยกมาจากต้นฉบับเป๊ะ) */
+function calcChillerRec(peakTons){
+  if(peakTons<=0) return {u1000:0,u500:0};
+  var u1000 = Math.floor(peakTons/CAP_1000);
+  var rem = peakTons - u1000*CAP_1000;
+  var u500 = 0;
+  if(rem>450){ u1000+=1; } else if(rem>0){ u500=1; }
+  return {u1000:u1000,u500:u500};
+}
+var TL_HOURS = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+function calcHourlyLoads(dayData){
+  return TL_HOURS.map(function(h){
+    return dayData.reduce(function(sum,r){
+      var s = parseHr(r.startTime), e = parseHr(r.endTime);
+      return sum + (h>=s && h<e ? (r.tonsOLS||r.tonsCalc||0) : 0);
+    },0);
+  });
+}
+function countActiveZones(dayData,hour){
+  var zones = {};
+  dayData.forEach(function(r){ var s=parseHr(r.startTime), e=parseHr(r.endTime); if(hour>=s && hour<e) zones[r.zone]=true; });
+  return Object.keys(zones).length;
+}
+
+function updateTime(){ document.getElementById('nowLabel').textContent = new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
+setInterval(updateTime, 1000); updateTime();
+
+(function init(){
+  var now = new Date();
+  var from = new Date(now); from.setDate(from.getDate()-1);
+  var to = new Date(now); to.setDate(to.getDate()+3);
+  document.getElementById('dateFrom').value = from.toISOString().slice(0,10);
+  document.getElementById('dateTo').value = to.toISOString().slice(0,10);
+  load();
+})();
+
+document.getElementById('dateFrom').addEventListener('change', load);
+document.getElementById('dateTo').addEventListener('change', load);
+document.getElementById('dateSelect').addEventListener('change', renderAll);
+document.getElementById('phaseFilter').addEventListener('change', renderAll);
+document.getElementById('zoneFilter').addEventListener('change', renderAll);
+
+async function load(){
+  var from = document.getElementById('dateFrom').value, to = document.getElementById('dateTo').value;
+  if(!from || !to) return;
+  document.getElementById('evTableBody').innerHTML = '<tr><td colspan="7" class="loading">กำลังโหลด...</td></tr>';
+  try {
+    var res = await fetch(API_URL + '?action=acdashboard&from=' + from + '&to=' + to + '&date=' + (document.getElementById('dateSelect').value || todayStr));
+    var json = await res.json();
+    if(json.error){ document.getElementById('evTableBody').innerHTML = '<tr><td colspan="7" class="empty" style="color:#FF7B72;">'+json.message+'</td></tr>'; return; }
+    allData = json.data || [];
+    acTotalsCache = json.totals || [];
+    shiftsCache = json.shifts || null;
+    chillerRunningCache = json.chillerRunning || [];
+    populateDateSelect();
+    populateZoneFilter();
+    renderAll();
+  } catch(err){
+    document.getElementById('evTableBody').innerHTML = '<tr><td colspan="7" class="empty" style="color:#FF7B72;">Error: '+err.message+'</td></tr>';
+  }
+}
+
+function populateDateSelect(){
+  var sel = document.getElementById('dateSelect'), cur = sel.value;
+  var dates = [...new Set(allData.map(function(r){ return r.date; }))].sort();
+  sel.innerHTML = '';
+  dates.forEach(function(d){
+    var o = document.createElement('option'); o.value=d; o.textContent=d;
+    if(d===todayStr || (!cur && d===dates[0])) o.selected = true;
+    sel.appendChild(o);
+  });
+  if(cur && dates.indexOf(cur)>-1) sel.value = cur;
+}
+function populateZoneFilter(){
+  var sel = document.getElementById('zoneFilter'), cur = sel.value;
+  while(sel.options.length>1) sel.remove(1);
+  var zones = [];
+  allData.forEach(function(r){ if(r.zone && zones.indexOf(r.zone)<0) zones.push(r.zone); });
+  zones.sort().forEach(function(z){ var o=document.createElement('option'); o.value=z; o.textContent=z; sel.appendChild(o); });
+  if(cur) sel.value = cur;
+}
+function getTimelineDate(){ return document.getElementById('dateSelect').value || todayStr; }
+function filtered(){
+  var phase = document.getElementById('phaseFilter').value, zone = document.getElementById('zoneFilter').value;
+  return allData.filter(function(r){
+    if(phase!=='all' && String(r.phase)!==phase) return false;
+    if(zone!=='all' && r.zone!==zone) return false;
+    return true;
+  });
+}
+function filteredForDate(){
+  var tlDate = getTimelineDate();
+  return filtered().filter(function(r){ return r.date===tlDate; });
+}
+
+function renderAll(){
+  var dayData = filteredForDate();
+  renderMetrics(dayData);
+  renderBookingMix();
+  renderChillerStatus();
+  renderChillerSchedule();
+  renderEventTable(dayData);
+}
+
+function renderMetrics(dayData){
+  if(!dayData.length){
+    ['mEvents','mZones','mPeak','mPeakTime'].forEach(function(id){ document.getElementById(id).textContent='—'; });
+    ['mEventsSub','mZonesSub','mPeakSub','mPeakZones'].forEach(function(id){ document.getElementById(id).textContent='—'; });
+    document.getElementById('mOAT').textContent = '—';
+    document.getElementById('mEff').textContent = '—';
+    return;
+  }
+  var eventNames = [], zoneNames = [];
+  dayData.forEach(function(r){
+    if(r.event && eventNames.indexOf(r.event)<0) eventNames.push(r.event);
+    if(r.zone && zoneNames.indexOf(r.zone)<0) zoneNames.push(r.zone);
+  });
+  var loads = calcHourlyLoads(dayData);
+  var peakTons = loads.length ? Math.max.apply(null, loads) : 0; peakTons = isFinite(peakTons) ? peakTons : 0;
+  var peakIdx = loads.indexOf(peakTons);
+  var peakZoneCount = countActiveZones(dayData, peakIdx);
+  var peakZoneNames = [];
+  dayData.forEach(function(r){
+    var s=parseHr(r.startTime), e=parseHr(r.endTime);
+    if(peakIdx>=s && peakIdx<e && peakZoneNames.indexOf(r.zone)<0) peakZoneNames.push(r.zone);
+  });
+
+  document.getElementById('mEvents').textContent = eventNames.length;
+  document.getElementById('mEventsSub').textContent = dayData.length + ' rooms';
+  document.getElementById('mZones').textContent = zoneNames.length;
+  document.getElementById('mZonesSub').textContent = 'P1 + P2';
+  document.getElementById('mPeak').textContent = fmtR1(peakTons) + ' (TR)';
+  document.getElementById('mPeakSub').textContent = peakZoneCount + ' zones active';
+  document.getElementById('mPeakTime').textContent = TL_HOURS[peakIdx]+':00 – '+(TL_HOURS[peakIdx]+1)+':00';
+  document.getElementById('mPeakZones').textContent = peakZoneNames.slice(0,2).join(' + ') + (peakZoneNames.length>2?' +':'');
+
+  var totals = acTotalsCache.find(function(t){ return t.date===getTimelineDate(); });
+  document.getElementById('mOAT').textContent = (totals && totals.avgOAT!=null) ? totals.avgOAT.toFixed(1)+'°' : '—';
+  if(totals && totals.actualKwh && totals.actualTR){
+    document.getElementById('mEff').textContent = (totals.actualKwh/totals.actualTR).toFixed(2);
+  } else { document.getElementById('mEff').textContent = '—'; }
+
+  // Zone utilization
+  if(totals && totals.zoneUtilPct!=null){
+    var pct = totals.zoneUtilPct;
+    document.getElementById('zuPct').textContent = Math.round(pct)+'%';
+    document.getElementById('zuFrac').textContent = (totals.activeZones!=null?totals.activeZones:'—')+' / '+(totals.totalZones!=null?totals.totalZones:'—')+' โซน active';
+    document.getElementById('zuDot').className = 'zu-dot ' + (pct>=70?'zu-green':(pct>=40?'zu-yellow':'zu-red'));
+  } else {
+    document.getElementById('zuPct').textContent='—'; document.getElementById('zuFrac').textContent='—'; document.getElementById('zuDot').className='zu-dot';
+  }
+}
+
+function renderBookingMix(){
+  var totals = acTotalsCache.find(function(t){ return t.date===getTimelineDate(); });
+  var pEv = totals&&totals.mixEventPct!=null?totals.mixEventPct:null;
+  var pMi = totals&&totals.mixMoveInPct!=null?totals.mixMoveInPct:null;
+  var pMo = totals&&totals.mixMoveOutPct!=null?totals.mixMoveOutPct:null;
+  document.getElementById('bmEventPct').textContent = pEv!=null?Math.round(pEv)+'%':'—';
+  document.getElementById('bmMoveInPct').textContent = pMi!=null?Math.round(pMi)+'%':'—';
+  document.getElementById('bmMoveOutPct').textContent = pMo!=null?Math.round(pMo)+'%':'—';
+  ['bmEvent','bmMoveIn','bmMoveOut'].forEach(function(id){ document.getElementById(id).classList.remove('major','ev','mi','mo'); });
+  if(pEv!=null && pMi!=null && pMo!=null){
+    var vals={ev:pEv,mi:pMi,mo:pMo};
+    var top=Object.keys(vals).reduce(function(a,b){ return vals[a]>=vals[b]?a:b; });
+    var elMap={ev:'bmEvent',mi:'bmMoveIn',mo:'bmMoveOut'};
+    document.getElementById(elMap[top]).classList.add('major',top);
+  }
+}
+
+function renderChillerStatus(){
+  var runSet = {}; chillerRunningCache.forEach(function(n){ runSet[n]=true; });
+  var onList = CHILLER_LIST.filter(function(c){ return runSet[c.id]; });
+  var totalCap = CHILLER_LIST.reduce(function(s,c){ return s+c.cap; },0);
+  var runCap = onList.reduce(function(s,c){ return s+c.cap; },0);
+  document.getElementById('csRunningCount').textContent = onList.length + ' เครื่อง · ' + runCap.toLocaleString() + ' TR';
+  document.getElementById('csTotalCap').textContent = totalCap.toLocaleString() + ' TR';
+  function makeCard(ch){
+    var on = !!runSet[ch.id];
+    return '<div class="cs-ch '+(on?'on':'off')+'"><div class="cs-top"><div class="cs-dot"></div><div class="cs-name">'+ch.id+'</div><div class="cs-cap">'+ch.cap.toLocaleString()+' TR</div></div><div class="cs-bar"></div></div>';
+  }
+  document.getElementById('csGrid1').innerHTML = CHILLER_LIST.slice(0,6).map(makeCard).join('');
+  document.getElementById('csGrid2').innerHTML = CHILLER_LIST.slice(6,12).map(makeCard).join('');
+  document.getElementById('chillerStatusWrap').style.display = chillerRunningCache.length ? '' : 'none';
+}
+
+function renderChillerSchedule(){
+  var grid = document.getElementById('chillerScheduleGrid');
+  var shifts = shiftsCache || {};
+  var defs = [
+    {key:'morning', label:'เช้า', time:'06:00 – 12:00'},
+    {key:'midday', label:'บ่าย', time:'12:00 – 18:00'},
+    {key:'night', label:'ค่ำ', time:'18:00 – 24:00'}
+  ];
+  grid.innerHTML = defs.map(function(d){
+    var s = shifts[d.key] || {predTRMargin:null, predKwhMargin:null, actualTR:null, actualKwh:null};
+    var rec = calcChillerRec(s.predTRMargin || 0);
+    var pills = '';
+    if(rec.u1000>0) pills += '<span class="chp chp-1000">'+rec.u1000+' × 1000TR</span>';
+    if(rec.u500>0) pills += '<span class="chp chp-500">'+rec.u500+' × 500TR</span>';
+    if(!pills) pills = '<span class="chp chp-none">ไม่มีโหลด</span>';
+    return '<div class="chiller-slot">'
+      + '<div class="chiller-slot-hd"><span class="chiller-slot-label">'+d.label+'</span><span class="chiller-slot-time">'+d.time+'</span></div>'
+      + '<div class="chiller-slot-body">'
+      +   '<div class="slot-shift-stats">'
+      +     '<div><div class="slot-stat-lbl">Pred TRH</div><div class="slot-stat-val s-pred-tr">'+fmtR1((s.predTRMargin||0)*2)+'</div></div>'
+      +     '<div><div class="slot-stat-lbl">Pred kWh</div><div class="slot-stat-val s-pred-kwh">'+fmtR1(s.predKwhMargin)+'</div></div>'
+      +     '<div><div class="slot-stat-lbl">Actual TR</div><div class="slot-stat-val s-act">'+(s.actualTR?fmtR1(s.actualTR):'—')+'</div></div>'
+      +   '</div>'
+      +   '<div style="font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Peak (TR)</div>'
+      +   '<div class="chiller-slot-peak">'+fmtR1(s.predTRMargin)+'</div>'
+      +   '<div class="chiller-slot-pills">'+pills+'</div>'
+      + '</div></div>';
+  }).join('');
+}
+
+function renderEventTable(dayData){
+  var tbody = document.getElementById('evTableBody');
+  if(!dayData.length){ tbody.innerHTML = '<tr><td colspan="7" class="empty">ไม่มีข้อมูลสำหรับวันที่เลือก</td></tr>'; return; }
+  var sorted = dayData.slice().sort(function(a,b){ return parseHr(a.startTime)-parseHr(b.startTime); });
+  tbody.innerHTML = sorted.map(function(r){
+    var typeCls = r.type==='Event'?'type-ev':(r.type==='Move In'?'type-mi':'type-mo');
+    var phTag = r.phase==='1' ? '<span class="ph-tag ph1-tag">P1</span>' : (r.phase==='2' ? '<span class="ph-tag ph2-tag">P2</span>' : '');
+    return '<tr>'
+      + '<td>'+r.startTime+' – '+r.endTime+'</td>'
+      + '<td class="zone-name">'+r.zone+phTag+'</td>'
+      + '<td>'+r.room+'</td>'
+      + '<td>'+r.event+'</td>'
+      + '<td class="'+typeCls+'">'+r.type+'</td>'
+      + '<td style="text-align:right;" class="tr-pred">'+fmtR1(r.tonsOLS||r.tonsCalc)+'</td>'
+      + '<td style="text-align:right;">'+fmtCost(r.cost)+'</td>'
+      + '</tr>';
+  }).join('');
+}
+</script>
+</body>
+</html>
