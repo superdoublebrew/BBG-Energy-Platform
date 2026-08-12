@@ -510,6 +510,13 @@ document.querySelectorAll(".side-tab").forEach(function(tab){
     document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
     tab.classList.add("active");
     document.getElementById("panel-"+tab.dataset.tab).classList.add("active");
+    // [แก้ - ยืนยันล่าสุด] ซ่อน search-box/date-filter บน topbar เมื่อไม่ได้อยู่แท็บ Chiller Circuit
+    // (แท็บ Monthly report/AC Planner มี date picker ของตัวเองใน iframe อยู่แล้ว ซ้ำซ้อนกัน)
+    var isPlant = tab.dataset.tab === 'plant';
+    var searchBox = document.querySelector('.search-box');
+    var dateFilterBar = document.querySelector('.date-filter');
+    if(searchBox) searchBox.style.display = isPlant ? '' : 'none';
+    if(dateFilterBar) dateFilterBar.style.display = isPlant ? '' : 'none';
   });
 });
 document.querySelectorAll('[data-phase]').forEach(function(btn){
