@@ -29,8 +29,18 @@ body{background:#0D1117;color:#E6EDF3;min-height:100vh}
 .metric-lbl{font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;font-weight:700}
 .metric-val{font-size:15px;font-weight:700;color:#F0F6FC;margin-bottom:2px;line-height:1}
 .metric-sub{font-size:10px;color:#7D8590;font-weight:400}
-.metric-peak .metric-val{color:#FF7B72}
-.metric-eff{border-color:#3C3489}.metric-eff .metric-val{color:#D2A8FF}
+/* [แก้ - ยืนยันล่าสุด] ใช้ pattern สีเดียวกับ Chiller Circuit (index.html) — กลุ่มเดียวกันสีเดียวกัน
+   c-chiller=เขียว, c-tower=แดงส้ม, c-pump=ฟ้า, c-plant=ทอง, c-outdoor=ขาวเทา (ค่าสีตรงกับต้นฉบับเป๊ะ) */
+.metric-card.c-chiller{background:rgba(52,211,153,.05);border-color:rgba(52,211,153,.5);border-top:2px solid #34d399}
+.metric-card.c-chiller .metric-val{color:#34d399}.metric-card.c-chiller .metric-lbl{color:#6ee7b7}
+.metric-card.c-tower{background:rgba(242,134,122,.05);border-color:rgba(242,134,122,.5);border-top:2px solid #f2867a}
+.metric-card.c-tower .metric-val{color:#f2867a}.metric-card.c-tower .metric-lbl{color:#f9a8a8}
+.metric-card.c-pump{background:rgba(56,189,248,.05);border-color:rgba(56,189,248,.5);border-top:2px solid #38bdf8}
+.metric-card.c-pump .metric-val{color:#38bdf8}.metric-card.c-pump .metric-lbl{color:#7dd3fc}
+.metric-card.c-plant{background:rgba(242,184,79,.05);border-color:rgba(242,184,79,.5);border-top:2px solid #f2b84f}
+.metric-card.c-plant .metric-val{color:#f2b84f}.metric-card.c-plant .metric-lbl{color:#fbd38d}
+.metric-card.c-outdoor{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.16);border-top:2px solid rgba(255,255,255,.3)}
+.metric-card.c-outdoor .metric-val{color:#E6EDF3}.metric-card.c-outdoor .metric-lbl{color:#8B949E}
 .zu-row{display:flex;align-items:baseline;gap:8px}
 .zu-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
 .zu-green{background:#3FB950}.zu-yellow{background:#D29922}.zu-red{background:#F85149}
@@ -132,17 +142,17 @@ body{background:#0D1117;color:#E6EDF3;min-height:100vh}
   </div>
 
   <div class="metric-grid">
-    <div class="metric-card"><div class="metric-lbl">Events วันนี้</div><div class="metric-val" id="mEvents">—</div><div class="metric-sub" id="mEventsSub">—</div></div>
-    <div class="metric-card"><div class="metric-lbl">Zones ที่ใช้</div><div class="metric-val" id="mZones">—</div><div class="metric-sub" id="mZonesSub">—</div></div>
-    <div class="metric-card metric-peak"><div class="metric-lbl">Peak load</div><div class="metric-val" id="mPeak">—</div><div class="metric-sub" id="mPeakSub">—</div></div>
-    <div class="metric-card"><div class="metric-lbl">Peak period</div><div class="metric-val" id="mPeakTime" style="font-size:13px;">—</div><div class="metric-sub" id="mPeakZones">—</div></div>
-    <div class="metric-card"><div class="metric-lbl">Temp (°C)</div><div class="metric-val" id="mOAT" style="color:#79C0FF">—</div><div class="metric-sub">avg วันนี้</div></div>
-    <div class="metric-card">
+    <div class="metric-card c-pump"><div class="metric-lbl">Events วันนี้</div><div class="metric-val" id="mEvents">—</div><div class="metric-sub" id="mEventsSub">—</div></div>
+    <div class="metric-card c-pump"><div class="metric-lbl">Zones ที่ใช้</div><div class="metric-val" id="mZones">—</div><div class="metric-sub" id="mZonesSub">—</div></div>
+    <div class="metric-card c-tower"><div class="metric-lbl">Peak load</div><div class="metric-val" id="mPeak">—</div><div class="metric-sub" id="mPeakSub">—</div></div>
+    <div class="metric-card c-tower"><div class="metric-lbl">Peak period</div><div class="metric-val" id="mPeakTime" style="font-size:13px;">—</div><div class="metric-sub" id="mPeakZones">—</div></div>
+    <div class="metric-card c-outdoor"><div class="metric-lbl">Temp (°C)</div><div class="metric-val" id="mOAT">—</div><div class="metric-sub">avg วันนี้</div></div>
+    <div class="metric-card c-chiller">
       <div class="metric-lbl">Zone utilization</div>
       <div class="zu-row"><span class="zu-dot" id="zuDot"></span><span class="zu-pct" id="zuPct">—</span></div>
       <div class="metric-sub" id="zuFrac">—</div>
     </div>
-    <div class="metric-card metric-eff"><div class="metric-lbl">Efficiency (kW/TR)</div><div class="metric-val" id="mEff">—</div><div class="metric-sub">Actual/Actual</div></div>
+    <div class="metric-card c-plant"><div class="metric-lbl">Efficiency (kW/TR)</div><div class="metric-val" id="mEff">—</div><div class="metric-sub">Actual/Actual</div></div>
   </div>
 
   <div class="bm-row" id="bmRow">
@@ -237,7 +247,7 @@ setInterval(updateTime, 1000); updateTime();
 
 document.getElementById('dateFrom').addEventListener('change', load);
 document.getElementById('dateTo').addEventListener('change', load);
-document.getElementById('dateSelect').addEventListener('change', renderAll);
+document.getElementById('dateSelect').addEventListener('change', load); // [แก้ - ยืนยันล่าสุด] เดิมเรียกแค่ renderAll ทำให้ shifts/chillerRunning (ผูกกับวันเดียว) ไม่อัปเดตตามวันที่เลือก ต้อง fetch ใหม่ทุกครั้ง
 document.getElementById('phaseFilter').addEventListener('change', renderAll);
 document.getElementById('zoneFilter').addEventListener('change', renderAll);
 
@@ -413,37 +423,20 @@ function renderChillerStatus(){
   document.getElementById('chillerStatusWrap').style.display = chillerRunningCache.length ? '' : 'none';
 }
 
-/* [แก้ - ยืนยันล่าสุด] Peak (TR) ต้องเป็นค่าดิบ ไม่คูณ margin — คำนวณจาก dayData ตรงๆ
-   (เหมือนต้นฉบับ ac.gs) รวม Common Area 4 zone อัตโนมัติเพราะเป็นแค่อีกแถวนึงใน dayData
-   คนละตัวกับ predTRMargin/predKwhMargin ที่ยังใช้กับ "Pred TRH"/"Pred kWh" เหมือนเดิม */
-var CHILLER_SLOTS = [{from:6,to:12},{from:12,to:18},{from:18,to:24}];
-function calcRawPeakPerSlot(dayData){
-  var loads = TL_HOURS.map(function(h){
-    return dayData.reduce(function(s,r){
-      var sh=parseHr(r.startTime), eh=parseHr(r.endTime);
-      return s + (h>=sh && h<eh ? (r.tonsOLS||r.tonsCalc||0) : 0);
-    },0);
-  });
-  return CHILLER_SLOTS.map(function(slot){
-    var sl = loads.slice(slot.from, slot.to);
-    return Math.max.apply(null, sl.concat([0]));
-  });
-}
-
+/* [แก้ - ยืนยันล่าสุด] Peak (TR) มาจาก shifts[s].peakTR ที่ backend คำนวณให้แล้วตรงๆ
+   (Common Area + Event ดิบ ไม่มี 0.5) ไม่ต้องคำนวณเองฝั่ง frontend อีกแล้ว —
+   หน้าบ้าน/หลังบ้านใช้ logic เดียวกันเป๊ะ (ตัดฟังก์ชัน calcRawPeakPerSlot เดิมออก) */
 function renderChillerSchedule(){
   var grid = document.getElementById('chillerScheduleGrid');
   var shifts = shiftsCache || {};
-  var dayData = filteredForDate(); // [ใหม่] ใช้คำนวณ Peak TR ดิบ (รวม Common Area อัตโนมัติ)
-  var rawPeaks = calcRawPeakPerSlot(dayData); // [เช้า, บ่าย, ค่ำ]
   var defs = [
     {key:'morning', label:'เช้า', time:'06:00 – 12:00'},
     {key:'midday', label:'บ่าย', time:'12:00 – 18:00'},
     {key:'night', label:'ค่ำ', time:'18:00 – 24:00'}
   ];
-  grid.innerHTML = defs.map(function(d,i){
-    var s = shifts[d.key] || {predTRMargin:null, predKwhMargin:null, actualTR:null, actualKwh:null};
-    var rawPeak = rawPeaks[i] || 0; // [แก้ - ยืนยันล่าสุด] ใช้ Peak TR ดิบ ไม่ใช่ predTRMargin
-    var rec = calcChillerRec(rawPeak);
+  grid.innerHTML = defs.map(function(d){
+    var s = shifts[d.key] || {peakTR:0, predTRMargin:null, predTRH:null, predKwhMargin:null, actualTR:null, actualKwh:null};
+    var rec = calcChillerRec(s.peakTR || 0); // [แก้ - ยืนยันล่าสุด] ใช้ peakTR ดิบจาก backend ตรงๆ
     var pills = '';
     if(rec.u1000>0) pills += '<span class="chp chp-1000">'+rec.u1000+' × 1000TR</span>';
     if(rec.u500>0) pills += '<span class="chp chp-500">'+rec.u500+' × 500TR</span>';
@@ -452,12 +445,12 @@ function renderChillerSchedule(){
       + '<div class="chiller-slot-hd"><span class="chiller-slot-label">'+d.label+'</span><span class="chiller-slot-time">'+d.time+'</span></div>'
       + '<div class="chiller-slot-body">'
       +   '<div class="slot-shift-stats">'
-      +     '<div><div class="slot-stat-lbl">Pred TRH</div><div class="slot-stat-val s-pred-tr">'+fmtR1((s.predTRMargin||0)*2)+'</div></div>'
+      +     '<div><div class="slot-stat-lbl">Pred TRH</div><div class="slot-stat-val s-pred-tr">'+fmtR1(s.predTRH)+'</div></div>'
       +     '<div><div class="slot-stat-lbl">Pred kWh</div><div class="slot-stat-val s-pred-kwh">'+fmtR1(s.predKwhMargin)+'</div></div>'
-      +     '<div><div class="slot-stat-lbl">Actual TR</div><div class="slot-stat-val s-act">'+(s.actualTR?fmtR1(s.actualTR):'—')+'</div></div>'
+      +     '<div><div class="slot-stat-lbl">Actual TRH</div><div class="slot-stat-val s-act">'+(s.actualTR?fmtR1(s.actualTR*2):'—')+'</div></div>'
       +   '</div>'
       +   '<div style="font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Peak (TR)</div>'
-      +   '<div class="chiller-slot-peak">'+fmtR1(rawPeak)+'</div>'
+      +   '<div class="chiller-slot-peak">'+fmtR1(s.peakTR)+'</div>'
       +   '<div class="chiller-slot-pills">'+pills+'</div>'
       + '</div></div>';
   }).join('');
