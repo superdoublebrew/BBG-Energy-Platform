@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zone Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Google Sans',Arial,sans-serif;background:#0D1117;color:#E6EDF3;min-height:100vh;}
+.topbar{background:#13171F;border-bottom:0.5px solid #21262D;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:15px;font-weight:600;color:#F0F6FC;}
+.topbar-sub{font-size:11px;color:#7D8590;margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.chip{background:#21262D;border:0.5px solid #30363D;border-radius:20px;padding:4px 12px;font-size:11px;color:#8B949E;}
+.upd{font-size:11px;color:#7D8590;}
+.rbtn{padding:5px 12px;border:0.5px solid #30363D;border-radius:20px;font-size:12px;color:#C9D1D9;background:#21262D;cursor:pointer;font-weight:500;}
+.rbtn:hover{background:#30363D;}
+.filterbar{background:#13171F;border-bottom:0.5px solid #21262D;padding:9px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.fchip{background:#21262D;border:0.5px solid #30363D;border-radius:8px;padding:5px 10px;font-size:12px;color:#8B949E;display:flex;align-items:center;gap:5px;}
+.fchip input[type=text]{border:none;outline:none;background:transparent;font-size:12px;color:#C9D1D9;width:160px;}
+.fchip input[type=text]::placeholder{color:#4D5562;}
+.fchip input[type=date],.fchip select{border:none;outline:none;background:transparent;font-size:12px;color:#C9D1D9;cursor:pointer;}
+.fchip b{color:#79C0FF;font-weight:600;}
+.fchip .sep{color:#30363D;margin:0 2px;}
+.cb-pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border:0.5px solid #30363D;border-radius:99px;cursor:pointer;user-select:none;background:#21262D;color:#8B949E;font-weight:500;}
+.cb-pill input{display:none;}
+.cb-pill.a-mi{background:#1F1500;border-color:#5A3A00;color:#FFA657;}
+.cb-pill.a-ev{background:#122620;border-color:#2EA043;color:#56D364;}
+.cb-pill.a-mo{background:#2D1214;border-color:#8B2020;color:#FF7B72;}
+.cb-pill.a-st{background:#0D1E36;border-color:#1F6FEB;color:#79C0FF;}
+.wrap{max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;flex-direction:column;gap:12px;}
+.alert-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.alert-card{border-radius:10px;padding:14px;}
+.alert-card.active{background:#122620;border-left:3px solid #2EA043;}
+.alert-card.upcoming{background:#1F1500;border-left:3px solid #FFA657;}
+.ac-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.alert-card.active .ac-title{color:#3FB950;}
+.alert-card.upcoming .ac-title{color:#E3B341;}
+.ac-badge{font-size:10px;font-weight:600;padding:1px 7px;border-radius:99px;}
+.alert-card.active .ac-badge{background:#2EA043;color:#fff;}
+.alert-card.upcoming .ac-badge{background:#FFA657;color:#1F1500;}
+.ac-item{background:#161B22;border-radius:8px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #21262D;}
+.ac-item:last-child{margin-bottom:0;}
+.ac-empty{font-size:12px;color:#4D5562;text-align:center;padding:12px;font-style:italic;}
+.ac-name{font-size:13px;font-weight:600;color:#F0F6FC;margin-bottom:3px;}
+.ac-detail{font-size:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.ac-zone{display:inline-block;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:600;background:#21262D;color:#8B949E;}
+.ac-time{color:#C9D1D9;font-weight:500;}
+.ac-count{color:#4D5562;font-size:10px;}
+.scores{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+.score{background:#13171F;border-radius:10px;padding:12px 14px;border:0.5px solid #21262D;}
+.score-label{font-size:10px;color:#7D8590;margin-bottom:4px;font-weight:400;text-transform:uppercase;letter-spacing:0.03em;}
+.score-value{font-size:22px;font-weight:600;color:#F0F6FC;}
+.card{background:#161B22;border-radius:10px;overflow:hidden;border:0.5px solid #21262D;}
+.card-hd{padding:10px 16px;border-bottom:0.5px solid #21262D;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-title{font-size:12px;font-weight:600;color:#F0F6FC;text-transform:uppercase;letter-spacing:0.04em;}
+.zone-section{margin-bottom:4px;}
+.zone-section:last-child{margin-bottom:0;}
+.phase-label{font-size:11px;font-weight:600;margin:10px 16px 6px;display:flex;align-items:center;gap:6px;}
+.phase-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.zone-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;padding:0 16px 14px;}
+.zblock{border-radius:8px;padding:10px 12px;background:#13171F;border:0.5px solid #21262D;}
+.zblock.on-1{border-left:3px solid #2EA043;}
+.zblock.on-2{border-left:3px solid #1F6FEB;}
+.zblock.off{opacity:0.4;}
+.zb-name{font-size:12px;font-weight:600;color:#F0F6FC;margin-bottom:2px;}
+.zb-sub{font-size:11px;font-weight:400;}
+.zblock.on-1 .zb-sub{color:#56D364;}
+.zblock.on-2 .zb-sub{color:#79C0FF;}
+.zblock.off .zb-sub{color:#4D5562;}
+.tl-scores{display:flex;gap:8px;}
+.tl-score{background:#13171F;border-radius:8px;padding:5px 12px;text-align:center;border:0.5px solid #21262D;}
+.tl-score-label{font-size:10px;color:#7D8590;font-weight:400;}
+.tl-score-value{font-size:14px;font-weight:600;color:#E6EDF3;}
+.tl-body{padding:10px 16px 4px;}
+.tl-now-header{position:relative;padding-left:130px;height:18px;margin-bottom:2px;}
+.tl-now-lbl{position:absolute;font-size:10px;color:#FF7B72;font-weight:600;transform:translateX(-50%);white-space:nowrap;}
+.tl-hour-row{display:flex;padding-left:130px;margin-bottom:3px;position:relative;}
+.tl-hour{flex:1;font-size:9px;color:#4D5562;font-weight:400;}
+.pdiv{padding-left:130px;font-size:11px;font-weight:600;margin:8px 0 4px;display:flex;align-items:center;gap:6px;}
+.tl-row{display:flex;align-items:center;margin-bottom:5px;}
+.tl-label{width:122px;font-size:12px;font-weight:500;color:#8B949E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;padding-right:8px;}
+.tl-track{flex:1;height:26px;background:#21262D;border-radius:3px;position:relative;cursor:crosshair;}
+.tl-seg{position:absolute;height:100%;border-radius:2px;pointer-events:none;}
+.mi-p1{background:#1A3B2A;}.ev-p1{background:#2EA043;}.mo-p1{background:#122620;}
+.mi-p2{background:#0D1E36;}.ev-p2{background:#1F6FEB;}.mo-p2{background:#0A1628;}
+.now-line{position:absolute;width:2px;background:#FF7B72;height:100%;top:0;pointer-events:none;z-index:5;}
+.grid-line{position:absolute;width:1px;background:rgba(255,255,255,0.05);height:100%;top:0;pointer-events:none;z-index:1;}
+.sel-ov{position:absolute;height:100%;background:rgba(121,192,255,0.1);border:1px solid #79C0FF;border-radius:2px;pointer-events:none;z-index:6;display:none;}
+.drag-hint{font-size:11px;color:#4D5562;padding:6px 16px 10px;padding-left:146px;font-style:italic;}
+.empty-state{text-align:center;padding:40px 20px;color:#4D5562;}
+.empty-state-icon{font-size:36px;margin-bottom:8px;}
+.empty-state-text{font-size:14px;font-weight:500;color:#7D8590;margin-bottom:4px;}
+.empty-state-sub{font-size:12px;color:#4D5562;}
+.rb{display:none;margin:4px 16px 10px;border:0.5px solid #21262D;border-radius:8px;overflow:hidden;}
+.rbh{background:#161B22;padding:8px 14px;font-size:12px;font-weight:600;color:#E6EDF3;display:flex;justify-content:space-between;align-items:center;}
+.rsbtn{font-size:11px;color:#8B949E;cursor:pointer;padding:2px 8px;border:0.5px solid #30363D;border-radius:99px;font-weight:400;}
+.export-btn{font-size:11px;color:#56D364;cursor:pointer;padding:2px 8px;border:0.5px solid #2EA043;border-radius:99px;background:#122620;margin-right:6px;font-weight:500;}
+.rbd{padding:12px 14px;display:grid;grid-template-columns:1fr 0.5px 1fr 0.5px 1fr;gap:12px;background:#161B22;}
+.rdiv{background:#21262D;}
+.rpl{font-size:11px;color:#7D8590;display:flex;align-items:center;gap:5px;margin-bottom:6px;font-weight:600;}
+.rrs{display:flex;flex-direction:column;gap:4px;}
+.rr{display:flex;justify-content:space-between;font-size:12px;}
+.rrl{color:#7D8590;font-weight:400;}
+.rrv{font-weight:600;color:#E6EDF3;}
+.rtot{font-size:18px;font-weight:600;color:#F0F6FC;margin-bottom:2px;}
+.rzc{font-size:11px;color:#7D8590;font-weight:400;}
+.legend{display:flex;gap:10px;padding:4px 16px 12px;padding-left:146px;flex-wrap:wrap;}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#8B949E;font-weight:400;}
+.ld{width:8px;height:8px;border-radius:2px;}
+.etable{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.etable th{text-align:left;padding:7px 14px;color:#7D8590;font-weight:600;border-bottom:0.5px solid #21262D;font-size:11px;background:#161B22;text-transform:uppercase;letter-spacing:0.03em;cursor:pointer;user-select:none;}
+.etable th:hover{color:#C9D1D9;}
+.etable th.sort-asc::after{content:' ↑';}
+.etable th.sort-desc::after{content:' ↓';}
+.etable td{padding:8px 14px;border-bottom:0.5px solid #21262D;color:#C9D1D9;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:400;}
+.etable tr:nth-child(even) td{background:#13171F;}
+.etable tr:nth-child(odd) td{background:#161B22;}
+.group-row td{background:#0D1117!important;font-weight:600;font-size:11px;color:#8B949E;padding:6px 14px;border-bottom:0.5px solid #21262D;}
+.row-wait td{opacity:0.5;}
+.wait-label{font-size:11px;color:#4D5562;padding:5px 14px;font-style:italic;}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;}
+.p-mi{background:#1F1500;color:#FFA657;}
+.p-ev{background:#122620;color:#56D364;}
+.p-mo{background:#2D1214;color:#FF7B72;}
+.p-con{background:#0D1E36;color:#79C0FF;}
+.p-def{background:#122620;color:#56D364;}
+.p-wait{background:#2D1214;color:#FF7B72;}
+.p-closed{background:#21262D;color:#7D8590;}
+.p-default{background:#21262D;color:#7D8590;}
+.tooltip{position:fixed;background:#161B22;color:#C9D1D9;padding:10px 14px;border-radius:10px;font-size:12px;pointer-events:none;display:none;z-index:999;line-height:1.7;border:0.5px solid #30363D;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
+.tooltip b{font-weight:600;color:#F0F6FC;}
+@media(max-width:768px){
+  .topbar{padding:10px 14px;flex-wrap:wrap;gap:6px}
+  .topbar-right{gap:5px}
+  .chip{display:none}
+  .filterbar{padding:8px 12px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .filterbar::-webkit-scrollbar{display:none}
+  .fchip{white-space:nowrap;flex-shrink:0;font-size:11px}
+  .fchip input[type=text]{width:110px}
+  .cb-pill{flex-shrink:0;font-size:11px}
+  .wrap{padding:10px 12px;gap:10px}
+  .alert-row{grid-template-columns:1fr}
+  .scores{grid-template-columns:repeat(3,1fr);gap:6px}
+  .score-value{font-size:18px}
+  .tl-label{width:80px;font-size:10px}
+  .tl-now-header{padding-left:88px}
+  .tl-hour-row{padding-left:88px}
+  .pdiv{padding-left:88px}
+  .drag-hint{padding-left:96px;font-size:10px}
+  .legend{padding-left:96px}
+  .rbd{grid-template-columns:1fr;gap:8px}
+  .rdiv{display:none}
+  .zt-col-phase,.zt-col-start,.zt-col-end{display:none}
+  .etable th,.etable td{padding:7px 9px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Zone Dashboard</div>
+    <div class="topbar-sub" id="todayLabel">—</div>
+  </div>
+  <div class="topbar-right">
+    <div class="upd" id="updTime">—</div>
+    <div class="chip">Auto-refresh: 30 min</div>
+    <div class="rbtn" id="refreshBtn">⟳ Refresh</div>
+  </div>
+</div>
+
+<div class="filterbar">
+  <div class="fchip">🔍 <input type="text" id="searchInput" placeholder="Search event or room..."></div>
+  <div class="fchip">
+    <input type="date" id="dateFrom">
+    <span class="sep">to</span>
+    <input type="date" id="dateTo">
+  </div>
+  <div class="fchip">
+    Timeline:&nbsp;<select id="dateSelect"><option value="">— date —</option></select>
+  </div>
+  <div class="fchip">
+    Zone:&nbsp;<select id="zoneFilter"><option value="">All</option></select>
+  </div>
+  <label class="cb-pill a-mi"><input type="checkbox" value="Move In" checked>Move In</label>
+  <label class="cb-pill a-ev"><input type="checkbox" value="Event" checked>Event</label>
+  <label class="cb-pill a-mo"><input type="checkbox" value="Move Out" checked>Move Out</label>
+  <div id="statusGroup" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+</div>
+
+<div class="wrap">
+
+  <div class="alert-row">
+    <div class="alert-card active">
+      <div class="ac-title">Currently active <span class="ac-badge" id="nowBadge" style="display:none;">0</span></div>
+      <div id="nowCards"><div class="ac-empty">Loading...</div></div>
+    </div>
+    <div class="alert-card upcoming">
+      <div class="ac-title">Upcoming (within 2 hrs) <span class="ac-badge" id="upBadge" style="display:none;">0</span></div>
+      <div id="upCards"><div class="ac-empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="scores">
+    <div class="score"><div class="score-label">Events today</div><div class="score-value" id="s-event">—</div></div>
+    <div class="score"><div class="score-label">Active zones</div><div class="score-value" id="s-zone">—</div></div>
+    <div class="score"><div class="score-label">Move In hrs</div><div class="score-value" id="s-mi">—</div></div>
+    <div class="score"><div class="score-label">Event hrs</div><div class="score-value" id="s-ev">—</div></div>
+    <div class="score"><div class="score-label">Move Out hrs</div><div class="score-value" id="s-mo">—</div></div>
+    <div class="score"><div class="score-label">Total hrs</div><div class="score-value" id="s-total">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><div class="card-title">Zone Status</div></div>
+    <div id="zoneBlocks"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title">Timeline — <span id="tlDateLabel">—</span></div>
+      <div class="tl-scores">
+        <div class="tl-score"><div class="tl-score-label">Move In</div><div class="tl-score-value" id="tl-mi" style="color:#7A5A00;">—</div></div>
+        <div class="tl-score"><div class="tl-score-label">Event</div><div class="tl-score-value" id="tl-ev" style="color:#1A6040;">—</div></div>
+        <div class="tl-score"><div class="tl-score-label">Move Out</div><div class="tl-score-value" id="tl-mo" style="color:#8A2020;">—</div></div>
+      </div>
+    </div>
+    <div class="tl-body">
+      <div class="tl-now-header" id="tlNowHeader"></div>
+      <div class="tl-hour-row" id="hours"></div>
+      <div id="timeline"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Select a date to view timeline</div><div class="empty-state-sub">Use the Timeline Date filter above</div></div></div>
+    </div>
+    <div class="drag-hint">💡 Click and drag to calculate hours by Phase · snaps to 30 min</div>
+    <div class="rb" id="rb">
+      <div class="rbh">
+        <span id="rbTitle">—</span>
+        <div>
+          <span class="export-btn" id="exportBtn">⬇ Copy</span>
+          <span class="rsbtn" id="resetBtn">✕ Clear</span>
+        </div>
+      </div>
+      <div class="rbd">
+        <div>
+          <div class="rpl"><div class="phase-dot" style="background:#52C98A;"></div>Phase 1</div>
+          <div class="rrs" id="rp1"></div>
+        </div>
+        <div class="rdiv"></div>
+        <div>
+          <div class="rpl"><div class="phase-dot" style="background:#5B9BD5;"></div>Phase 2</div>
+          <div class="rrs" id="rp2"></div>
+        </div>
+        <div class="rdiv"></div>
+        <div>
+          <div class="rpl">Total</div>
+          <div class="rtot" id="rtot">—</div>
+          <div class="rzc" id="rzc">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="li"><div class="ld" style="background:#A8E6C8;"></div>Move In P1</div>
+      <div class="li"><div class="ld" style="background:#52C98A;"></div>Event P1</div>
+      <div class="li"><div class="ld" style="background:#1F7A52;"></div>Move Out P1</div>
+      <div class="li"><div class="ld" style="background:#A8CCF0;"></div>Move In P2</div>
+      <div class="li"><div class="ld" style="background:#5B9BD5;"></div>Event P2</div>
+      <div class="li"><div class="ld" style="background:#1A4E8A;"></div>Move Out P2</div>
+      <div class="li"><div class="ld" style="background:#E5484D;border-radius:0;width:3px;"></div>Now</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><div class="card-title">Event Details</div></div>
+    <table class="etable" id="eventTable">
+      <thead>
+        <tr>
+          <th style="width:12%;" data-col="status">Status</th>
+          <th style="width:10%;" data-col="type">Type</th>
+          <th style="width:24%;" data-col="eventName">Event Name</th>
+          <th style="width:13%;" data-col="room">Room</th>
+          <th style="width:11%;" data-col="zone" class="zt-col-phase">Zone</th>
+          <th style="width:9%;" data-col="startTime" class="zt-col-start">Start</th>
+          <th style="width:9%;" data-col="endTime" class="zt-col-end">End</th>
+          <th style="width:7%;" data-col="diff">Hrs</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+var allZones=[],allEvents=[],todayEvents=[],trackEls=[],dragState={active:false};
+var lastCalc={title:'',p1:{mi:0,ev:0,mo:0},p2:{mi:0,ev:0,mo:0},tot:0,zones:0};
+
+var now=new Date();
+var yyyy=now.getFullYear(),mm=String(now.getMonth()+1).padStart(2,'0'),dd=String(now.getDate()).padStart(2,'0');
+var todayStr=yyyy+'-'+mm+'-'+dd;
+var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+document.getElementById('todayLabel').textContent=days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+(now.getFullYear()+543);
+document.getElementById('dateFrom').value=todayStr;
+document.getElementById('dateTo').value=todayStr;
+
+var hoursDiv=document.getElementById('hours');
+for(var h=0;h<=24;h++){
+  var hd=document.createElement('div');
+  hd.style.flex='1';hd.style.fontSize='9px';hd.style.color='#AAA';hd.style.position='relative';
+  hd.textContent=h%3===0?String(h).padStart(2,'0')+':00':'';
+  hoursDiv.appendChild(hd);
+}
+
+function statusClass(s){var sl=(s||'').toLowerCase();if(sl.indexOf('contract')>-1)return 'p-con';if(sl.indexOf('definite')>-1)return 'p-def';if(sl.indexOf('wait')>-1)return 'p-wait';if(sl.indexOf('closed')>-1)return 'p-closed';return 'p-default';}
+function isWait(s){var sl=(s||'').toLowerCase();return sl.indexOf('wait')>-1||sl.indexOf('option')>-1;}
+function getTypes(){return Array.from(document.querySelectorAll('.filterbar .cb-pill input:checked')).map(function(c){return c.value;});}
+function getStats(){var c=document.querySelectorAll('#statusGroup input:checked');return c.length?Array.from(c).map(function(x){return x.value;}):null;}
+function inRange(d){var f=document.getElementById('dateFrom').value,t=document.getElementById('dateTo').value;return d>=f&&d<=t;}
+function searchQ(){return document.getElementById('searchInput').value.toLowerCase();}
+function t2p(t){if(!t)return 0;if(t==='24:00')return 100;var p=t.split(':');return((parseInt(p[0])*60+parseInt(p[1]))/1440)*100;}
+function t2m(t){if(!t)return 0;if(t==='24:00')return 1440;var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+function nowP(){var n=new Date();return((n.getHours()*60+n.getMinutes())/1440)*100;}
+function nowStr(){var n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+function snap(p){return Math.round(p/100*1440/30)*30/1440*100;}
+function p2t(p){var m=Math.round(p/100*1440);m=Math.max(0,Math.min(1440,m));return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function updateTime(){var n=new Date();document.getElementById('updTime').textContent='Updated: '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+
+function getFiltered(){
+  var zone=document.getElementById('zoneFilter').value,types=getTypes(),stats=getStats(),q=searchQ();
+  return allEvents.filter(function(e){return inRange(e.startDate)&&!isWait(e.status)&&(!zone||e.zone===zone)&&types.indexOf(e.type)>-1&&(!stats||stats.indexOf(e.status)>-1)&&(!q||e.eventName.toLowerCase().indexOf(q)>-1||e.room.toLowerCase().indexOf(q)>-1);});
+}
+
+function getTlEvents(){
+  var sel=document.getElementById('dateSelect').value,zone=document.getElementById('zoneFilter').value,types=getTypes(),stats=getStats();
+  return allEvents.filter(function(e){return e.startDate===sel&&!isWait(e.status)&&(!zone||e.zone===zone)&&types.indexOf(e.type)>-1&&(!stats||stats.indexOf(e.status)>-1);});
+}
+
+function renderAlerts(){
+  var nowMins=new Date().getHours()*60+new Date().getMinutes(),upcoming=nowMins+120;
+  var conf=todayEvents.filter(function(e){return !isWait(e.status);});
+  var nowList=conf.filter(function(e){return t2m(e.startTime)<=nowMins&&t2m(e.endTime)>nowMins;});
+  var upList=conf.filter(function(e){var s=t2m(e.startTime);return s>nowMins&&s<=upcoming;});
+
+  var nb=document.getElementById('nowBadge');
+  if(nowList.length){nb.textContent=nowList.length;nb.style.display='inline';}else{nb.style.display='none';}
+  var ub=document.getElementById('upBadge');
+  if(upList.length){ub.textContent=upList.length;ub.style.display='inline';}else{ub.style.display='none';}
+
+  var nc=document.getElementById('nowCards');
+  if(!nowList.length){nc.innerHTML='<div class="ac-empty">No active events right now</div>';}
+  else{nc.innerHTML='';nowList.slice(0,4).forEach(function(e){var d=document.createElement('div');d.className='ac-item';d.innerHTML='<div class="ac-name">'+e.eventName+'</div><div class="ac-detail"><span class="ac-zone">'+e.room+'</span><span class="ac-time">'+e.startTime+' – '+e.endTime+'</span><span style="font-size:10px;color:#AAA;">'+e.type+'</span></div>';nc.appendChild(d);});}
+  var uc=document.getElementById('upCards');
+  if(!upList.length){uc.innerHTML='<div class="ac-empty">Nothing upcoming in 2 hrs</div>';}
+  else{uc.innerHTML='';upList.slice(0,4).forEach(function(e){var minsLeft=t2m(e.startTime)-nowMins;var d=document.createElement('div');d.className='ac-item';d.innerHTML='<div class="ac-name">'+e.eventName+'</div><div class="ac-detail"><span class="ac-zone">'+e.room+'</span><span class="ac-time">'+e.type+' starts '+e.startTime+'</span><span class="ac-count">in '+minsLeft+' min</span></div>';uc.appendChild(d);});}
+}
+
+function renderAll(){var f=getFiltered();renderScores(f);renderZoneBlocks(f);renderTimeline();renderTable();}
+
+function renderScores(ev){
+  var ec=ev.filter(function(e){return e.type==='Event';}).length;
+  var zc=[...new Set(ev.map(function(e){return e.zone;}))].length;
+  var mi=ev.filter(function(e){return e.type==='Move In';}).reduce(function(s,e){return s+(parseFloat(e.diff)||0);},0);
+  var ev2=ev.filter(function(e){return e.type==='Event';}).reduce(function(s,e){return s+(parseFloat(e.diff)||0);},0);
+  var mo=ev.filter(function(e){return e.type==='Move Out';}).reduce(function(s,e){return s+(parseFloat(e.diff)||0);},0);
+  document.getElementById('s-event').textContent=ec;
+  document.getElementById('s-zone').textContent=zc;
+  document.getElementById('s-mi').textContent=Math.round(mi*2)/2;
+  document.getElementById('s-ev').textContent=Math.round(ev2*2)/2;
+  document.getElementById('s-mo').textContent=Math.round(mo*2)/2;
+  document.getElementById('s-total').textContent=Math.round((mi+ev2+mo)*2)/2;
+}
+
+function renderZoneBlocks(filtered){
+  var zb=document.getElementById('zoneBlocks');zb.innerHTML='';
+  var activeZones=new Set(filtered.map(function(e){return e.zone;}));
+  var zoneHours={};filtered.forEach(function(e){zoneHours[e.zone]=(zoneHours[e.zone]||0)+(parseFloat(e.diff)||0);});
+  var p1z=allZones.filter(function(z){return z.phase==='1';});
+  var p2z=allZones.filter(function(z){return z.phase==='2';});
+  function renderPhase(zones,label,dotColor,textColor){
+    if(!zones.length)return;
+    var sec=document.createElement('div');sec.className='zone-section';
+    sec.innerHTML='<div class="phase-label" style="color:'+textColor+';"><div class="phase-dot" style="background:'+dotColor+';"></div>'+label+'</div>';
+    var grid=document.createElement('div');grid.className='zone-grid';
+    zones.forEach(function(z){
+      var isOn=activeZones.has(z.name);
+      var div=document.createElement('div');
+      div.className='zblock '+(isOn?(z.phase==='2'?'on-2':'on-1'):'off');
+      var hrs=zoneHours[z.name]?Math.round(zoneHours[z.name]*2)/2+' hrs':'—';
+      div.innerHTML='<div class="zb-name">'+z.name+'</div><div class="zb-sub">'+(isOn?'Active · '+hrs:'Vacant')+'</div>';
+      grid.appendChild(div);
+    });
+    sec.appendChild(grid);zb.appendChild(sec);
+  }
+  renderPhase(p1z,'Phase 1','#52C98A','#1A8050');
+  renderPhase(p2z,'Phase 2','#5B9BD5','#1A4E8A');
+}
+
+function renderTimeline(){
+  var sel=document.getElementById('dateSelect').value,tl=document.getElementById('timeline');
+  document.getElementById('tlDateLabel').textContent=sel||'—';
+  trackEls=[];
+  if(!sel){
+    tl.innerHTML='<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Select a date to view timeline</div><div class="empty-state-sub">Use the Timeline Date filter above</div></div>';
+    document.getElementById('tlNowHeader').innerHTML='';
+    return;
+  }
+  tl.innerHTML='';
+  var events=getTlEvents(),isToday=sel===todayStr,np=nowP();
+  var tlMi=events.filter(function(e){return e.type==='Move In';}).reduce(function(s,e){return s+(parseFloat(e.diff)||0);},0);
+  var tlEv=events.filter(function(e){return e.type==='Event';}).reduce(function(s,e){return s+(parseFloat(e.diff)||0);},0);
+  var tlMo=events.filter(function(e){return e.type==='Move Out';}).reduce(function(s,e){return s+(parseFloat(e.diff)||0);},0);
+  document.getElementById('tl-mi').textContent=Math.round(tlMi*2)/2+' hrs';
+  document.getElementById('tl-ev').textContent=Math.round(tlEv*2)/2+' hrs';
+  document.getElementById('tl-mo').textContent=Math.round(tlMo*2)/2+' hrs';
+
+  var header=document.getElementById('tlNowHeader');
+  header.innerHTML='';
+  if(isToday){
+    var lbl=document.createElement('div');
+    lbl.className='tl-now-lbl';
+    lbl.textContent=nowStr();
+    lbl.style.left=(130+(np*(header.offsetWidth-130)/100))+'px';
+    header.appendChild(lbl);
+  }
+
+  if(!events.length){
+    tl.innerHTML='<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-text">No events found for this date</div><div class="empty-state-sub">Try adjusting your filters</div></div>';
+    return;
+  }
+
+  var zf=document.getElementById('zoneFilter').value;
+  var activeZoneNames=new Set(events.map(function(e){return e.zone;}));
+  var zonesToShow=allZones.filter(function(z){return(!zf||z.name===zf)&&activeZoneNames.has(z.name);});
+  var p1z=zonesToShow.filter(function(z){return z.phase==='1';});
+  var p2z=zonesToShow.filter(function(z){return z.phase==='2';});
+
+  function addRows(zones,label,dotColor,textColor){
+    if(!zones.length)return;
+    var ph=document.createElement('div');ph.className='pdiv';ph.style.color=textColor;
+    ph.innerHTML='<span style="width:7px;height:7px;border-radius:50%;display:inline-block;background:'+dotColor+';"></span>'+label;
+    tl.appendChild(ph);
+    zones.forEach(function(zone){
+      var row=document.createElement('div');row.className='tl-row';
+      var lbl=document.createElement('div');lbl.className='tl-label';lbl.textContent=zone.name;lbl.title=zone.name;row.appendChild(lbl);
+      var track=document.createElement('div');track.className='tl-track';
+      for(var g=0;g<=24;g+=3){
+        var gl=document.createElement('div');gl.className='grid-line';gl.style.left=(g/24*100)+'%';track.appendChild(gl);
+      }
+      if(isToday){var nl=document.createElement('div');nl.className='now-line';nl.style.left=np+'%';track.appendChild(nl);}
+      var zev=events.filter(function(e){return e.zone===zone.name;});
+      var isP2=zone.phase==='2';
+      zev.forEach(function(ev){
+        var seg=document.createElement('div');
+        var cls=isP2?(ev.type==='Move In'?'mi-p2':ev.type==='Event'?'ev-p2':'mo-p2'):(ev.type==='Move In'?'mi-p1':ev.type==='Event'?'ev-p1':'mo-p1');
+        seg.className='tl-seg '+cls;
+        var left=t2p(ev.startTime),width=t2p(ev.endTime)-left;
+        seg.style.left=left+'%';seg.style.width=Math.max(width,0.5)+'%';
+        seg.addEventListener('mousemove',function(e){
+          var t=document.getElementById('tooltip');
+          t.style.display='block';t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-10)+'px';
+          t.innerHTML='<b>'+ev.eventName+'</b><br>'+ev.type+' · '+ev.startTime+' – '+ev.endTime+'<br>'+ev.room+' ('+ev.zone+')<br>'+ev.diff+' hrs · '+ev.status;
+        });
+        seg.addEventListener('mouseleave',function(){document.getElementById('tooltip').style.display='none';});
+        track.appendChild(seg);
+      });
+      var ov=document.createElement('div');ov.className='sel-ov';track.appendChild(ov);
+      trackEls.push({track:track,ov:ov,zone:zone,events:zev});
+      row.appendChild(track);tl.appendChild(row);
+    });
+  }
+  addRows(p1z,'Phase 1','#52C98A','#1A8050');
+  addRows(p2z,'Phase 2','#5B9BD5','#1A4E8A');
+  attachDrag();
+}
+
+function calcDrag(s,e){
+  var sm=s/100*1440,em=e/100*1440,dur=em-sm;
+  if(dur<1)return;
+  var p1={mi:0,ev:0,mo:0,z:0},p2={mi:0,ev:0,mo:0,z:0};
+  var tlEv=getTlEvents();
+  allZones.forEach(function(zone){
+    var isP2=zone.phase==='2';
+    var zev=tlEv.filter(function(e){return e.zone===zone.name;});
+    var any=false;
+    zev.forEach(function(ev){var ss=t2m(ev.startTime),ee=t2m(ev.endTime),ov=Math.min(ee,em)-Math.max(ss,sm);if(ov>0){any=true;var tp=ev.type==='Move In'?'mi':ev.type==='Event'?'ev':'mo';(isP2?p2:p1)[tp]+=ov/60;}});
+    if(any)(isP2?p2:p1).z++;
+  });
+  function rh(l,v,c){return '<div class="rr"><span class="rrl">'+l+'</span><span class="rrv" style="color:'+c+';">'+v.toFixed(1)+' hrs</span></div>';}
+  var title='Selected: '+p2t(s)+' – '+p2t(e)+' = '+(dur/60).toFixed(1)+' hrs';
+  document.getElementById('rb').style.display='block';
+  document.getElementById('rbTitle').textContent=title;
+  document.getElementById('rp1').innerHTML=rh('Move In',p1.mi,'#7A5A00')+rh('Event',p1.ev,'#1A6040')+rh('Move Out',p1.mo,'#8A2020')+'<div class="rr" style="border-top:0.5px solid #EEE;padding-top:4px;margin-top:2px;"><span class="rrl">P1 Total</span><span class="rrv">'+(p1.mi+p1.ev+p1.mo).toFixed(1)+' hrs</span></div>';
+  document.getElementById('rp2').innerHTML=rh('Move In',p2.mi,'#7A5A00')+rh('Event',p2.ev,'#1A4E8A')+rh('Move Out',p2.mo,'#8A2020')+'<div class="rr" style="border-top:0.5px solid #EEE;padding-top:4px;margin-top:2px;"><span class="rrl">P2 Total</span><span class="rrv">'+(p2.mi+p2.ev+p2.mo).toFixed(1)+' hrs</span></div>';
+  var tot=(p1.mi+p1.ev+p1.mo+p2.mi+p2.ev+p2.mo);
+  document.getElementById('rtot').textContent=tot.toFixed(1)+' hrs';
+  document.getElementById('rzc').textContent=(p1.z+p2.z)+' zones active';
+  lastCalc={title:title,p1:p1,p2:p2,tot:tot,zones:p1.z+p2.z};
+}
+
+function attachDrag(){
+  trackEls.forEach(function(item){
+    function start(clientX){
+      var r=trackEls[0].track.getBoundingClientRect();
+      var pct=snap(((clientX-r.left)/r.width)*100);
+      dragState={active:true,sp:pct,rect:r};
+      trackEls.forEach(function(t){t.ov.style.left=pct+'%';t.ov.style.width='0';t.ov.style.display='block';});
+    }
+    item.track.addEventListener('mousedown',function(e){start(e.clientX);e.preventDefault();});
+    item.track.addEventListener('touchstart',function(e){start(e.touches[0].clientX);e.preventDefault();},{passive:false});
+  });
+}
+
+function moveDrag(clientX){
+  if(!dragState.active)return;
+  var pct=snap(((clientX-dragState.rect.left)/dragState.rect.width)*100);
+  pct=Math.max(0,Math.min(100,pct));
+  var l=Math.min(dragState.sp,pct),w=Math.abs(pct-dragState.sp);
+  trackEls.forEach(function(t){t.ov.style.left=l+'%';t.ov.style.width=w+'%';});
+}
+
+function endDrag(clientX){
+  if(!dragState.active)return;
+  var pct=snap(((clientX-dragState.rect.left)/dragState.rect.width)*100);
+  pct=Math.max(0,Math.min(100,pct));
+  calcDrag(Math.min(dragState.sp,pct),Math.max(dragState.sp,pct));
+  trackEls.forEach(function(t){t.ov.style.display='none';});
+  dragState.active=false;
+}
+
+document.addEventListener('mousemove',function(e){moveDrag(e.clientX);});
+document.addEventListener('touchmove',function(e){moveDrag(e.touches[0].clientX);},{passive:true});
+document.addEventListener('mouseup',function(e){endDrag(e.clientX);});
+document.addEventListener('touchend',function(e){endDrag(e.changedTouches[0].clientX);});
+
+var currentSort={col:'',dir:1};
+document.querySelectorAll('.etable th[data-col]').forEach(function(th){
+  th.addEventListener('click',function(){
+    var col=th.dataset.col;
+    if(currentSort.col===col){currentSort.dir*=-1;}else{currentSort.col=col;currentSort.dir=1;}
+    document.querySelectorAll('.etable th').forEach(function(h){h.classList.remove('sort-asc','sort-desc');});
+    th.classList.add(currentSort.dir===1?'sort-asc':'sort-desc');
+    renderTable();
+  });
+});
+
+function renderTable(){
+  var tbody=document.getElementById('tableBody');tbody.innerHTML='';
+  var q=searchQ();
+  var filtered=getFiltered();
+  var waitlist=allEvents.filter(function(e){return inRange(e.startDate)&&isWait(e.status)&&(!q||e.eventName.toLowerCase().indexOf(q)>-1||e.room.toLowerCase().indexOf(q)>-1);});
+
+  if(currentSort.col){
+    var col=currentSort.col,dir=currentSort.dir;
+    filtered.sort(function(a,b){var va=a[col]||'',vb=b[col]||'';return va<vb?-dir:va>vb?dir:0;});
+    waitlist.sort(function(a,b){var va=a[col]||'',vb=b[col]||'';return va<vb?-dir:va>vb?dir:0;});
+  }
+
+  var grouped={};
+  filtered.forEach(function(e){if(!grouped[e.zone])grouped[e.zone]=[];grouped[e.zone].push(e);});
+
+  if(!Object.keys(grouped).length&&!waitlist.length){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-text">No events found</div><div class="empty-state-sub">Try adjusting your search or filters</div></div></td></tr>';
+    return;
+  }
+
+  Object.keys(grouped).sort().forEach(function(zone){
+    var gr=document.createElement('tr');gr.className='group-row';gr.innerHTML='<td colspan="8">📍 '+zone+'</td>';tbody.appendChild(gr);
+    grouped[zone].forEach(function(ev){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><span class="pill '+statusClass(ev.status)+'">'+ev.status+'</span></td><td><span class="pill '+(ev.type==='Move In'?'p-mi':ev.type==='Event'?'p-ev':'p-mo')+'">'+ev.type+'</span></td><td>'+ev.eventName+'</td><td>'+ev.room+'</td><td class="zt-col-phase">'+ev.zone+'</td><td class="zt-col-start">'+ev.startTime+'</td><td class="zt-col-end">'+ev.endTime+'</td><td>'+ev.diff+'</td>';
+      tbody.appendChild(tr);
+    });
+  });
+
+  if(waitlist.length){
+    var wr=document.createElement('tr');wr.innerHTML='<td colspan="8" class="wait-label">— Not Confirm —</td>';tbody.appendChild(wr);
+    waitlist.forEach(function(ev){
+      var tr=document.createElement('tr');tr.className='row-wait';
+      tr.innerHTML='<td><span class="pill p-wait">'+ev.status+'</span></td><td><span class="pill '+(ev.type==='Move In'?'p-mi':ev.type==='Event'?'p-ev':'p-mo')+'">'+ev.type+'</span></td><td>'+ev.eventName+'</td><td>'+ev.room+'</td><td class="zt-col-phase">'+ev.zone+'</td><td class="zt-col-start">'+ev.startTime+'</td><td class="zt-col-end">'+ev.endTime+'</td><td>'+ev.diff+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+function populateFilters(){
+  var zs=document.getElementById('zoneFilter');
+  zs.innerHTML='<option value="">All</option>';
+  allZones.forEach(function(z){var o=document.createElement('option');o.value=z.name;o.textContent=z.name;zs.appendChild(o);});
+  var stats=[...new Set(allEvents.map(function(e){return e.status;}))].filter(function(s){return !isWait(s);}).sort();
+  var sg=document.getElementById('statusGroup');sg.innerHTML='';
+  stats.forEach(function(s){
+    var sc=statusClass(s);
+    var lbl=document.createElement('label');lbl.className='cb-pill a-st '+sc;
+    lbl.innerHTML='<input type="checkbox" value="'+s+'" checked>'+s;
+    lbl.querySelector('input').addEventListener('change',function(){
+      lbl.className=this.checked?'cb-pill a-st '+sc:'cb-pill';
+      renderAll();
+    });
+    sg.appendChild(lbl);
+  });
+  var dates=[...new Set(allEvents.map(function(e){return e.startDate;}))].sort();
+  var ds=document.getElementById('dateSelect');
+  var curSel = ds.value;
+  ds.innerHTML='<option value="">— date —</option>';
+  dates.forEach(function(d){var o=document.createElement('option');o.value=d;o.textContent=d;if(d===(curSel||todayStr))o.selected=true;ds.appendChild(o);});
+  document.getElementById('tlDateLabel').textContent=ds.value||'—';
+}
+
+async function load(){
+  var from=document.getElementById('dateFrom').value,to=document.getElementById('dateTo').value;
+  if(!from||!to)return;
+  document.getElementById('timeline').innerHTML='<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">Loading...</div></div>';
+  document.getElementById('tableBody').innerHTML='';
+  try{
+    var res=await fetch(API_URL+'?action=datarange&from='+from+'&to='+to);
+    var data=await res.json();
+    allEvents=data;
+    todayEvents=allEvents.filter(function(e){return e.startDate===todayStr;});
+    populateFilters();renderAlerts();renderAll();updateTime();
+  }catch(err){
+    document.getElementById('timeline').innerHTML='<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Error: '+err.message+'</div></div>';
+  }
+}
+
+async function initZones(){
+  try{
+    var res=await fetch(API_URL+'?action=zones');
+    allZones=await res.json();
+  }catch(err){ allZones=[]; }
+  load();
+}
+initZones();
+
+document.getElementById('dateFrom').addEventListener('change',load);
+document.getElementById('dateTo').addEventListener('change',load);
+document.getElementById('dateSelect').addEventListener('change',function(){renderTimeline();});
+document.getElementById('zoneFilter').addEventListener('change',renderAll);
+document.getElementById('searchInput').addEventListener('input',renderAll);
+document.querySelectorAll('.filterbar .cb-pill input').forEach(function(cb){
+  cb.addEventListener('change',function(){
+    var lbl=cb.closest('.cb-pill');
+    var cls=cb.value==='Move In'?'a-mi':cb.value==='Event'?'a-ev':'a-mo';
+    lbl.className=cb.checked?'cb-pill '+cls:'cb-pill';
+    renderAll();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click',function(){document.getElementById('rb').style.display='none';});
+document.getElementById('refreshBtn').addEventListener('click',function(){load();});
+document.getElementById('exportBtn').addEventListener('click',function(){
+  var lc=lastCalc;
+  var text=lc.title+'\n\nPhase 1:\n  Move In: '+lc.p1.mi.toFixed(1)+' hrs\n  Event: '+lc.p1.ev.toFixed(1)+' hrs\n  Move Out: '+lc.p1.mo.toFixed(1)+' hrs\n  P1 Total: '+(lc.p1.mi+lc.p1.ev+lc.p1.mo).toFixed(1)+' hrs\n\nPhase 2:\n  Move In: '+lc.p2.mi.toFixed(1)+' hrs\n  Event: '+lc.p2.ev.toFixed(1)+' hrs\n  Move Out: '+lc.p2.mo.toFixed(1)+' hrs\n  P2 Total: '+(lc.p2.mi+lc.p2.ev+lc.p2.mo).toFixed(1)+' hrs\n\nTotal: '+lc.tot.toFixed(1)+' hrs ('+lc.zones+' zones active)';
+  navigator.clipboard.writeText(text).then(function(){document.getElementById('exportBtn').textContent='✓ Copied!';setTimeout(function(){document.getElementById('exportBtn').textContent='⬇ Copy';},2000);});
+});
+
+setInterval(function(){load();},30*60*1000);
+setInterval(function(){if(allEvents.length){renderAlerts();renderTimeline();}},60*1000);
+</script>
+</body>
+</html>
