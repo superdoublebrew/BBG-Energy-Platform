@@ -616,6 +616,14 @@ async function load(){
   try{
     var res=await fetch(API_URL+'?action=datarange&from='+from+'&to='+to);
     var data=await res.json();
+    if(data && data.error){ // [แก้ - ยืนยันล่าสุด] เช็ค error object ก่อนใช้เป็น array กัน ".filter is not a function"
+      document.getElementById('timeline').innerHTML='<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Backend error: '+data.error+'</div></div>';
+      return;
+    }
+    if(!Array.isArray(data)){
+      document.getElementById('timeline').innerHTML='<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">ข้อมูลที่ได้ไม่ใช่ array — ลองเช็ค action=datarange ตรงๆ ผ่าน URL</div></div>';
+      return;
+    }
     allEvents=data;
     todayEvents=allEvents.filter(function(e){return e.startDate===todayStr;});
     populateFilters();renderAlerts();renderAll();updateTime();
@@ -627,7 +635,11 @@ async function load(){
 async function initZones(){
   try{
     var res=await fetch(API_URL+'?action=zones');
-    allZones=await res.json();
+    var data=await res.json();
+    allZones = Array.isArray(data) ? data : [];
+    if(data && data.error){
+      document.getElementById('timeline').innerHTML='<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">getZones error: '+data.error+'</div></div>';
+    }
   }catch(err){ allZones=[]; }
   load();
 }
