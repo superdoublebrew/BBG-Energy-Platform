@@ -333,7 +333,9 @@ async function loadYearly() {
   collapsePanel();
   try {
     if (!yearlyCache) {
-      var res = await fetch(API_URL + '?action=monthlytrend&months=36');
+      // [แก้] อ่านจาก Daily_Archive (แหล่งเดียวกับตาราง drill-down ด้านล่างที่ ?action=monthlydata ใช้)
+      // แทน monthlytrend เดิม (อ่าน Data_Log/Daily_Summary/Config_DailyAreaUsed) กันตัวเลข 2 ตารางเพี้ยนกันเอง
+      var res = await fetch(API_URL + '?action=monthlyreportsummary&months=36');
       yearlyCache = await res.json();
     }
     renderYearly(year, yearlyCache);
@@ -343,7 +345,6 @@ async function loadYearly() {
 }
 function renderYearly(year, trend) {
   document.getElementById('yrTitle').textContent = 'สรุปรายปี ' + year;
-  var yearBE = year + 543;
   var byMonth = {};
   trend.forEach(function(t){ byMonth[t.month] = t; });
   var now = new Date();
@@ -352,7 +353,9 @@ function renderYearly(year, trend) {
   tbody.innerHTML = '';
   var latestWithData = null;
   for (var mm = 1; mm <= 12; mm++) {
-    var key = yearBE + '-' + String(mm).padStart(2,'0');
+    // [แก้] key เป็นปี ค.ศ. ตรงๆ แล้ว — getMonthlyReportSummary คืน month เป็น yyyy-MM ค.ศ.
+    // (ตรงกับ Daily_Archive.Date) ต่างจาก monthlytrend เดิมที่คืนปี พ.ศ. ไม่ต้องแปลง +543 อีกแล้ว
+    var key = year + '-' + String(mm).padStart(2,'0');
     var t = byMonth[key];
     var tr = document.createElement('tr');
     var isCurrent = (mm === curMonth && year === curYear);
@@ -364,10 +367,12 @@ function renderYearly(year, trend) {
       continue;
     }
     var prevKeyDate = new Date(year, mm - 2, 1);
-    var prevKey = (prevKeyDate.getFullYear() + 543) + '-' + String(prevKeyDate.getMonth()+1).padStart(2,'0');
+    var prevKey = prevKeyDate.getFullYear() + '-' + String(prevKeyDate.getMonth()+1).padStart(2,'0'); // [แก้] ปี ค.ศ. เช่นกัน
     var prevT = byMonth[prevKey];
-    var trhPerM2 = (typeof t.trPerSqm === 'number') ? t.trPerSqm * 2 : null;
-    var prevTrhPerM2 = prevT && typeof prevT.trPerSqm === 'number' ? prevT.trPerSqm * 2 : null;
+    // [แก้] getMonthlyReportSummary.trPerSqm คือ sum(Actual_TRH)/sum(Avg_Area_M2) = TRH/ตร.ม. ตรงๆ อยู่แล้ว
+    // (ต่างจาก monthlytrend เดิมที่ trPerSqm คือ TR/ตร.ม. ต้องคูณ 2 เอง) ไม่ต้องคูณ 2 ซ้ำอีก
+    var trhPerM2 = (typeof t.trPerSqm === 'number') ? t.trPerSqm : null;
+    var prevTrhPerM2 = prevT && typeof prevT.trPerSqm === 'number' ? prevT.trPerSqm : null;
     latestWithData = { month: mm, chgArea: prevT ? pctChg_(t.areaUsedTotalSqm, prevT.areaUsedTotalSqm) : null,
       chgTRHperM2: prevT ? pctChg_(trhPerM2, prevTrhPerM2) : null };
     tr.className = 'yr-row' + (isCurrent ? ' is-current' : '') + (isOpen ? ' is-open' : '');
