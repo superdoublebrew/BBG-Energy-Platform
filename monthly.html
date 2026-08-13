@@ -609,7 +609,7 @@ function renderTable() {
   var sumRow = document.createElement('tr');
   sumRow.innerHTML =
     '<td class="sum-date">รวม (sum) — ' + filtered.length + ' วัน</td>'
-    + '<td class="sum-area">' + fmtN(areaCount ? sumArea/areaCount : null, 0) + '</td>'
+    + '<td class="sum-area">' + fmtN(areaCount ? sumArea : null, 0) + '</td>'
     + '<td class="sum-tr">' + fmtN(sumPredTR) + '</td>'
     + '<td class="sum-tr">' + fmtN(sumActTR) + '</td>'
     + '<td class="sum-tr" style="text-align:left;">' + devBar(avgTRDev) + '</td>'
