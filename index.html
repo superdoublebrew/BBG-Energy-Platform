@@ -1364,7 +1364,9 @@ document.getElementById('svgMain').innerHTML = frag.d;
       var kwhTotalEl = document.getElementById('lz-kwh-total-val');
       if(kwhTotalEl) kwhTotalEl.textContent = (typeof data.kwhPerSqmTotal === 'number') ? fmtNum(data.kwhPerSqmTotal,3) : '—';
       var areaTotalEl = document.getElementById('lz-area-total-val');
-      if(areaTotalEl) areaTotalEl.textContent = (typeof data.totalAreaSqm === 'number') ? fmtNum(data.totalAreaSqm,0) : '—';
+      // [แก้บั๊ก] เดิมอ่าน data.totalAreaSqm (พื้นที่ทั้งอาคารคงที่ ไม่แปรผันตาม filter) — ตามที่ confirm
+      // เปลี่ยนมาอ่าน data.totalAreaUsedSqm (พื้นที่ event จริงล้วนๆ ตรงกับ TotalAreaUsed ของ AC Calc/Daily Summary)
+      if(areaTotalEl) areaTotalEl.textContent = (typeof data.totalAreaUsedSqm === 'number') ? fmtNum(data.totalAreaUsedSqm,0) : '—';
 
       renderLzFlat_(byLocationZoneFlat);
 
