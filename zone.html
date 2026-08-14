@@ -321,6 +321,9 @@ function inRange(d){var f=document.getElementById('dateFrom').value,t=document.g
 function searchQ(){return document.getElementById('searchInput').value.toLowerCase();}
 function t2p(t){if(!t)return 0;if(t==='24:00')return 100;var p=t.split(':');return((parseInt(p[0])*60+parseInt(p[1]))/1440)*100;}
 function t2m(t){if(!t)return 0;if(t==='24:00')return 1440;var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+// [แก้บั๊ก - security] escape ข้อมูลดิบจาก Input (eventName/room/zone/status/type) ก่อนแทรกลง innerHTML
+// กันชื่ออีเวนต์ที่มีอักขระ < > & " ทำตารางเพี้ยน/พัง
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function nowP(){var n=new Date();return((n.getHours()*60+n.getMinutes())/1440)*100;}
 function nowStr(){var n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
 function snap(p){return Math.round(p/100*1440/30)*30/1440*100;}
@@ -350,10 +353,10 @@ function renderAlerts(){
 
   var nc=document.getElementById('nowCards');
   if(!nowList.length){nc.innerHTML='<div class="ac-empty">No active events right now</div>';}
-  else{nc.innerHTML='';nowList.slice(0,4).forEach(function(e){var d=document.createElement('div');d.className='ac-item';d.innerHTML='<div class="ac-name">'+e.eventName+'</div><div class="ac-detail"><span class="ac-zone">'+e.room+'</span><span class="ac-time">'+e.startTime+' – '+e.endTime+'</span><span style="font-size:10px;color:#AAA;">'+e.type+'</span></div>';nc.appendChild(d);});}
+  else{nc.innerHTML='';nowList.slice(0,4).forEach(function(e){var d=document.createElement('div');d.className='ac-item';d.innerHTML='<div class="ac-name">'+escapeHtml(e.eventName)+'</div><div class="ac-detail"><span class="ac-zone">'+escapeHtml(e.room)+'</span><span class="ac-time">'+e.startTime+' – '+e.endTime+'</span><span style="font-size:10px;color:#AAA;">'+escapeHtml(e.type)+'</span></div>';nc.appendChild(d);});}
   var uc=document.getElementById('upCards');
   if(!upList.length){uc.innerHTML='<div class="ac-empty">Nothing upcoming in 2 hrs</div>';}
-  else{uc.innerHTML='';upList.slice(0,4).forEach(function(e){var minsLeft=t2m(e.startTime)-nowMins;var d=document.createElement('div');d.className='ac-item';d.innerHTML='<div class="ac-name">'+e.eventName+'</div><div class="ac-detail"><span class="ac-zone">'+e.room+'</span><span class="ac-time">'+e.type+' starts '+e.startTime+'</span><span class="ac-count">in '+minsLeft+' min</span></div>';uc.appendChild(d);});}
+  else{uc.innerHTML='';upList.slice(0,4).forEach(function(e){var minsLeft=t2m(e.startTime)-nowMins;var d=document.createElement('div');d.className='ac-item';d.innerHTML='<div class="ac-name">'+escapeHtml(e.eventName)+'</div><div class="ac-detail"><span class="ac-zone">'+escapeHtml(e.room)+'</span><span class="ac-time">'+escapeHtml(e.type)+' starts '+e.startTime+'</span><span class="ac-count">in '+minsLeft+' min</span></div>';uc.appendChild(d);});}
 }
 
 function renderAll(){var f=getFiltered();renderScores(f);renderZoneBlocks(f);renderTimeline();renderTable();}
@@ -460,7 +463,7 @@ function renderTimeline(){
         seg.addEventListener('mousemove',function(e){
           var t=document.getElementById('tooltip');
           t.style.display='block';t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-10)+'px';
-          t.innerHTML='<b>'+ev.eventName+'</b><br>'+ev.type+' · '+ev.startTime+' – '+ev.endTime+'<br>'+ev.room+' ('+ev.zone+')<br>'+ev.diff+' hrs · '+ev.status;
+          t.innerHTML='<b>'+escapeHtml(ev.eventName)+'</b><br>'+escapeHtml(ev.type)+' · '+ev.startTime+' – '+ev.endTime+'<br>'+escapeHtml(ev.room)+' ('+escapeHtml(ev.zone)+')<br>'+ev.diff+' hrs · '+escapeHtml(ev.status);
         });
         seg.addEventListener('mouseleave',function(){document.getElementById('tooltip').style.display='none';});
         track.appendChild(seg);
@@ -566,10 +569,10 @@ function renderTable(){
   }
 
   Object.keys(grouped).sort().forEach(function(zone){
-    var gr=document.createElement('tr');gr.className='group-row';gr.innerHTML='<td colspan="8">📍 '+zone+'</td>';tbody.appendChild(gr);
+    var gr=document.createElement('tr');gr.className='group-row';gr.innerHTML='<td colspan="8">📍 '+escapeHtml(zone)+'</td>';tbody.appendChild(gr);
     grouped[zone].forEach(function(ev){
       var tr=document.createElement('tr');
-      tr.innerHTML='<td><span class="pill '+statusClass(ev.status)+'">'+ev.status+'</span></td><td><span class="pill '+(ev.type==='Move In'?'p-mi':ev.type==='Event'?'p-ev':'p-mo')+'">'+ev.type+'</span></td><td>'+ev.eventName+'</td><td>'+ev.room+'</td><td class="zt-col-phase">'+ev.zone+'</td><td class="zt-col-start">'+ev.startTime+'</td><td class="zt-col-end">'+ev.endTime+'</td><td>'+ev.diff+'</td>';
+      tr.innerHTML='<td><span class="pill '+statusClass(ev.status)+'">'+escapeHtml(ev.status)+'</span></td><td><span class="pill '+(ev.type==='Move In'?'p-mi':ev.type==='Event'?'p-ev':'p-mo')+'">'+escapeHtml(ev.type)+'</span></td><td>'+escapeHtml(ev.eventName)+'</td><td>'+escapeHtml(ev.room)+'</td><td class="zt-col-phase">'+escapeHtml(ev.zone)+'</td><td class="zt-col-start">'+ev.startTime+'</td><td class="zt-col-end">'+ev.endTime+'</td><td>'+ev.diff+'</td>';
       tbody.appendChild(tr);
     });
   });
@@ -578,7 +581,7 @@ function renderTable(){
     var wr=document.createElement('tr');wr.innerHTML='<td colspan="8" class="wait-label">— Not Confirm —</td>';tbody.appendChild(wr);
     waitlist.forEach(function(ev){
       var tr=document.createElement('tr');tr.className='row-wait';
-      tr.innerHTML='<td><span class="pill p-wait">'+ev.status+'</span></td><td><span class="pill '+(ev.type==='Move In'?'p-mi':ev.type==='Event'?'p-ev':'p-mo')+'">'+ev.type+'</span></td><td>'+ev.eventName+'</td><td>'+ev.room+'</td><td class="zt-col-phase">'+ev.zone+'</td><td class="zt-col-start">'+ev.startTime+'</td><td class="zt-col-end">'+ev.endTime+'</td><td>'+ev.diff+'</td>';
+      tr.innerHTML='<td><span class="pill p-wait">'+escapeHtml(ev.status)+'</span></td><td><span class="pill '+(ev.type==='Move In'?'p-mi':ev.type==='Event'?'p-ev':'p-mo')+'">'+escapeHtml(ev.type)+'</span></td><td>'+escapeHtml(ev.eventName)+'</td><td>'+escapeHtml(ev.room)+'</td><td class="zt-col-phase">'+escapeHtml(ev.zone)+'</td><td class="zt-col-start">'+ev.startTime+'</td><td class="zt-col-end">'+ev.endTime+'</td><td>'+ev.diff+'</td>';
       tbody.appendChild(tr);
     });
   }
