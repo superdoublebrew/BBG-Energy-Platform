@@ -1301,22 +1301,28 @@ document.getElementById('svgMain').innerHTML = frag.d;
       var isTop = (idx === 0);
       var kwhTxt = (typeof zone.kwhAreaBased === 'number') ? fmtNum(zone.kwhAreaBased,1) : '—';
       var areaTxt = (typeof zone.areaSqm === 'number') ? fmtNum(zone.areaSqm,0) : '—';
+      var trTxt = (typeof zone.trApprox === 'number') ? fmtNum(zone.trApprox,0) : '—';
+      var kwPerTrTxt = (typeof zone.kwPerTr === 'number') ? fmtNum(zone.kwPerTr,2) : '—';
       var pct = (maxKwh > 0 && typeof zone.kwhAreaBased === 'number') ? Math.round((zone.kwhAreaBased/maxKwh)*100) : 0;
       var barColor = isTop ? '#38bdf8' : colorForRank_(idx, list.length);
 
       html += '<div class="lz-card-flat"'
-            + ' style="padding:7px 9px; border-radius:7px; margin-bottom:5px;'
-            + ' background:' + (isTop ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.03)') + ';'
-            + ' border:1px solid ' + (isTop ? 'rgba(56,189,248,0.5)' : 'var(--glass-border)') + ';"'
-            + ' title="' + zone.locationZone + ': ' + kwhTxt + ' kWh · ' + areaTxt + ' m²">'
-            +   '<div style="display:flex; justify-content:space-between; align-items:baseline; font-family:JetBrains Mono,monospace;">'
-            +     '<span style="font-size:10px; color:var(--text-normal);">' + zone.locationZone + '</span>'
-            +     '<span style="font-size:11px; font-weight:600; color:' + barColor + ';">' + kwhTxt + '<span style="font-size:7px; color:var(--text-faint);"> kWh</span></span>'
+            + ' style="padding:10px 12px; border-radius:10px; margin-bottom:8px;'
+            + ' background:' + (isTop ? 'rgba(56,189,248,0.08)' : 'rgba(255,255,255,0.02)') + ';'
+            + ' border:1px solid ' + (isTop ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.1)') + ';"'
+            + ' title="' + zone.locationZone + ': ' + kwhTxt + ' kWh · ' + areaTxt + ' m² · ' + trTxt + ' TR · ' + kwPerTrTxt + ' kW/TR">'
+            +   '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">'
+            +     '<span style="font-size:11px; color:var(--text);">' + zone.locationZone + '</span>'
+            +     '<span style="font-size:12px; font-weight:700; color:' + barColor + ';">' + kwhTxt + '<span style="font-size:8px; color:var(--text-faint);"> kWh</span></span>'
             +   '</div>'
-            +   '<div style="height:4px; border-radius:2px; background:rgba(255,255,255,0.06); margin-top:4px; overflow:hidden;">'
+            +   '<div style="height:4px; border-radius:2px; background:rgba(255,255,255,0.06); overflow:hidden; margin-bottom:8px;">'
             +     '<div style="height:100%; width:' + pct + '%; background:' + barColor + '; border-radius:2px;"></div>'
             +   '</div>'
-            +   '<div style="font-family:JetBrains Mono,monospace; font-size:7px; color:var(--text-faint); margin-top:2px;">' + areaTxt + ' m²</div>'
+            +   '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; border-top:1px solid rgba(255,255,255,0.08); padding-top:7px;">'
+            +     '<div><div style="font-size:8px; color:var(--text-faint); letter-spacing:.03em;">Area</div><div style="font-size:12px; color:var(--text); font-weight:600;">' + areaTxt + ' m²</div></div>'
+            +     '<div><div style="font-size:8px; color:var(--text-faint); letter-spacing:.03em;">Total TR</div><div style="font-size:12px; color:var(--text); font-weight:600;">' + trTxt + '</div></div>'
+            +     '<div><div style="font-size:8px; color:var(--text-faint); letter-spacing:.03em;">kW/TR</div><div style="font-size:13px; color:' + barColor + '; font-weight:700;">' + kwPerTrTxt + '</div></div>'
+            +   '</div>'
             + '</div>';
     });
 
