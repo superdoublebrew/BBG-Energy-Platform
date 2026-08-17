@@ -597,8 +597,10 @@ function renderTable() {
       + '<td class="td-st">' + statusCell + '</td>'
       + '<td class="td-cm">' + commentCell + '</td>';
     tbody.appendChild(tr);
+    // [แก้ - ตามที่ confirm] Area มาจาก Input/Event_Log ล้วนๆ รู้ล่วงหน้าแน่นอน ไม่ต้องรอ Data_Log จริง
+    // เหมือน TR/kW/Cost — แยกออกจากเงื่อนไข isFuture ให้รวมพื้นที่ทุกวันเสมอ (รวมวันอนาคตด้วย)
+    if (r.avgArea !== null) { sumArea += r.avgArea; areaCount++; }
     if (!r.isFuture) {
-      if (r.avgArea !== null) { sumArea += r.avgArea; areaCount++; }
       sumPredTR += r.predTR||0; sumActTR += r.actualTR||0;
       sumPredKW += r.predKW||0; sumActKW += r.actualKW||0;
       sumPredCost += r.predCost||0; sumActCost += r.actualCost||0;
