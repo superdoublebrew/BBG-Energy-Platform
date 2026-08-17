@@ -479,10 +479,17 @@ function renderAll() {
   if (!allData.length) { resetKPI(); renderTable(); return; }
   var real = allData.filter(function(d){ return !d.isFuture; });
   var agg = { sumPredTR:0, sumActTR:0, avgTRDev:0, sumPredKW:0, sumActKW:0, avgKWDev:0, sumPredCost:0, sumActCost:0, flagDays:0 };
+  // [แก้ - ตามที่ confirm] Predict (มาจาก Input ล้วนๆ รู้ล่วงหน้าแน่นอน) รวมทั้งเดือนเสมอ ไม่ต้องรอ Data_Log จริง
+  // ใช้ allData ทั้งก้อน ไม่กรอง isFuture — ต่างจาก Actual ที่ต้องรอวันนั้นมาถึงจริงถึงจะมีค่า ยังใช้ real เหมือนเดิม
+  allData.forEach(function(d) {
+    agg.sumPredTR += d.predTR || 0;
+    agg.sumPredKW += d.predKW || 0;
+    agg.sumPredCost += d.predCost || 0;
+  });
   real.forEach(function(d) {
-    agg.sumPredTR += d.predTR || 0; agg.sumActTR += d.actualTR || 0;
-    agg.sumPredKW += d.predKW || 0; agg.sumActKW += d.actualKW || 0;
-    agg.sumPredCost += d.predCost || 0; agg.sumActCost += d.actualCost || 0;
+    agg.sumActTR += d.actualTR || 0;
+    agg.sumActKW += d.actualKW || 0;
+    agg.sumActCost += d.actualCost || 0;
     if (d.flagTR || d.flagKW) agg.flagDays++;
   });
   agg.avgTRDev = real.length ? real.reduce(function(s,d){ return s + (d.trDevPct||0); },0) / real.length : 0;
@@ -597,13 +604,17 @@ function renderTable() {
       + '<td class="td-st">' + statusCell + '</td>'
       + '<td class="td-cm">' + commentCell + '</td>';
     tbody.appendChild(tr);
-    // [แก้ - ตามที่ confirm] Area มาจาก Input/Event_Log ล้วนๆ รู้ล่วงหน้าแน่นอน ไม่ต้องรอ Data_Log จริง
-    // เหมือน TR/kW/Cost — แยกออกจากเงื่อนไข isFuture ให้รวมพื้นที่ทุกวันเสมอ (รวมวันอนาคตด้วย)
+    // [แก้ - ตามที่ confirm] Area และ Predict (Pred TR/KW/Cost) มาจาก Input/Event_Log ล้วนๆ รู้ล่วงหน้า
+    // แน่นอน ไม่ต้องรอ Data_Log จริง — รวมทั้งเดือนเสมอ (รวมวันอนาคตด้วย) ส่วน Actual ต้องรอวันนั้นมาถึงจริง
+    // ถึงจะมีค่า ยังกรอง isFuture เหมือนเดิม
     if (r.avgArea !== null) { sumArea += r.avgArea; areaCount++; }
+    sumPredTR += r.predTR||0;
+    sumPredKW += r.predKW||0;
+    sumPredCost += r.predCost||0;
     if (!r.isFuture) {
-      sumPredTR += r.predTR||0; sumActTR += r.actualTR||0;
-      sumPredKW += r.predKW||0; sumActKW += r.actualKW||0;
-      sumPredCost += r.predCost||0; sumActCost += r.actualCost||0;
+      sumActTR += r.actualTR||0;
+      sumActKW += r.actualKW||0;
+      sumActCost += r.actualCost||0;
     }
   });
   var avgTRDev = filtered.length ? filtered.reduce(function(s,d){return s+(d.trDevPct||0);},0)/filtered.length : 0;
