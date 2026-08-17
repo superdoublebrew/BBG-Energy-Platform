@@ -97,6 +97,9 @@ body{background:#0D1117;color:#E6EDF3;min-height:100vh}
 .chp-1000{background:#1A1040;color:#D2A8FF;border:0.5px solid #6E40C9}
 .chp-500{background:#0D1E36;color:#79C0FF;border:0.5px solid #1F6FEB}
 .chp-none{background:#21262D;color:#7D8590;border:0.5px solid #30363D;font-size:10px;font-weight:500}
+.chiller-slot-delta{font-size:11px;font-weight:600;margin-top:2px;display:flex;align-items:center;gap:5px}
+.chiller-slot-delta.up{color:#56D364}
+.chiller-slot-delta.down{color:#79C0FF}
 .ev-table{width:100%;border-collapse:collapse}
 .ev-table th{font-size:10px;color:#7D8590;font-weight:700;padding:7px 12px;text-align:left;border-bottom:0.5px solid #21262D;background:#161B22;white-space:nowrap;text-transform:uppercase;letter-spacing:0.04em}
 .ev-table td{font-size:12px;padding:7px 12px;border-bottom:0.5px solid #21262D;color:#C9D1D9;white-space:nowrap}
@@ -434,6 +437,7 @@ function renderChillerSchedule(){
     {key:'midday', label:'บ่าย', time:'12:00 – 18:00'},
     {key:'night', label:'ค่ำ', time:'18:00 – 24:00'}
   ];
+  var prevTotal = null; // [ใหม่] นับรวม 1000TR+500TR เป็นยอดเดียว เช้าไม่มีช่วงก่อนหน้าให้เทียบเลยไม่มีป้าย
   grid.innerHTML = defs.map(function(d){
     var s = shifts[d.key] || {peakTR:0, predTRMargin:null, predTRH:null, predKwhMargin:null, actualTR:null, actualKwh:null};
     var rec = calcChillerRec(s.peakTR || 0); // [แก้ - ยืนยันล่าสุด] ใช้ peakTR ดิบจาก backend ตรงๆ
@@ -441,6 +445,14 @@ function renderChillerSchedule(){
     if(rec.u1000>0) pills += '<span class="chp chp-1000">'+rec.u1000+' × 1000TR</span>';
     if(rec.u500>0) pills += '<span class="chp chp-500">'+rec.u500+' × 500TR</span>';
     if(!pills) pills = '<span class="chp chp-none">ไม่มีโหลด</span>';
+    var total = rec.u1000 + rec.u500;
+    var deltaHtml = '';
+    if(prevTotal !== null){
+      var diff = total - prevTotal;
+      if(diff > 0) deltaHtml = '<div class="chiller-slot-delta up">▲ เพิ่ม '+diff+' เครื่องจากช่วงก่อนหน้า</div>';
+      else if(diff < 0) deltaHtml = '<div class="chiller-slot-delta down">▼ ลด '+(-diff)+' เครื่องจากช่วงก่อนหน้า</div>';
+    }
+    prevTotal = total;
     return '<div class="chiller-slot">'
       + '<div class="chiller-slot-hd"><span class="chiller-slot-label">'+d.label+'</span><span class="chiller-slot-time">'+d.time+'</span></div>'
       + '<div class="chiller-slot-body">'
@@ -452,6 +464,7 @@ function renderChillerSchedule(){
       +   '<div style="font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Peak (TR)</div>'
       +   '<div class="chiller-slot-peak">'+fmtR1(s.peakTR)+'</div>'
       +   '<div class="chiller-slot-pills">'+pills+'</div>'
+      +   deltaHtml
       + '</div></div>';
   }).join('');
 }
