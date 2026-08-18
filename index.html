@@ -117,11 +117,10 @@
   .kpi-trend.flat{ color:var(--text-faint); }
   .kpi-spark{ position:absolute; left:0; right:0; bottom:0; height:22px; opacity:0.55; pointer-events:none; }
 
-  /* [แก้ - เจอบั๊กจริงหลังย้าย Location Zone] เดิม min-height:0 ทำให้ flexbox บีบผังวงจรเล็กลงได้ไม่จำกัด
-     พอมี .loczone-full เป็น sibling ใหม่ในกรอบความสูงจำกัดของ .panel — ผังเลยหดจนเล็กผิดปกติ (เจอจากภาพจริง)
-     แก้โดยให้มี min-height ตายตัว กันบีบต่ำกว่านี้ ส่วนพื้นที่ไม่พอให้ #panel-plant scroll ทั้งก้อนแทน
-     (ตามที่ยืนยันว่ายอมรับ scroll ได้ ขอแค่สัดส่วนไม่ถูกบีบ) */
-  .circuit-area{ flex:1; min-height:460px; padding:10px 16px 14px; display:flex; flex-direction:column; position:relative; }
+  /* [แก้ - ตามที่ชี้ว่ามีพื้นที่ว่างเยอะเกิน] เดิม min-height:460px เป็นค่าตายตัวที่เดามา ทำให้เผื่อพื้นที่เกินกว่า
+     ที่ผังต้องใช้จริง เปลี่ยนกลับเป็นไม่ระบุ (auto ตาม default ของ flex item) — flexbox จะกันบีบเล็กกว่าขนาด
+     เนื้อหาจริงของผังเองอยู่แล้วโดยธรรมชาติ (ต่างจาก min-height:0 เดิมที่อนุญาตให้บีบเกินจริงได้) ไม่ต้องเผื่อเกิน */
+  .circuit-area{ flex:1; padding:10px 16px 14px; display:flex; flex-direction:column; position:relative; }
   #panel-plant{ overflow-y:auto; }
   .circuit-legend{ flex-shrink:0; display:flex; gap:14px; margin-bottom:6px; flex-wrap:wrap; }
   .legend-item{ display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--text-muted); }
@@ -190,8 +189,8 @@
   .lzf-block{ border-radius:8px; overflow:hidden; margin-bottom:10px; }
   .lzf-block.grp{ background:rgba(52,211,153,0.05); }
   .lzf-block.evt{ background:rgba(168,85,247,0.05); }
-  .lzf-block-hdr{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr 1fr; gap:6px; padding:4px 10px; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint); text-transform:uppercase; }
-  .lzf-row{ border-left:4px solid; padding:7px 10px; display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr 1fr; gap:6px; align-items:center; font-size:11px; }
+  .lzf-block-hdr{ display:grid; grid-template-columns:1.4fr 0.9fr 1fr 1fr 1fr 1fr; gap:6px; padding:4px 10px; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint); text-transform:uppercase; }
+  .lzf-row{ border-left:4px solid; padding:7px 10px; display:grid; grid-template-columns:1.4fr 0.9fr 1fr 1fr 1fr 1fr; gap:6px; align-items:center; font-size:11px; }
   .lzf-row.grp{ border-left-color:var(--green); }
   .lzf-row.evt{ border-left-color:var(--p2-1); }
   .lzf-row .zn{ color:var(--text); }
@@ -1332,15 +1331,18 @@ document.getElementById('svgMain').innerHTML = frag.d;
     var name = (z && z.locationZone) ? String(z.locationZone) : 'ไม่ทราบชื่อโซน'; // [กันปัญหา] locationZone หาย
     var kwhTxt = (z && typeof z.kwhAreaBased === 'number') ? fmtNum(z.kwhAreaBased,1) : '—';
     var areaTxt = (z && typeof z.areaSqm === 'number') ? fmtNum(z.areaSqm,0) : '—';
-    var trTxt = (z && typeof z.trApprox === 'number') ? fmtNum(z.trApprox,0) : '—';
-    var kwhPerM2 = (z && typeof z.kwhAreaBased === 'number' && typeof z.areaSqm === 'number' && z.areaSqm > 0)
-      ? fmtNum(z.kwhAreaBased/z.areaSqm,2) : '—'; // [กันปัญหา] area=0 กันหารด้วยศูนย์
-    return '<div class="lzf-row ' + catClass + '" title="' + name + ': ' + kwhTxt + ' kWh · ' + areaTxt + ' m² · ' + trTxt + ' TR">'
+    // [ใหม่ - ตามที่ขอ] TRH = TR×2 (หน่วยเดียวกับที่ใช้ทั้งระบบ เช่น Actual_TRH/Pred_TRH ใน Daily_Archive)
+    var trhVal = (z && typeof z.trApprox === 'number') ? z.trApprox * 2 : null;
+    var trhTxt = (trhVal !== null) ? fmtNum(trhVal,0) : '—';
+    var trhPerArea = (trhVal !== null && z && typeof z.areaSqm === 'number' && z.areaSqm > 0) ? fmtNum(trhVal/z.areaSqm,3) : '—';
+    var kwhPerM2 = (z && typeof z.kwhAreaBased === 'number' && typeof z.areaSqm === 'number' && z.areaSqm > 0) ? fmtNum(z.kwhAreaBased/z.areaSqm,2) : '—'; // [กันปัญหา] area=0 กันหารด้วยศูนย์
+    return '<div class="lzf-row ' + catClass + '" title="' + name + ': ' + kwhTxt + ' kWh · ' + areaTxt + ' m² · ' + trhTxt + ' TRH">'
       + '<span class="zn">' + name + '</span>'
       + '<span class="num">' + areaTxt + ' m²</span>'
-      + '<span class="num">TR ' + trTxt + '</span>'
-      + '<span class="num">' + kwhPerM2 + '/m²</span>'
-      + '<span class="kwh-' + catClass + '">' + kwhTxt + ' kWh</span>'
+      + '<span class="num">' + trhTxt + ' TRH</span>'
+      + '<span class="num">' + kwhTxt + ' kWh</span>'
+      + '<span class="num">' + trhPerArea + '</span>'
+      + '<span class="kwh-' + catClass + '">' + kwhPerM2 + '/m²</span>'
       + '</div>';
   }
 
@@ -1362,18 +1364,19 @@ document.getElementById('svgMain').innerHTML = frag.d;
 
     var groupKwh = sumField_(groupRows, 'kwhAreaBased');
     var groupArea = sumField_(groupRows, 'areaSqm');
-    var groupTr = sumField_(groupRows, 'trApprox');
+    var groupTrh = sumField_(groupRows, 'trApprox') * 2; // [ใหม่ - ตามที่ขอ] TRH = TR×2
     var eventKwh = sumField_(eventRows, 'kwhAreaBased');
     var eventArea = sumField_(eventRows, 'areaSqm');
-    var eventTr = sumField_(eventRows, 'trApprox');
+    var eventTrh = sumField_(eventRows, 'trApprox') * 2;
 
     sumEl.innerHTML =
         '<div class="lzf-gs-card grp"><span class="name">Group · ' + fmtNum(groupKwh,1) + ' kWh</span>'
-      +   '<span class="stats">' + fmtNum(groupArea,0) + ' m² · TR ' + fmtNum(groupTr,0) + ' · ' + (groupArea > 0 ? fmtNum(groupKwh/groupArea,2) : '—') + '/m²</span></div>'
+      +   '<span class="stats">' + fmtNum(groupArea,0) + ' m² · TRH ' + fmtNum(groupTrh,0) + ' · ' + (groupArea > 0 ? fmtNum(groupKwh/groupArea,2) : '—') + '/m²</span></div>'
       + '<div class="lzf-gs-card evt"><span class="name">Event · ' + fmtNum(eventKwh,1) + ' kWh</span>'
-      +   '<span class="stats">' + fmtNum(eventArea,0) + ' m² · TR ' + fmtNum(eventTr,0) + ' · ' + (eventArea > 0 ? fmtNum(eventKwh/eventArea,2) : '—') + '/m²</span></div>';
+      +   '<span class="stats">' + fmtNum(eventArea,0) + ' m² · TRH ' + fmtNum(eventTrh,0) + ' · ' + (eventArea > 0 ? fmtNum(eventKwh/eventArea,2) : '—') + '/m²</span></div>';
 
-    var headerHtml = '<div class="lzf-block-hdr"><span>Zone</span><span style="text-align:right;">Area</span><span style="text-align:right;">TR</span><span style="text-align:right;">kWh/m²</span><span style="text-align:right;">kWh</span></div>';
+    // [ใหม่ - ตามที่ขอ] จัดลำดับใหม่: Area, Total TRH, Total kWh, TRH/Area, kWh/Area
+    var headerHtml = '<div class="lzf-block-hdr"><span>Zone</span><span style="text-align:right;">Area</span><span style="text-align:right;">Total TRH</span><span style="text-align:right;">Total kWh</span><span style="text-align:right;">TRH/Area</span><span style="text-align:right;">kWh/Area</span></div>';
 
     var html = '<div class="lzf-block grp" data-cat="group">' + headerHtml;
     if(groupRows.length){
