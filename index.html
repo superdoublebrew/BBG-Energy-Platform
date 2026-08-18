@@ -117,7 +117,12 @@
   .kpi-trend.flat{ color:var(--text-faint); }
   .kpi-spark{ position:absolute; left:0; right:0; bottom:0; height:22px; opacity:0.55; pointer-events:none; }
 
-  .circuit-area{ flex:1; min-height:0; padding:10px 16px 14px; display:flex; flex-direction:column; position:relative; }
+  /* [แก้ - เจอบั๊กจริงหลังย้าย Location Zone] เดิม min-height:0 ทำให้ flexbox บีบผังวงจรเล็กลงได้ไม่จำกัด
+     พอมี .loczone-full เป็น sibling ใหม่ในกรอบความสูงจำกัดของ .panel — ผังเลยหดจนเล็กผิดปกติ (เจอจากภาพจริง)
+     แก้โดยให้มี min-height ตายตัว กันบีบต่ำกว่านี้ ส่วนพื้นที่ไม่พอให้ #panel-plant scroll ทั้งก้อนแทน
+     (ตามที่ยืนยันว่ายอมรับ scroll ได้ ขอแค่สัดส่วนไม่ถูกบีบ) */
+  .circuit-area{ flex:1; min-height:460px; padding:10px 16px 14px; display:flex; flex-direction:column; position:relative; }
+  #panel-plant{ overflow-y:auto; }
   .circuit-legend{ flex-shrink:0; display:flex; gap:14px; margin-bottom:6px; flex-wrap:wrap; }
   .legend-item{ display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--text-muted); }
   .legend-swatch{ width:16px; height:3px; border-radius:2px; }
