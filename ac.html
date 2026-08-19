@@ -461,8 +461,18 @@ function renderChillerSchedule(){
       +     '<div><div class="slot-stat-lbl">Pred kWh</div><div class="slot-stat-val s-pred-kwh">'+fmtR1(s.predKwhMargin)+'</div></div>'
       +     '<div><div class="slot-stat-lbl">Actual TRH</div><div class="slot-stat-val s-act">'+(s.actualTR?fmtR1(s.actualTR*2):'—')+'</div></div>'
       +   '</div>'
-      +   '<div style="font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Peak (TR)</div>'
-      +   '<div class="chiller-slot-peak">'+fmtR1(s.peakTR)+'</div>'
+      +   '<div style="display:flex;justify-content:space-between;align-items:flex-end;">'
+      +     '<div>'
+      +       '<div style="font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Peak (TR)</div>'
+      +       '<div class="chiller-slot-peak">'+fmtR1(s.peakTR)+'</div>'
+      +     '</div>'
+      // [เพิ่มกลับ - ยืนยันจากไฟล์เก่า] Flow (GPM) = Peak(TR) × 2.4 — หายไปตอน rewrite renderChillerSchedule ใหม่
+      // ไม่ใช่ค่าจาก backend/sensor เป็นการคำนวณฝั่ง frontend ล้วนๆ จากค่า Peak TR ของกะนั้นตรงๆ
+      +     '<div style="text-align:right;">'
+      +       '<div style="font-size:9px;color:#7D8590;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Flow (GPM)</div>'
+      +       '<div style="font-size:15px;font-weight:700;color:#FFA657;line-height:1;">'+(s.peakTR>0?Math.round(s.peakTR*2.4).toLocaleString():'—')+'</div>'
+      +     '</div>'
+      +   '</div>'
       +   '<div class="chiller-slot-pills">'+pills+'</div>'
       +   deltaHtml
       + '</div></div>';
