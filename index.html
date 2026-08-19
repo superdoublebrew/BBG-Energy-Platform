@@ -195,7 +195,7 @@
 
   /* [ใหม่] popup แยกต่างหากสำหรับ Location Zone (Group/Event) — ใช้ .popup-backdrop ร่วมกับของเดิมได้
      (แค่ dim พื้นหลัง ไม่มี logic เฉพาะ) แต่ modal เป็นของตัวเอง กันชนกับ #popupModal ของ equipment */
-  .lzp-modal{ position:absolute; top:50%; left:50%; width:440px; max-height:calc(100% - 40px); background:#0d1017;
+  .lzp-modal{ position:absolute; top:50%; left:50%; width:460px; max-height:calc(100% - 40px); background:#0d1017;
     border:1px solid var(--glass-border); border-radius:16px; padding:20px; opacity:0; transform:translate(-50%,-46%) scale(.94);
     transition:opacity .2s cubic-bezier(.2,.8,.3,1), transform .2s cubic-bezier(.2,.8,.3,1);
     pointer-events:none; z-index:41; box-shadow:0 24px 60px -14px rgba(0,0,0,.65); display:flex; flex-direction:column; }
@@ -204,7 +204,12 @@
   .lzp-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; color:#fff; }
   .lzp-sub{ color:var(--text-faint); font-size:11px; margin-bottom:14px; flex-shrink:0; }
   .lzp-head-row{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr; gap:8px; padding:0 0 7px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700; letter-spacing:.3px; color:var(--text-label); text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,.14); flex-shrink:0; }
-  .lzp-rows{ flex:1; min-height:0; overflow-y:auto; max-height:320px; }
+  /* [แก้เหมือนกับ .pm-unit-rows] เผื่อ padding-right กัน scrollbar ทับข้อมูล + scrollbar บางสวยสไตล์เดียวกัน */
+  .lzp-rows{ flex:1; min-height:0; overflow-y:auto; max-height:320px; padding-right:10px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.18) transparent; }
+  .lzp-rows::-webkit-scrollbar{ width:6px; }
+  .lzp-rows::-webkit-scrollbar-track{ background:transparent; }
+  .lzp-rows::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:99px; }
+  .lzp-rows::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.3); }
   .lzp-row{ padding:9px 0; border-bottom:1px solid rgba(255,255,255,.04); }
   .lzp-row:last-child{ border-bottom:none; }
   .lzp-row-main{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr; gap:8px; align-items:center; font-family:'Inter',sans-serif; font-size:13px; }
@@ -247,7 +252,7 @@
   .popup-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,0); pointer-events:none;
     transition:background .22s ease, backdrop-filter .22s ease; z-index:40; }
   .popup-backdrop.open{ background:rgba(0,0,0,.6); backdrop-filter:blur(2px); pointer-events:auto; }
-  .popup-modal{ position:absolute; top:50%; left:50%; width:420px; background:#0d1017; border:1px solid var(--glass-border);
+  .popup-modal{ position:absolute; top:50%; left:50%; width:460px; background:#0d1017; border:1px solid var(--glass-border);
     border-radius:16px; padding:20px; opacity:0; transform:translate(-50%,-46%) scale(.94);
     transition:opacity .2s cubic-bezier(.2,.8,.3,1), transform .2s cubic-bezier(.2,.8,.3,1), width .2s ease;
     pointer-events:none; z-index:41; box-shadow:0 24px 60px -14px rgba(0,0,0,.65); display:flex; gap:20px;
@@ -274,7 +279,14 @@
   .pm-head-row .hc-unit{ flex:1; min-width:0; }
   .pm-head-row .hc-status{ width:34px; flex-shrink:0; text-align:center; }
   .pm-head-row .hc-num{ width:64px; flex-shrink:0; text-align:right; }
-  .pm-unit-rows{ flex:1; min-height:0; overflow-y:auto; }
+  /* [แก้ - เจอบั๊กจริงจากภาพ] เดิม overflow-y:auto ไม่เผื่อพื้นที่ให้ scrollbar เลย พอ scrollbar เบราว์เซอร์
+     (ปกติกว้าง ~15-17px) โผล่มา ไปทับคอลัมน์ขวาสุด (%LOAD) พอดี — เพิ่ม padding-right กันชน +
+     ทำ scrollbar บางสวยเอง (6px โปร่งแสง) แทน default ของเบราว์เซอร์ ทั้ง Chrome/Firefox/Safari */
+  .pm-unit-rows{ flex:1; min-height:0; overflow-y:auto; padding-right:10px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.18) transparent; }
+  .pm-unit-rows::-webkit-scrollbar{ width:6px; }
+  .pm-unit-rows::-webkit-scrollbar-track{ background:transparent; }
+  .pm-unit-rows::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:99px; }
+  .pm-unit-rows::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.3); }
   .pm-unit-row{ display:flex; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); font-family:'Inter',sans-serif; font-size:12px; gap:8px; }
   .pm-unit-row:last-child{ border-bottom:none; }
   .pm-unit-row.row-hit{ background:rgba(250,199,117,0.14); border-radius:6px; }
