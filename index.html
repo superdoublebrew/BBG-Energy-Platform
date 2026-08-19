@@ -173,54 +173,42 @@
   /* [ใหม่ - ตาม BBG_AreaCondition_Reference_Spec.md รอบ 2] Location Zone ย้ายกลับมาเป็นคอลัมน์ขวาสุด
      (แคบ) แบบพับเก็บ — ต่างจากรอบแรกที่เป็นตารางเต็มความกว้างใต้ผัง (เจอปัญหาแน่นเกิน ตามที่ feedback)
      ตอนนี้เห็นแค่การ์ดสรุป Group/Event 2 ใบ กดแล้วเปิด popup ดูโซนย่อยแทนการดันเนื้อหา (กันปัญหาบีบผังซ้ำ) */
-  .lzf-col{ width:220px; flex-shrink:0; display:flex; flex-direction:column; }
+  .lzf-col{ width:250px; flex-shrink:0; display:flex; flex-direction:column; overflow-y:auto; min-height:0; }
   .lzf-col-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:11px; }
   .lzf-col-head .t{ color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; }
   .lzf-mini-filter{ display:flex; gap:3px; }
   .lzf-mini-filter button{ background:transparent; border:1px solid var(--glass-border); color:var(--text-faint); border-radius:5px; padding:3px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; }
   .lzf-mini-filter button.active{ background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.25); color:#fff; font-weight:700; }
   /* ลำดับสี/ขนาดตัวอักษร 3 ชั้นตามที่ confirm: ตัวเลข kWh ใหญ่สุด+ขาว > ชื่อกลุ่มกลาง+สีของกลุ่ม > metadata เล็กสุด+เทา */
-  .lzf-summary-card{ border-radius:10px; padding:12px 13px; margin-bottom:9px; cursor:pointer; border:1px solid; }
+  .lzf-summary-card{ border-radius:10px; padding:12px 13px; margin-bottom:8px; cursor:pointer; border:1px solid; flex-shrink:0; }
   .lzf-summary-card.grp{ background:rgba(52,211,153,0.12); border-color:rgba(52,211,153,0.28); }
   .lzf-summary-card.evt{ background:rgba(168,85,247,0.12); border-color:rgba(168,85,247,0.28); }
-  .lzf-summary-card .sc-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-  .lzf-summary-card .sc-name{ font-family:'Inter',sans-serif; font-weight:700; font-size:14px; }
-  .lzf-summary-card.grp .sc-name{ color:var(--green); }
-  .lzf-summary-card.evt .sc-name{ color:#c084fc; }
-  .lzf-summary-card .sc-chev{ color:var(--text-faint); font-size:12px; }
-  .lzf-summary-card .sc-kwh{ color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:21px; line-height:1; }
-  .lzf-summary-card .sc-kwh .u{ font-size:11px; font-weight:400; color:var(--text-faint); }
-  .lzf-summary-card .sc-meta{ color:var(--text-faint); font-size:10.5px; margin-top:6px; }
-  .lzf-hint{ margin-top:4px; font-size:9.5px; color:#5a5766; text-align:center; }
+  .lzf-summary-card .sc-top{ display:flex; align-items:center; gap:7px; margin-bottom:10px; }
+  .lzf-summary-card .sc-chev{ font-size:11px; transition:transform .15s; flex-shrink:0; }
+  .lzf-summary-card .sc-chev.collapsed{ transform:rotate(-90deg); }
+  .lzf-summary-card .sc-name{ font-family:'Inter',sans-serif; font-weight:700; font-size:13px; flex:1; min-width:0; }
+  .lzf-summary-card.grp .sc-name, .lzf-summary-card.grp .sc-chev{ color:var(--green); }
+  .lzf-summary-card.evt .sc-name, .lzf-summary-card.evt .sc-chev{ color:#c084fc; }
+  .lzf-summary-card .sc-kwh{ color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; flex-shrink:0; }
+  .lzf-summary-card .sc-metrics{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .lzf-summary-card .sc-metrics .lbl{ color:var(--text-faint); font-size:8.5px; margin-bottom:2px; text-transform:uppercase; }
+  .lzf-summary-card .sc-metrics .val{ color:#fff; font-weight:700; font-size:11.5px; }
+  .lzf-hint{ margin-top:4px; font-size:9.5px; color:#5a5766; text-align:center; flex-shrink:0; }
 
-  /* [ใหม่] popup แยกต่างหากสำหรับ Location Zone (Group/Event) — ใช้ .popup-backdrop ร่วมกับของเดิมได้
-     (แค่ dim พื้นหลัง ไม่มี logic เฉพาะ) แต่ modal เป็นของตัวเอง กันชนกับ #popupModal ของ equipment */
-  .lzp-modal{ position:absolute; top:50%; left:50%; width:460px; max-height:calc(100% - 40px); background:#0d1017;
-    border:1px solid var(--glass-border); border-radius:16px; padding:20px; opacity:0; transform:translate(-50%,-46%) scale(.94);
-    transition:opacity .2s cubic-bezier(.2,.8,.3,1), transform .2s cubic-bezier(.2,.8,.3,1);
-    pointer-events:none; z-index:41; box-shadow:0 24px 60px -14px rgba(0,0,0,.65); display:flex; flex-direction:column; }
-  .lzp-modal.open{ opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:auto; }
-  .lzp-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; flex-shrink:0; }
-  .lzp-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; color:#fff; }
-  .lzp-sub{ color:var(--text-faint); font-size:11px; margin-bottom:14px; flex-shrink:0; }
-  .lzp-head-row{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr; gap:8px; padding:0 0 7px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700; letter-spacing:.3px; color:var(--text-label); text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,.14); flex-shrink:0; }
-  /* [แก้เหมือนกับ .pm-unit-rows] เผื่อ padding-right กัน scrollbar ทับข้อมูล + scrollbar บางสวยสไตล์เดียวกัน */
-  .lzp-rows{ flex:1; min-height:0; overflow-y:auto; max-height:320px; padding-right:10px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.18) transparent; }
-  .lzp-rows::-webkit-scrollbar{ width:6px; }
-  .lzp-rows::-webkit-scrollbar-track{ background:transparent; }
-  .lzp-rows::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:99px; }
-  .lzp-rows::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.3); }
-  .lzp-row{ padding:9px 0; border-bottom:1px solid rgba(255,255,255,.04); }
-  .lzp-row:last-child{ border-bottom:none; }
-  .lzp-row-main{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr; gap:8px; align-items:center; font-family:'Inter',sans-serif; font-size:13px; }
-  .lzp-row .zn{ color:#fff; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .lzp-row .trig{ display:block; font-size:10px; color:#c084fc; margin-top:3px; }
-  .lzp-row .num{ text-align:right; color:var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:12px; }
-  .lzp-row .kwh{ text-align:right; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; color:#fff; }
-  .lzp-foot{ margin-top:12px; padding-top:11px; border-top:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:baseline; flex-shrink:0; }
-  .lzp-foot #lzpFootLabel{ color:var(--text-faint); font-size:11px; }
-  .lzp-foot #lzpFootTotal{ color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; }
-  .lzp-empty{ color:var(--text-faint); font-size:12px; text-align:center; padding:20px 0; }
+  /* [ใหม่ - ตามภาพที่ confirm] แถวโซนย่อยแบบ inline ในคอลัมน์เดียวกันเลย ไม่ต้องเปิด popup —
+     แต่ละ Group/Event card ตามด้วยกลุ่มแถวย่อยนี้ กดที่ sc-top เพื่อพับ/กางได้ (chevron หมุน) */
+  .lzf-subzones{ margin-bottom:8px; display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+  .lzf-subzone-row{ background:#15121f; border-radius:8px; padding:9px 11px; }
+  .lzf-subzone-row .zn{ color:#fff; font-size:12px; font-weight:500; margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lzf-subzone-row .trig{ display:block; font-size:9.5px; color:#c084fc; font-weight:400; margin-top:2px; white-space:normal; }
+  .lzf-subzone-row .stats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; align-items:baseline; }
+  .lzf-subzone-row .stats .area{ color:var(--text-faint); font-size:11px; }
+  .lzf-subzone-row .stats .tr{ color:var(--text-faint); font-size:11px; }
+  .lzf-subzone-row .stats .kwhm2{ font-weight:700; font-size:11.5px; text-align:right; }
+  .lzf-subzone-row.grp .kwhm2{ color:var(--green); }
+  .lzf-subzone-row.evt .kwhm2{ color:#c084fc; }
+  .lzf-empty-inline{ color:var(--text-faint); font-size:10.5px; padding:8px 2px; flex-shrink:0; }
+
 
   /* [ใหม่ 31/7/69] ข้อ2 — คอลัมน์ gap ระหว่างผังกับ Location Zone: System status + Alerts + Top zones */
   .gap-col{ width:170px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; margin-right:8px; }
@@ -510,20 +498,6 @@
           <div class="pm-head-row" id="pmHeadRow"></div>
           <div class="pm-unit-rows" id="pmUnitRows"></div>
         </div>
-      </div>
-      <!-- [ใหม่ - ตาม BBG_AreaCondition_Reference_Spec.md] popup แยกต่างหากสำหรับ Location Zone
-           (Group/Event) — ไม่ใช้ #popupModal ร่วมกับ equipment popup เพราะโครงสร้างข้อมูลคนละแบบ
-           (equipment = unit + ON/OFF, zone = Area/TRH/kWh + ตัวกระตุ้น) กันชนกัน/พังของเดิม -->
-      <div class="popup-backdrop" id="lzPopupBackdrop"></div>
-      <div class="lzp-modal" id="lzPopupModal">
-        <div class="lzp-head">
-          <span class="lzp-title" id="lzpTitle">—</span>
-          <div class="pm-close" id="lzPopupClose">✕</div>
-        </div>
-        <div class="lzp-sub" id="lzpSub">—</div>
-        <div class="lzp-head-row"><span>Zone</span><span style="text-align:right;">Area</span><span style="text-align:right;">TRH</span><span style="text-align:right;">kWh</span></div>
-        <div class="lzp-rows" id="lzpRows"></div>
-        <div class="lzp-foot"><span id="lzpFootLabel">—</span><span id="lzpFootTotal">—</span></div>
       </div>
     </div>
   </div>
@@ -1354,10 +1328,10 @@ document.getElementById('svgMain').innerHTML = frag.d;
   function applyLzFilter_(){
     var cardsEl = document.getElementById('lzfCards');
     if(!cardsEl) return; // [กันปัญหา] ไม่เจอ element เลย ข้ามเงียบๆ ไม่ error ค้าง
-    var grpCard = cardsEl.querySelector('[data-cat="group"]');
-    var evtCard = cardsEl.querySelector('[data-cat="event"]');
-    if(grpCard) grpCard.style.display = (lzFilter === 'all' || lzFilter === 'group') ? '' : 'none';
-    if(evtCard) evtCard.style.display = (lzFilter === 'all' || lzFilter === 'event') ? '' : 'none';
+    var grpBlock = cardsEl.querySelector('.lzf-group-block[data-cat="group"]');
+    var evtBlock = cardsEl.querySelector('.lzf-group-block[data-cat="event"]');
+    if(grpBlock) grpBlock.style.display = (lzFilter === 'all' || lzFilter === 'group') ? '' : 'none';
+    if(evtBlock) evtBlock.style.display = (lzFilter === 'all' || lzFilter === 'event') ? '' : 'none';
   }
 
   window.__setLzFilter = function(f){
@@ -1368,72 +1342,59 @@ document.getElementById('svgMain').innerHTML = frag.d;
     applyLzFilter_();
   };
 
-  // [ใหม่] popup รายละเอียดโซนย่อย — แยกจาก equipment popup เดิมทั้งหมด (id คนละชุด กันชนกัน)
-  function openLzPopup_(category){
-    var rows = (category === 'group') ? lzData.group : lzData.event;
-    var isGroup = (category === 'group');
-    var titleEl = document.getElementById('lzpTitle');
-    var subEl = document.getElementById('lzpSub');
-    var rowsEl = document.getElementById('lzpRows');
-    var footLabelEl = document.getElementById('lzpFootLabel');
-    var footTotalEl = document.getElementById('lzpFootTotal');
-    if(!titleEl || !subEl || !rowsEl || !footLabelEl || !footTotalEl) return; // [กันปัญหา] ไม่เจอ element ข้ามเงียบๆ
+  var lzExpanded = { group: true, event: true }; // [ใหม่] ค่าเริ่มต้นกางไว้เลยตามภาพที่ confirm ไม่ต้องคลิกก่อน
 
-    titleEl.textContent = isGroup ? 'Group — เปิดทุกวัน' : 'Event — จาก booking จริง';
-    titleEl.style.color = isGroup ? 'var(--green)' : '#c084fc';
+  // [ใหม่] toggle พับ/กางอยู่ในคอลัมน์เดียวกันเลย (ไม่ต้องเปิด popup แบบรอบก่อน) — re-render จาก lzData
+  // ที่เก็บไว้แล้ว ไม่ต้อง fetch ใหม่ เร็วกว่า
+  window.__toggleLzGroup = function(category){
+    if(category !== 'group' && category !== 'event') return; // [กันปัญหา]
+    lzExpanded[category] = !lzExpanded[category];
+    renderLzCards_(lzData.group.concat(lzData.event));
+  };
 
-    var totalKwh = sumField_(rows, 'kwhAreaBased');
-    var totalArea = sumField_(rows, 'areaSqm');
-    subEl.textContent = rows.length + ' โซน · ' + fmtNum(totalArea,0) + ' m² · รวม ' + fmtNum(totalKwh,1) + ' kWh';
-
-    if(!rows.length){
-      rowsEl.innerHTML = '<div class="lzp-empty">' + (isGroup ? 'ไม่มีโซนกลุ่ม Group เปิดอยู่วันนี้' : 'ไม่มีโซน Event ที่มี booking จริงวันนี้ — ไม่แสดงแถว') + '</div>';
-    } else {
-      rowsEl.innerHTML = rows.map(function(z){
-        var name = (z && z.locationZone) ? String(z.locationZone) : 'ไม่ทราบชื่อโซน'; // [กันปัญหา] locationZone หาย
-        var areaTxt = (z && typeof z.areaSqm === 'number') ? fmtNum(z.areaSqm,0) : '—';
-        var trhVal = (z && typeof z.trApprox === 'number') ? z.trApprox * 2 : null; // [ใหม่] TRH = TR×2
-        var trhTxt = (trhVal !== null) ? fmtNum(trhVal,0) : '—';
-        var kwhTxt = (z && typeof z.kwhAreaBased === 'number') ? fmtNum(z.kwhAreaBased,1) : '—';
-        var trigHtml = (z && z.triggeredBy) ? '<span class="trig">← ' + String(z.triggeredBy) + '</span>' : ''; // [ใหม่] ป้ายตัวกระตุ้น
-        return '<div class="lzp-row" title="' + name + ': ' + kwhTxt + ' kWh · ' + areaTxt + ' m² · ' + trhTxt + ' TRH">'
-          + '<div class="lzp-row-main">'
-          +   '<span class="zn">' + name + trigHtml + '</span>'
-          +   '<span class="num">' + areaTxt + ' m²</span>'
-          +   '<span class="num">' + trhTxt + '</span>'
-          +   '<span class="kwh">' + kwhTxt + '</span>'
-          + '</div></div>';
-      }).join('');
-    }
-
-    footLabelEl.textContent = 'รวม ' + rows.length + ' โซน';
-    footTotalEl.textContent = fmtNum(totalKwh,1) + ' kWh';
-
-    document.getElementById('lzPopupBackdrop').classList.add('open');
-    document.getElementById('lzPopupModal').classList.add('open');
+  function subzoneRowHtml_(z, catClass){
+    var name = (z && z.locationZone) ? String(z.locationZone) : 'ไม่ทราบชื่อโซน'; // [กันปัญหา] locationZone หาย
+    var areaTxt = (z && typeof z.areaSqm === 'number') ? fmtNum(z.areaSqm,0) : '—';
+    var trPerM2 = (z && typeof z.trApprox === 'number' && typeof z.areaSqm === 'number' && z.areaSqm > 0) ? fmtNum(z.trApprox/z.areaSqm,3) : '—';
+    var kwhPerM2 = (z && typeof z.kwhAreaBased === 'number' && typeof z.areaSqm === 'number' && z.areaSqm > 0) ? fmtNum(z.kwhAreaBased/z.areaSqm,2) : '—'; // [กันปัญหา] area=0 กันหารด้วยศูนย์
+    var trigHtml = (z && z.triggeredBy) ? '<span class="trig">← ' + String(z.triggeredBy) + '</span>' : ''; // [ใหม่] ป้ายตัวกระตุ้น (โผล่เมื่อ backend มีข้อมูลให้)
+    return '<div class="lzf-subzone-row ' + catClass + '" title="' + name + '">'
+      + '<div class="zn">' + name + trigHtml + '</div>'
+      + '<div class="stats"><span class="area">' + areaTxt + ' m²</span><span class="tr">' + trPerM2 + '</span><span class="kwhm2">' + kwhPerM2 + '</span></div>'
+      + '</div>';
   }
-  function closeLzPopup_(){
-    document.getElementById('lzPopupBackdrop').classList.remove('open');
-    document.getElementById('lzPopupModal').classList.remove('open');
-  }
-  document.getElementById('lzPopupClose').addEventListener('click', closeLzPopup_);
-  document.getElementById('lzPopupBackdrop').addEventListener('click', closeLzPopup_);
 
-  function summaryCardHtml_(category, rows){
+  function categoryBlockHtml_(category, rows){
     var isGroup = (category === 'group');
     var kwh = sumField_(rows, 'kwhAreaBased');
     var area = sumField_(rows, 'areaSqm');
-    var perM2 = (area > 0) ? fmtNum(kwh/area,2) : '—';
-    return '<div class="lzf-summary-card ' + (isGroup?'grp':'evt') + '" data-cat="' + category + '" onclick="window.__openLzPopup(\'' + category + '\')">'
+    var tr = sumField_(rows, 'trApprox');
+    var trPerM2 = (area > 0) ? fmtNum(tr/area,3) : '—';
+    var kwhPerM2 = (area > 0) ? fmtNum(kwh/area,2) : '—';
+    var expanded = lzExpanded[category];
+
+    var html = '<div class="lzf-summary-card ' + (isGroup?'grp':'evt') + '" onclick="window.__toggleLzGroup(\'' + category + '\')">'
       + '<div class="sc-top">'
-      +   '<span class="sc-name">' + (isGroup ? 'Group' : 'Event') + '</span>'
-      +   '<span class="sc-chev">▶</span>'
+      +   '<span class="sc-chev' + (expanded ? '' : ' collapsed') + '">⌄</span>'
+      +   '<span class="sc-name">' + (isGroup ? 'Group — เปิดทุกวัน' : 'Event — จาก booking จริง') + '</span>'
+      +   '<span class="sc-kwh">' + fmtNum(kwh,1) + ' kWh</span>'
       + '</div>'
-      + '<div class="sc-kwh">' + fmtNum(kwh,1) + ' <span class="u">kWh</span></div>'
-      + '<div class="sc-meta">' + fmtNum(area,0) + ' m² · ' + perM2 + ' kWh/m²</div>'
+      + '<div class="sc-metrics">'
+      +   '<div><div class="lbl">Area</div><div class="val">' + fmtNum(area,0) + ' m²</div></div>'
+      +   '<div><div class="lbl">TR/ตร.ม.</div><div class="val">' + trPerM2 + '</div></div>'
+      +   '<div><div class="lbl">kWh/ตร.ม.</div><div class="val">' + kwhPerM2 + '</div></div>'
+      + '</div>'
       + '</div>';
+
+    if(expanded){
+      if(rows.length){
+        html += '<div class="lzf-subzones">' + rows.map(function(z){ return subzoneRowHtml_(z, isGroup?'grp':'evt'); }).join('') + '</div>';
+      } else {
+        html += '<div class="lzf-empty-inline">' + (isGroup ? 'ไม่มีโซนกลุ่ม Group เปิดอยู่วันนี้' : 'ไม่มีโซน Event ที่มี booking จริงวันนี้ — ไม่แสดงแถว') + '</div>';
+      }
+    }
+    return '<div class="lzf-group-block" data-cat="' + category + '">' + html + '</div>';
   }
-  window.__openLzPopup = openLzPopup_;
 
   function renderLzCards_(list){
     var cardsEl = document.getElementById('lzfCards');
@@ -1450,15 +1411,8 @@ document.getElementById('svgMain').innerHTML = frag.d;
     lzData.group = list.filter(function(z){ return z && z.category === 'group'; });
     lzData.event = list.filter(function(z){ return z && z.category === 'event'; });
 
-    cardsEl.innerHTML = summaryCardHtml_('group', lzData.group) + summaryCardHtml_('event', lzData.event);
+    cardsEl.innerHTML = categoryBlockHtml_('group', lzData.group) + categoryBlockHtml_('event', lzData.event);
     applyLzFilter_(); // ใช้ filter ปัจจุบันทันทีหลัง render ใหม่ กันกด filter ค้างไว้แล้วโหลดวันใหม่ตัวเลือกหาย
-
-    // [กันปัญหา] popup ที่เปิดค้างอยู่ตอนโหลดวันใหม่ ต้องรีเฟรชเนื้อหาให้ตรงวันที่ใหม่ ไม่ใช่โชว์ข้อมูลวันเก่าค้าง
-    var openCat = null;
-    if(document.getElementById('lzPopupModal').classList.contains('open')){
-      openCat = document.getElementById('lzpTitle').textContent.indexOf('Group') === 0 ? 'group' : 'event';
-      openLzPopup_(openCat);
-    }
   }
 
   async function loadLocationZone(){
