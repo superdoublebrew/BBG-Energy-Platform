@@ -203,7 +203,7 @@
   .lzf-filter-btn.active{ background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.25); color:var(--text); }
 
   /* [ใหม่ 31/7/69] ข้อ2 — คอลัมน์ gap ระหว่างผังกับ Location Zone: System status + Alerts + Top zones */
-  .gap-col{ width:170px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; margin-left:8px; }
+  .gap-col{ width:170px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; margin-right:8px; }
   .gc-card{ background:#0d1017; border:1px solid var(--glass-border); border-radius:10px; padding:9px; flex-shrink:0; }
   .gc-card.alert{ border-color:rgba(251,146,60,.3); }
   .gc-card .t{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:9.5px; color:#fff; margin-bottom:7px; }
@@ -405,6 +405,25 @@
     </div>
 
     <div class="circuit-area glass" style="flex-direction:row;">
+      <div class="gap-col">
+        <div class="gc-card alert" id="gcAlerts">
+          <div class="t">Alerts วันนี้</div>
+          <div id="gcAlertsBody"><div class="gc-alert-row ok"><div class="name">กำลังโหลด...</div></div></div>
+        </div>
+        <div class="gc-card" id="gcStatus">
+          <div class="t">System status</div>
+          <div id="gcStatusBody"></div>
+          <div class="lzf-filter-row" id="lzfFilterRow">
+            <button class="lzf-filter-btn active" data-f="all" onclick="window.__setLzFilter('all')">ทั้งหมด</button>
+            <button class="lzf-filter-btn" data-f="group" onclick="window.__setLzFilter('group')">Group</button>
+            <button class="lzf-filter-btn" data-f="event" onclick="window.__setLzFilter('event')">Event</button>
+          </div>
+        </div>
+        <div class="gc-card" id="gcTopZones">
+          <div class="t">Top zone · kWh/m²</div>
+          <div id="gcTopZonesBody"></div>
+        </div>
+      </div>
       <div class="diagram-col">
         <div class="circuit-legend">
           <div class="legend-item"><span class="legend-swatch" style="background:var(--hot);"></span>Condenser Water Loop</div>
@@ -427,25 +446,6 @@
           <div class="hz" data-key="support" style="left:72.88%; top:73.41%; width:7.54%; height:7.97%;"></div>
           <div class="hz" data-key="sale" style="left:81.57%; top:73.41%; width:7.54%; height:7.97%;"></div>
           <div class="hz" data-key="exhibition" style="left:90.37%; top:73.41%; width:7.54%; height:7.97%;"></div>
-        </div>
-      </div>
-      <div class="gap-col">
-        <div class="gc-card alert" id="gcAlerts">
-          <div class="t">Alerts วันนี้</div>
-          <div id="gcAlertsBody"><div class="gc-alert-row ok"><div class="name">กำลังโหลด...</div></div></div>
-        </div>
-        <div class="gc-card" id="gcStatus">
-          <div class="t">System status</div>
-          <div id="gcStatusBody"></div>
-          <div class="lzf-filter-row" id="lzfFilterRow">
-            <button class="lzf-filter-btn active" data-f="all" onclick="window.__setLzFilter('all')">ทั้งหมด</button>
-            <button class="lzf-filter-btn" data-f="group" onclick="window.__setLzFilter('group')">Group</button>
-            <button class="lzf-filter-btn" data-f="event" onclick="window.__setLzFilter('event')">Event</button>
-          </div>
-        </div>
-        <div class="gc-card" id="gcTopZones">
-          <div class="t">Top zone · kWh/m²</div>
-          <div id="gcTopZonesBody"></div>
         </div>
       </div>
       <div class="popup-backdrop" id="popupBackdrop"></div>
