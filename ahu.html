@@ -265,29 +265,40 @@ function renderHallBoxes(dataByLabel, sparklineByHall) {
 }
 
 function loadEventHalls(dateStr) {
-  var label = document.getElementById('currentDateLabel');
-  if (label) label.textContent = '· ' + fmtDateThai_(dateStr);
   document.getElementById('planCanvas').innerHTML = '<div class="loading-note" id="loadingNote">กำลังโหลดข้อมูล...</div>';
 
   var mainUrl = API_URL + '?action=eventhalls' + (dateStr ? ('&date=' + dateStr) : '');
-  var sparkUrl = API_URL + '?action=eventhallsparkline' + (dateStr ? ('&date=' + dateStr) : '') + '&days=7';
+  fetch(mainUrl)
+    .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (eventhalls)'); return res.json(); })
+    .then(function(mainRes) {
+      if (mainRes && mainRes.error) throw new Error(mainRes.error);
+      // [แก้ - สำคัญ] backend คืน {date, halls} แล้ว — ใช้ mainRes.date เป็นวันที่จริงเสมอ ไม่เดา/hardcode
+      // เอง กันปัญหาวันที่ไม่ตรงกับ Location Zone panel (Chiller Circuit ใช้ resolve logic เดียวกัน)
+      var resolvedDate = mainRes.date;
+      var label = document.getElementById('currentDateLabel');
+      if (label) label.textContent = '· ' + fmtDateThai_(resolvedDate);
+      // ไฮไลต์ปุ่มวันนี้/เมื่อวานอัตโนมัติ ถ้าวันที่ backend เลือกมาตรงกับปุ่มใดปุ่มหนึ่งพอดี (เผื่อ
+      // เป็นการโหลดครั้งแรกที่ไม่ได้ระบุ date เอง — ถ้าไม่ตรงทั้งคู่ ปล่อยว่างไว้ ไม่บังคับไฮไลต์มั่ว)
+      if (resolvedDate === dateStrOf_(0)) setActiveDateBtn_('btnToday');
+      else if (resolvedDate === dateStrOf_(1)) setActiveDateBtn_('btnYesterday');
+      else setActiveDateBtn_(null);
 
-  Promise.all([
-    fetch(mainUrl).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (eventhalls)'); return res.json(); }),
-    fetch(sparkUrl).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (sparkline)'); return res.json(); })
-  ]).then(function(results) {
-    var list = results[0], sparkRes = results[1];
-    if (list && list.error) throw new Error(list.error);
-    if (sparkRes && sparkRes.error) throw new Error(sparkRes.error);
+      var byLabel = {};
+      (mainRes.halls || []).forEach(function(item) { byLabel[item.label] = item; });
 
-    var byLabel = {};
-    (list || []).forEach(function(item) { byLabel[item.label] = item; });
-
-    renderHallBoxes(byLabel, (sparkRes && sparkRes.byHall) ? sparkRes.byHall : null);
-  }).catch(function(err) {
-    document.getElementById('planCanvas').innerHTML =
-      '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
-  });
+      // ยิง sparkline ต่อ "หลัง" รู้วันที่จริงแล้วเท่านั้น (ระบุ date ตรงๆ กันคนละวันกับ main เอง)
+      var sparkUrl = API_URL + '?action=eventhallsparkline&date=' + resolvedDate + '&days=7';
+      return fetch(sparkUrl)
+        .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (sparkline)'); return res.json(); })
+        .then(function(sparkRes) {
+          if (sparkRes && sparkRes.error) throw new Error(sparkRes.error);
+          renderHallBoxes(byLabel, (sparkRes && sparkRes.byHall) ? sparkRes.byHall : null);
+        });
+    })
+    .catch(function(err) {
+      document.getElementById('planCanvas').innerHTML =
+        '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
+    });
 }
 
 function dateStrOf_(daysAgo) {
@@ -299,7 +310,7 @@ function dateStrOf_(daysAgo) {
 function setActiveDateBtn_(id) {
   document.getElementById('btnToday').classList.remove('active');
   document.getElementById('btnYesterday').classList.remove('active');
-  document.getElementById(id).classList.add('active');
+  if (id) document.getElementById(id).classList.add('active');
 }
 
 document.getElementById('btnToday').addEventListener('click', function() {
@@ -311,9 +322,11 @@ document.getElementById('btnYesterday').addEventListener('click', function() {
   loadEventHalls(dateStrOf_(1));
 });
 
-// [ใช้เมื่อวานเป็นค่าเริ่มต้น เหมือน test script — Data_Log ของวันนี้อาจยังไม่ครบ]
-setActiveDateBtn_('btnYesterday');
-loadEventHalls(dateStrOf_(1));
+// [แก้ - สำคัญ] เดิม hardcode "เมื่อวาน" ตายตัว ทำให้ไม่ตรงกับ Location Zone panel (ที่ใช้วันล่าสุด
+// จริงจาก Data_Log ซึ่งอาจเป็นวันนี้แล้วถ้าข้อมูลมาครบ) ตอนนี้ไม่ส่ง date เลยตอนโหลดครั้งแรก ให้
+// backend resolve "วันล่าสุดที่มีข้อมูลจริง" เอง (logic เดียวกับ Chiller Circuit) รับประกันตรงกันเสมอ
+setActiveDateBtn_(null); // ยังไม่ไฮไลต์ปุ่มไหนไว้ก่อน เพราะยังไม่รู้ว่า backend จะเลือกวันนี้หรือเมื่อวาน
+loadEventHalls(null);
 </script>
 </body>
 </html>
