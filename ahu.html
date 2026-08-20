@@ -94,8 +94,8 @@
     <h1>AHU Floor Plan</h1>
     <div class="search-box">🔍<input placeholder="ค้นหา hall เช่น EH101"></div>
     <div class="date-filter">
-      <div class="f-btn active">วันนี้</div>
-      <div class="f-btn">เมื่อวาน</div>
+      <div class="f-btn active" id="btnToday">วันนี้</div>
+      <div class="f-btn" id="btnYesterday">เมื่อวาน</div>
       <span style="color:var(--glass-border)">|</span>
       <div class="f-btn active">ทั้งหมด</div>
       <div class="f-btn">Phase 1</div>
@@ -140,7 +140,7 @@
 
       <div class="ahu-main">
         <div class="plan-hd">
-          <div class="t">Exhibition Wing — ผังพื้นที่ (EH)</div>
+          <div class="t">Exhibition Wing — ผังพื้นที่ (EH) <span id="currentDateLabel" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--return);font-weight:500;margin-left:8px"></span></div>
           <div class="note">Option 2 · ไม่พึ่ง real-time AHU · คลิกกล่องเพื่อดูรายละเอียด</div>
         </div>
         <div class="plan-canvas" id="planCanvas">
@@ -187,7 +187,40 @@ function fmtNum_(v, digits) {
   return Number(v).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
-function renderHallBoxes(dataByLabel) {
+function fmtDateThai_(dateStr) {
+  var d = new Date(dateStr + 'T00:00:00');
+  var days = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  var months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return 'วัน' + days[d.getDay()] + 'ที่ ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+}
+
+function buildSparkAndTrendHtml_(series, colorCls) {
+  if (!series || !series.length) return { sparkHtml: '', trendHtml: '' };
+  var vals = series.map(function(s) { return s.kwh; });
+  var max = Math.max.apply(null, vals.concat([0.0001])); // กัน max=0 หารพัง
+  var barsHtml = vals.map(function(v, i) {
+    var h = Math.max(3, Math.round((v / max) * 100));
+    var todayCls = (i === vals.length - 1) ? ' today' : '';
+    return '<div class="hb-spark-bar' + todayCls + '" style="height:' + h + '%"></div>';
+  }).join('');
+  var sparkHtml = '<div class="hb-spark" style="color:var(--' + colorCls + ')">' + barsHtml + '</div>';
+
+  var trendHtml = '';
+  if (vals.length >= 2) {
+    var todayV = vals[vals.length - 1], ydayV = vals[vals.length - 2];
+    if (ydayV > 0) {
+      var pct = Math.round(((todayV - ydayV) / ydayV) * 100);
+      if (pct > 0) trendHtml = '<span class="hb-tr tr-up">▲' + pct + '%</span>';
+      else if (pct < 0) trendHtml = '<span class="hb-tr tr-down">▼' + Math.abs(pct) + '%</span>';
+      else trendHtml = '<span class="hb-tr" style="color:var(--text-faint)">— 0%</span>';
+    } else if (todayV > 0) {
+      trendHtml = '<span class="hb-tr tr-up">▲ ใหม่</span>';
+    }
+  }
+  return { sparkHtml: sparkHtml, trendHtml: trendHtml };
+}
+
+function renderHallBoxes(dataByLabel, sparklineByHall) {
   var canvas = document.getElementById('planCanvas');
 
   var html = ZONE_TAGS.map(function(z) {
@@ -214,11 +247,15 @@ function renderHallBoxes(dataByLabel) {
       ? ((d.hasEventToday ? fmtNum_(d.activeAreaSqm, 0) + ' / ' : '') + fmtNum_(d.areaSqm, 0) + ' m²')
       : 'รอข้อมูลพื้นที่';
 
+    var series = sparklineByHall ? sparklineByHall[pos.label] : null;
+    var st = buildSparkAndTrendHtml_(series, pos.phase === 'p1' ? 'green' : 'cold');
+
     return '<div class="hall-box ' + phaseCls + '" style="left:' + pos.left + 'px;top:' + pos.top + 'px;width:' + pos.width + 'px;height:' + pos.height + 'px">'
       + evBadge
       + '<div class="hb-nametag"><span class="hb-nm">' + pos.label + '</span><span class="hb-ph ' + phaseCls.replace('n-', 'ph-') + '">' + phaseBadge + '</span></div>'
-      + '<div class="hb-kwrow"><span class="hb-kwh-big">' + kwhHtml + '</span><span class="hb-kwh-unit">kWh</span></div>'
+      + '<div class="hb-kwrow"><span class="hb-kwh-big">' + kwhHtml + '</span><span class="hb-kwh-unit">kWh</span>' + st.trendHtml + '</div>'
       + '<div class="hb-trmsq">' + trHtml + '</div>'
+      + st.sparkHtml
       + '<div class="hb-evname">' + evNameHtml + '</div>'
       + '<div class="hb-sub">' + areaHtml + '</div>'
       + '</div>';
@@ -228,25 +265,55 @@ function renderHallBoxes(dataByLabel) {
 }
 
 function loadEventHalls(dateStr) {
-  var url = API_URL + '?action=eventhalls' + (dateStr ? ('&date=' + dateStr) : '');
-  fetch(url)
-    .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-    .then(function(list) {
-      if (list && list.error) throw new Error(list.error);
-      var byLabel = {};
-      (list || []).forEach(function(item) { byLabel[item.label] = item; });
-      renderHallBoxes(byLabel);
-    })
-    .catch(function(err) {
-      document.getElementById('planCanvas').innerHTML =
-        '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
-    });
+  var label = document.getElementById('currentDateLabel');
+  if (label) label.textContent = '· ' + fmtDateThai_(dateStr);
+  document.getElementById('planCanvas').innerHTML = '<div class="loading-note" id="loadingNote">กำลังโหลดข้อมูล...</div>';
+
+  var mainUrl = API_URL + '?action=eventhalls' + (dateStr ? ('&date=' + dateStr) : '');
+  var sparkUrl = API_URL + '?action=eventhallsparkline' + (dateStr ? ('&date=' + dateStr) : '') + '&days=7';
+
+  Promise.all([
+    fetch(mainUrl).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (eventhalls)'); return res.json(); }),
+    fetch(sparkUrl).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (sparkline)'); return res.json(); })
+  ]).then(function(results) {
+    var list = results[0], sparkRes = results[1];
+    if (list && list.error) throw new Error(list.error);
+    if (sparkRes && sparkRes.error) throw new Error(sparkRes.error);
+
+    var byLabel = {};
+    (list || []).forEach(function(item) { byLabel[item.label] = item; });
+
+    renderHallBoxes(byLabel, (sparkRes && sparkRes.byHall) ? sparkRes.byHall : null);
+  }).catch(function(err) {
+    document.getElementById('planCanvas').innerHTML =
+      '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
+  });
 }
 
+function dateStrOf_(daysAgo) {
+  var d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function setActiveDateBtn_(id) {
+  document.getElementById('btnToday').classList.remove('active');
+  document.getElementById('btnYesterday').classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+
+document.getElementById('btnToday').addEventListener('click', function() {
+  setActiveDateBtn_('btnToday');
+  loadEventHalls(dateStrOf_(0));
+});
+document.getElementById('btnYesterday').addEventListener('click', function() {
+  setActiveDateBtn_('btnYesterday');
+  loadEventHalls(dateStrOf_(1));
+});
+
 // [ใช้เมื่อวานเป็นค่าเริ่มต้น เหมือน test script — Data_Log ของวันนี้อาจยังไม่ครบ]
-var y = new Date(); y.setDate(y.getDate() - 1);
-var yesterdayStr = y.getFullYear() + '-' + String(y.getMonth() + 1).padStart(2, '0') + '-' + String(y.getDate()).padStart(2, '0');
-loadEventHalls(yesterdayStr);
+setActiveDateBtn_('btnYesterday');
+loadEventHalls(dateStrOf_(1));
 </script>
 </body>
 </html>
