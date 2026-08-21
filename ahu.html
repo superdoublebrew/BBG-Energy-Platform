@@ -6,71 +6,101 @@
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Google Sans',Arial,sans-serif}
   :root{
     --p1-1:#22d3ee; --p2-1:#a855f7;
-    --text:#f3f6fb; --text-muted:#a3b0c7; --text-label:#c2cee2; --text-faint:#7c8aa3;
+    --text:#f3f6fb; --text-muted:#a3b0c7; --text-faint:#7c8aa3;
     --glass:rgba(255,255,255,0.035); --glass-border:rgba(255,255,255,0.10);
     --hot:#f2867a; --cold:#38bdf8; --return:#f2b84f; --green:#34d399;
-    --sidebar-w:180px; --topbar-h:52px;
   }
   body{background:#05070c;color:var(--text);min-height:100vh}
   .main{padding:10px 16px;display:flex;flex-direction:column;gap:10px}
-  .topbar{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:10px 16px;display:flex;align-items:center;gap:14px}
-  .topbar h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px}
-  .search-box{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:7px;padding:4px 9px}
-  .search-box input{background:none;border:none;outline:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;width:130px}
-  .date-filter{display:flex;align-items:center;gap:6px;margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted)}
-  .f-btn{padding:5px 10px;border-radius:7px;font-size:10.5px;font-weight:600;font-family:'Space Grotesk',sans-serif;color:var(--text-muted);border:1px solid var(--glass-border);background:rgba(255,255,255,0.02)}
-  .f-btn.active{color:#0a0612;background:linear-gradient(120deg,var(--p1-1),var(--p2-1));border-color:transparent}
 
-  .kpi-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-  .kpi-tile{background:rgba(255,255,255,.04);border:1.5px solid;border-top:3px solid;border-radius:8px;padding:8px 10px}
+  .topbar{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .topbar-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px}
+  .topbar-sub{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-faint);margin-top:2px}
+  .now-pill{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:20px;padding:5px 14px;font-size:10.5px;color:var(--text-muted);display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+  .now-pill .ndot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+  .filterbar{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:8px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .fchip{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+  .fchip input{background:none;border:none;outline:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;width:120px}
+  .fchip.toggle{gap:2px;padding:3px}
+  .tg-btn{padding:4px 11px;border-radius:6px;font-size:10.5px;font-weight:600;font-family:'Space Grotesk',sans-serif;color:var(--text-muted);cursor:pointer;user-select:none}
+  .tg-btn.active{color:#0a0612;background:linear-gradient(120deg,var(--p1-1),var(--p2-1))}
+
+  .callout{display:none;align-items:center;gap:10px;background:rgba(242,134,122,.08);border:1px solid rgba(242,134,122,.3);border-radius:10px;padding:9px 14px}
+  .callout.show{display:flex}
+  .callout .ic{width:22px;height:22px;border-radius:6px;background:rgba(242,134,122,.18);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+  .callout .tx{font-size:11.5px;color:var(--text)}
+  .callout .tx b{color:var(--hot)}
+  .callout .dismiss{margin-left:auto;font-size:14px;color:var(--text-faint);cursor:pointer;padding:2px 6px;user-select:none}
+
+  .kpi-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .kpi-tile{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:10px 12px;transition:border-color .15s}
+  .kpi-tile.filterable{cursor:pointer}
+  .kpi-tile.filterable:hover{border-color:rgba(255,255,255,.25)}
+  .kpi-tile.active-filter{border-color:var(--p1-1);background:rgba(34,211,238,.06)}
   .kpi-tile .lbl{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:8.5px;text-transform:uppercase;color:var(--text-faint)}
-  .kpi-tile .val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:#fff;margin-top:3px}
+  .kpi-tile .val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:#fff;margin-top:4px}
   .kpi-tile .val .unit{font-size:10px;color:var(--text-faint);margin-left:3px;font-weight:500}
-  .c-chiller{border-color:rgba(52,211,153,.45)}.c-chiller .val{color:var(--green)}
-  .c-pump{border-color:rgba(56,189,248,.45)}.c-pump .val{color:var(--cold)}
-  .c-plant{border-color:rgba(242,184,79,.45)}.c-plant .val{color:var(--return)}
-  .c-outdoor{border-color:rgba(255,255,255,.2)}
-  .c-tower{border-color:rgba(242,134,122,.45)}.c-tower .val{color:var(--hot)}
 
-  .ahu-shell{flex:1;min-height:0;display:flex;gap:10px}
-  .ahu-side{width:190px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
-  .side-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px}
-  .side-title{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;margin-bottom:8px}
-  .filter-row{display:flex;gap:6px;flex-wrap:wrap}
-  .month-summary-row{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-muted);padding:3px 0}
-  .month-summary-row .v{color:var(--text);font-weight:700}
-  .legend-card{display:flex;flex-direction:column;gap:6px}
-  .legend-row{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-muted)}
-  .legend-sw{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+  .legend-row{display:flex;align-items:center;gap:16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:7px 14px;flex-wrap:wrap}
+  .legend-row .t{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px}
+  .heat-scale{flex:1;display:flex;align-items:center;gap:8px;min-width:120px}
+  .heat-bar{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#1a2f28,var(--green),var(--return),var(--hot))}
+  .heat-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint)}
 
-  .ahu-main{flex:1;min-width:0;background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:16px;position:relative;display:flex;flex-direction:column}
-  .plan-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-  .plan-hd .t{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:#fff}
-  .plan-hd .note{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint)}
-  .plan-canvas{flex:1;position:relative;min-height:800px;padding-top:6px}
+  .wing-block{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:16px}
+  .wing-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .wing-hd .t{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px}
+  .wing-hd .m{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-faint)}
 
-  .hall-box{position:absolute;border-radius:10px;border:1.5px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px 10px;cursor:pointer;transition:box-shadow .15s}
-  .hall-box:hover{box-shadow:0 0 0 2px rgba(255,255,255,0.15)}
-  .hb-nametag{display:flex;align-items:center;gap:4px;justify-content:center}
-  .hb-nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px}
-  .hb-ph{font-size:8px;font-weight:700;padding:2px 6px;border-radius:20px}
+  /* map view — พิกัดจริงจากผังอาคาร (absolute, ตาม HALL_LAYOUT) */
+  .plan-canvas{position:relative;min-height:800px}
+  .blk{position:absolute;border-radius:8px;border:1.5px solid;display:flex;flex-direction:column;justify-content:space-between;padding:12px;cursor:pointer;transition:box-shadow .15s}
+  .blk:hover{box-shadow:0 0 0 2px rgba(255,255,255,0.15)}
+  .blk.dim{opacity:.25;pointer-events:none}
+  .blk .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px}
+  .blk .ph{font-size:8px;font-weight:700;padding:2px 6px;border-radius:20px;margin-left:4px}
   .ph-p1{background:rgba(56,189,248,.16);color:var(--cold)}
   .ph-p2{background:rgba(242,184,79,.16);color:var(--return)}
-  .hb-kwrow{display:flex;align-items:baseline;gap:4px;justify-content:center}
-  .hb-kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px}
-  .hb-tr{font-size:8px;font-weight:700}
-  .tr-up{color:var(--hot)}.tr-down{color:var(--green)}
-  .hb-spark{display:flex;align-items:flex-end;gap:2px;height:20px;justify-content:center}
-  .hb-spark-bar{width:6px;border-radius:1px;background:currentColor;opacity:.55}
-  .hb-spark-bar.today{opacity:1}
-  .hb-evname{font-size:10.5px;color:var(--text-muted);max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
-  .hb-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-faint);text-align:center}
-  .hall-box .ev{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(242,184,79,.16);color:var(--return)}
+  .blk .ev-flag{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(242,184,79,.16);color:var(--return)}
+  .blk .kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:22px;margin-top:6px}
+  .blk .kw .u{font-size:11px;font-weight:500;color:var(--text-faint);margin-left:3px}
+  .blk .spark{display:flex;align-items:flex-end;gap:2px;height:18px;margin-top:6px}
+  .blk .spark-bar{width:6px;border-radius:1px;background:currentColor;opacity:.5}
+  .blk .spark-bar.today{opacity:1}
+  .blk .ev-nm{font-size:10.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:6px}
+  .blk .meta{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-faint);margin-top:6px;display:flex;justify-content:space-between}
+  .blk .last-ev{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-faint);margin-top:6px}
 
-  .n-p1{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.06)}
-  .n-p2{border-color:var(--cold);color:var(--cold);background:rgba(56,189,248,.06)}
-  .zone-tag{position:absolute;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1px;color:var(--text-faint);top:-16px}
-  .hb-cond{font-family:'JetBrains Mono',monospace;font-size:6.5px;color:var(--return);margin-top:-2px}
+  .heat-1{background:rgba(242,134,122,.16);border-color:rgba(242,134,122,.55)}.heat-1 .kw{color:var(--hot)}
+  .heat-2{background:rgba(242,184,79,.13);border-color:rgba(242,184,79,.5)}.heat-2 .kw{color:var(--return)}
+  .heat-3{background:rgba(52,211,153,.11);border-color:rgba(52,211,153,.45)}.heat-3 .kw{color:var(--green)}
+  .heat-0{background:rgba(255,255,255,.03);border-color:var(--glass-border)}.heat-0 .kw{color:var(--text-faint)}
+
+  /* list view */
+  .console{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;overflow:hidden}
+  .console-hd{display:grid;grid-template-columns:90px 60px 1fr 80px 90px 100px;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:8.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--glass-border);letter-spacing:.5px}
+  .row{display:grid;grid-template-columns:90px 60px 1fr 80px 90px 100px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.04);border-left:3px solid;cursor:pointer}
+  .row:last-child{border-bottom:none}
+  .row.dim{display:none}
+  .r-hot{border-left-color:var(--hot)}
+  .r-mid{border-left-color:var(--return)}
+  .r-low{border-left-color:var(--green)}
+  .r-none{border-left-color:rgba(255,255,255,0.08)}
+  .r-nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px}
+  .r-ph{font-size:7.5px;font-weight:700;padding:1px 5px;border-radius:20px;width:fit-content}
+  .r-ev{font-size:10.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .r-ev.none{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:9.5px}
+  .r-kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;text-align:right}
+  .r-trm{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);text-align:right}
+  .r-spark{display:flex;align-items:flex-end;gap:2px;height:18px;justify-content:flex-end}
+  .r-spark-bar{width:5px;border-radius:1px;background:currentColor;opacity:.5}
+  .r-spark-bar.today{opacity:1}
+  .grp-label{padding:7px 14px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;background:rgba(255,255,255,0.015);border-bottom:1px solid var(--glass-border)}
+
+  .view{display:none}
+  .view.active{display:block}
+  .loading-note{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:11px;padding:20px;text-align:center}
 
   .detail-pop{position:absolute;width:230px;background:#0d1017;border:1px solid var(--glass-border);border-radius:10px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:5}
   .detail-pop .dt{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:#fff;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
@@ -78,85 +108,73 @@
   .detail-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
   .detail-row:last-child{border-bottom:none}
   .detail-row b{color:var(--text)}
-  .dpop-spark{display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:28px}
-  .dpop-spark-bar{flex:1;border-radius:1px;background:var(--hot);opacity:.55}
-  .dpop-spark-bar.today{opacity:1}
-  .loading-note{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:11px;padding:20px;text-align:center}
-  .hb-kwh-big{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px}
-  .hb-kwh-unit{font-size:12px;color:var(--text-faint);font-weight:500;margin-left:3px}
-  .hb-trmsq{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);margin-top:4px}
-  .hb-nodata{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:9px}
 </style>
 </head>
 <body>
 <div class="main">
   <div class="topbar">
-    <h1>AHU Floor Plan</h1>
-    <div class="search-box">🔍<input placeholder="ค้นหา hall เช่น EH101"></div>
-    <div class="date-filter">
-      <div class="f-btn active" id="btnToday">วันนี้</div>
-      <div class="f-btn" id="btnYesterday">เมื่อวาน</div>
-      <span style="color:var(--glass-border)">|</span>
-      <div class="f-btn active">ทั้งหมด</div>
-      <div class="f-btn">Phase 1</div>
-      <div class="f-btn">Phase 2</div>
+    <div>
+      <div class="topbar-title">Exhibition Hall Monitor</div>
+      <div class="topbar-sub" id="topbarSub">Exhibition Wing</div>
+    </div>
+    <div class="now-pill"><div class="ndot"></div><span id="updTime">—</span></div>
+  </div>
+
+  <div class="filterbar">
+    <div class="fchip">🔍<input id="searchInput" placeholder="ค้นหา hall เช่น EH101"></div>
+    <div class="fchip toggle" id="viewToggle">
+      <span class="tg-btn active" data-view="map">🗺 ผังพื้นที่</span>
+      <span class="tg-btn" data-view="list">☰ รายการ</span>
+    </div>
+    <div class="fchip toggle" id="dateToggle">
+      <span class="tg-btn active" data-days="0">วันนี้</span>
+      <span class="tg-btn" data-days="1">เมื่อวาน</span>
     </div>
   </div>
 
-    <div class="kpi-tiles">
-      <div class="kpi-tile c-chiller"><div class="lbl">Total AHU</div><div class="val">58<span class="unit">หน่วย</span></div></div>
-      <div class="kpi-tile c-pump"><div class="lbl">Phase 1</div><div class="val">36<span class="unit">หน่วย</span></div></div>
-      <div class="kpi-tile c-plant"><div class="lbl">Phase 2</div><div class="val">22<span class="unit">หน่วย</span></div></div>
-      <div class="kpi-tile c-outdoor"><div class="lbl">kWh/m² เฉลี่ย</div><div class="val">0.271</div></div>
-      <div class="kpi-tile c-tower"><div class="lbl">Event วันนี้</div><div class="val">2<span class="unit">hall</span></div></div>
-    </div>
+  <div class="callout" id="callout">
+    <div class="ic">⚡</div>
+    <div class="tx" id="calloutText"></div>
+    <div class="dismiss" id="calloutDismiss">✕</div>
+  </div>
 
-    <div class="ahu-shell">
-      <div class="ahu-side">
-        <div class="side-card">
-          <div class="side-title">Filter</div>
-          <div class="filter-row">
-            <div class="f-btn active" style="font-size:9.5px;padding:4px 8px">ทั้งหมด</div>
-            <div class="f-btn" style="font-size:9.5px;padding:4px 8px">มี Event</div>
-            <div class="f-btn" style="font-size:9.5px;padding:4px 8px">kWh/m² สูง</div>
-          </div>
-        </div>
-        <div class="side-card legend-card">
-          <div class="side-title">kWh/m² (percentile)</div>
-          <div class="legend-row"><span class="legend-sw" style="background:var(--hot)"></span>สูงสุด 1/3</div>
-          <div class="legend-row"><span class="legend-sw" style="background:var(--return)"></span>กลาง</div>
-          <div class="legend-row"><span class="legend-sw" style="background:var(--green)"></span>ต่ำสุด 1/3</div>
-        </div>
-        <div class="side-card" style="flex:1;overflow:hidden">
-          <div class="side-title">สรุปเดือนนี้ · kWh</div>
-          <div class="month-summary-row"><span>EH101</span><span class="v">18,220</span></div>
-          <div class="month-summary-row"><span>BEAT</span><span class="v">16,540</span></div>
-          <div class="month-summary-row"><span>EH98</span><span class="v">15,890</span></div>
-          <div class="month-summary-row"><span>EH103</span><span class="v">11,760</span></div>
-          <div class="month-summary-row"><span>EH99</span><span class="v">9,940</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text-faint);margin-top:8px;line-height:1.5">เรียงมากไปน้อย · สะสมตั้งแต่ต้นเดือน</div>
-        </div>
-      </div>
+  <div class="kpi-tiles">
+    <div class="kpi-tile"><div class="lbl">Total AHU</div><div class="val">58<span class="unit">หน่วย</span></div></div>
+    <div class="kpi-tile filterable" id="tilePh1" data-phase="p1"><div class="lbl">Phase 1</div><div class="val">36<span class="unit">หน่วย</span></div></div>
+    <div class="kpi-tile filterable" id="tilePh2" data-phase="p2"><div class="lbl">Phase 2</div><div class="val">22<span class="unit">หน่วย</span></div></div>
+    <div class="kpi-tile"><div class="lbl">kWh/m² เฉลี่ย</div><div class="val" id="kpiAvgIntensity">—</div></div>
+    <div class="kpi-tile"><div class="lbl">Event วันนี้</div><div class="val" id="kpiEventCount" style="color:var(--return)">—</div></div>
+  </div>
 
-      <div class="ahu-main">
-        <div class="plan-hd">
-          <div class="t">Exhibition Wing — ผังพื้นที่ (EH) <span id="currentDateLabel" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--return);font-weight:500;margin-left:8px"></span></div>
-          <div class="note">Option 2 · ไม่พึ่ง real-time AHU · คลิกกล่องเพื่อดูรายละเอียด</div>
-        </div>
-        <div class="plan-canvas" id="planCanvas">
-          <div class="loading-note" id="loadingNote">กำลังโหลดข้อมูล...</div>
-        </div>
+  <div class="legend-row">
+    <span class="t">kWh/m² percentile</span>
+    <div class="heat-scale"><span class="heat-lbl">ต่ำสุด</span><div class="heat-bar"></div><span class="heat-lbl">สูงสุด</span></div>
+  </div>
+
+  <div class="view active" id="viewMap">
+    <div class="wing-block">
+      <div class="wing-hd"><span class="t">Exhibition Wing — ผังพื้นที่ (EH)</span><span class="m" id="mapDateLabel"></span></div>
+      <div class="plan-canvas" id="planCanvas">
+        <div class="loading-note">กำลังโหลดข้อมูล...</div>
       </div>
     </div>
   </div>
+
+  <div class="view" id="viewList">
+    <div class="wing-block">
+      <div class="wing-hd"><span class="t">Exhibition Wing — รายการ</span><span class="m" id="listDateLabel"></span></div>
+      <div class="console" id="consoleBody">
+        <div class="loading-note">กำลังโหลดข้อมูล...</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-// [สำคัญ] แก้เป็น URL deploy จริงของ Brew — เอาค่าเดียวกับที่ใช้ใน index.html/ac.html/monthly.html
-// (ถ้า deploy ใหม่ URL เปลี่ยน ต้องแก้ตรงนี้ด้วย เหมือนไฟล์อื่นๆ ทุกไฟล์ในระบบ)
+// [สำคัญ] URL deploy จริง — เอาค่าเดียวกับไฟล์อื่นทุกไฟล์ในระบบ (index.html/ac.html/monthly.html)
 var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
 
-// พิกัด/สัดส่วนจากผังจริงที่ Brew ส่งมา ขยายขนาดขึ้น ~1.45 เท่าจากเดิม (ตามที่ขอ) — สัดส่วน
-// สัมพัทธ์ระหว่างฮอลยังคงเดิม (ฮอลใหญ่ = กล่องใหญ่กว่า) Phase ยังเป็นค่าคาดเดา รอยืนยันจาก AHU_Floor
+// พิกัด/สัดส่วนจากผังจริงที่ Brew ส่งมา — เอามาจาก ahu.html เดิมตรงๆ ไม่แก้พิกัดเลย
 var HALL_LAYOUT = [
   { label: 'EH104',        left: 0,   top: 29,  width: 154, height: 367, phase: 'p1' },
   { label: 'EH103',        left: 181, top: 35,  width: 157, height: 357, phase: 'p1' },
@@ -169,163 +187,275 @@ var HALL_LAYOUT = [
   { label: 'LIVE',         left: 374, top: 421, width: 154, height: 360, phase: 'p2' },
   { label: 'EH100',        left: 802, top: 415, width: 154, height: 355, phase: 'p2' }
 ];
-var ZONE_TAGS = [
-  { left: 0,   top: 8,   text: 'EVENT HALLS PH1', zone: 'ph1' },
-  { left: 802, top: 8,   text: 'EVENT HALLS PH2', zone: 'ph2' },
-  { left: 802, top: 386, text: 'EVENT HALLS PH2', zone: 'ph2' }
-];
-// [ใหม่] กลุ่มฮอลตาม Location_Zone จริง (Config_LocationMap) — ใช้รวมยอด kWh/พื้นที่แสดงเหนือกลุ่ม
-// ไม่เรียก backend เพิ่ม รวมจากข้อมูล 10 ฮอลที่ fetch มาแล้วรอบเดียว (ตัด BEAT/LIVE/SAMA-GARDEN ออก
-// เพราะคนละ Location_Zone กับ EH ไม่เกี่ยวกัน ไม่ต้องรวม)
-var ZONE_GROUPS = {
-  ph1: ['EH104', 'EH103', 'EH102', 'EH101'],
-  ph2: ['EH99', 'EH98', 'EH100']
+var PHASE_LABELS = {
+  p1: HALL_LAYOUT.filter(function(h){ return h.phase === 'p1'; }).map(function(h){ return h.label; }),
+  p2: HALL_LAYOUT.filter(function(h){ return h.phase === 'p2'; }).map(function(h){ return h.label; })
 };
+
+var state = { view: 'map', dateDays: 0, phaseFilter: null, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {} };
 
 function fmtNum_(v, digits) {
   if (v === null || v === undefined || isNaN(v)) return '—';
   return Number(v).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
-
 function fmtDateThai_(dateStr) {
   var d = new Date(dateStr + 'T00:00:00');
   var days = ['อา','จ','อ','พ','พฤ','ศ','ส'];
   var months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   return 'วัน' + days[d.getDay()] + 'ที่ ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
 }
-
-function buildSparkAndTrendHtml_(series, colorCls) {
-  if (!series || !series.length) return { sparkHtml: '', trendHtml: '' };
-  var vals = series.map(function(s) { return s.kwh; });
-  var max = Math.max.apply(null, vals.concat([0.0001])); // กัน max=0 หารพัง
-  var barsHtml = vals.map(function(v, i) {
-    var h = Math.max(3, Math.round((v / max) * 100));
-    var todayCls = (i === vals.length - 1) ? ' today' : '';
-    return '<div class="hb-spark-bar' + todayCls + '" style="height:' + h + '%"></div>';
-  }).join('');
-  var sparkHtml = '<div class="hb-spark" style="color:var(--' + colorCls + ')">' + barsHtml + '</div>';
-
-  var trendHtml = '';
-  if (vals.length >= 2) {
-    var todayV = vals[vals.length - 1], ydayV = vals[vals.length - 2];
-    if (ydayV > 0) {
-      var pct = Math.round(((todayV - ydayV) / ydayV) * 100);
-      if (pct > 0) trendHtml = '<span class="hb-tr tr-up">▲' + pct + '%</span>';
-      else if (pct < 0) trendHtml = '<span class="hb-tr tr-down">▼' + Math.abs(pct) + '%</span>';
-      else trendHtml = '<span class="hb-tr" style="color:var(--text-faint)">— 0%</span>';
-    } else if (todayV > 0) {
-      trendHtml = '<span class="hb-tr tr-up">▲ ใหม่</span>';
-    }
-  }
-  return { sparkHtml: sparkHtml, trendHtml: trendHtml };
-}
-
-function renderHallBoxes(dataByLabel, sparklineByHall) {
-  var canvas = document.getElementById('planCanvas');
-
-  var html = ZONE_TAGS.map(function(z) {
-    var members = ZONE_GROUPS[z.zone] || [];
-    var sumKwh = 0, sumArea = 0, hasAny = false;
-    members.forEach(function(lbl) {
-      var d = dataByLabel[lbl];
-      if (d && d.kwh !== null) { sumKwh += d.kwh; hasAny = true; }
-      if (d && d.areaSqm !== null) sumArea += d.areaSqm;
-    });
-    var totalText = hasAny ? (' · รวม ' + fmtNum_(sumKwh, 0) + ' kWh · ' + fmtNum_(sumArea, 0) + ' m²') : '';
-    return '<div class="zone-tag" style="left:' + z.left + 'px;top:' + z.top + 'px">' + z.text + totalText + '</div>';
-  }).join('');
-
-  html += HALL_LAYOUT.map(function(pos) {
-    var d = dataByLabel[pos.label];
-    var phaseCls = pos.phase === 'p1' ? 'n-p1' : 'n-p2';
-    var phaseBadge = pos.phase === 'p1' ? 'P1' : 'P2';
-    var evBadge = (d && d.hasEventToday) ? '<span class="ev">EVENT</span>' : '';
-    var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '—';
-    var trHtml = (d && d.trPerSqm !== null) ? ('TR/m² ' + fmtNum_(d.trPerSqm, 3)) : 'TR/m² —';
-    var evNameHtml = (d && d.eventName) ? d.eventName : '—';
-    var areaHtml = (d && d.areaSqm !== null)
-      ? ((d.hasEventToday ? fmtNum_(d.activeAreaSqm, 0) + ' / ' : '') + fmtNum_(d.areaSqm, 0) + ' m²')
-      : 'รอข้อมูลพื้นที่';
-
-    var series = sparklineByHall ? sparklineByHall[pos.label] : null;
-    var st = buildSparkAndTrendHtml_(series, pos.phase === 'p1' ? 'green' : 'cold');
-
-    return '<div class="hall-box ' + phaseCls + '" style="left:' + pos.left + 'px;top:' + pos.top + 'px;width:' + pos.width + 'px;height:' + pos.height + 'px">'
-      + evBadge
-      + '<div class="hb-nametag"><span class="hb-nm">' + pos.label + '</span><span class="hb-ph ' + phaseCls.replace('n-', 'ph-') + '">' + phaseBadge + '</span></div>'
-      + '<div class="hb-kwrow"><span class="hb-kwh-big">' + kwhHtml + '</span><span class="hb-kwh-unit">kWh</span>' + st.trendHtml + '</div>'
-      + '<div class="hb-trmsq">' + trHtml + '</div>'
-      + st.sparkHtml
-      + '<div class="hb-evname">' + evNameHtml + '</div>'
-      + '<div class="hb-sub">' + areaHtml + '</div>'
-      + '</div>';
-  }).join('');
-
-  canvas.innerHTML = html;
-}
-
-function loadEventHalls(dateStr) {
-  document.getElementById('planCanvas').innerHTML = '<div class="loading-note" id="loadingNote">กำลังโหลดข้อมูล...</div>';
-
-  var mainUrl = API_URL + '?action=eventhalls' + (dateStr ? ('&date=' + dateStr) : '');
-  fetch(mainUrl)
-    .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (eventhalls)'); return res.json(); })
-    .then(function(mainRes) {
-      if (mainRes && mainRes.error) throw new Error(mainRes.error);
-      // [แก้ - สำคัญ] backend คืน {date, halls} แล้ว — ใช้ mainRes.date เป็นวันที่จริงเสมอ ไม่เดา/hardcode
-      // เอง กันปัญหาวันที่ไม่ตรงกับ Location Zone panel (Chiller Circuit ใช้ resolve logic เดียวกัน)
-      var resolvedDate = mainRes.date;
-      var label = document.getElementById('currentDateLabel');
-      if (label) label.textContent = '· ' + fmtDateThai_(resolvedDate);
-      // ไฮไลต์ปุ่มวันนี้/เมื่อวานอัตโนมัติ ถ้าวันที่ backend เลือกมาตรงกับปุ่มใดปุ่มหนึ่งพอดี (เผื่อ
-      // เป็นการโหลดครั้งแรกที่ไม่ได้ระบุ date เอง — ถ้าไม่ตรงทั้งคู่ ปล่อยว่างไว้ ไม่บังคับไฮไลต์มั่ว)
-      if (resolvedDate === dateStrOf_(0)) setActiveDateBtn_('btnToday');
-      else if (resolvedDate === dateStrOf_(1)) setActiveDateBtn_('btnYesterday');
-      else setActiveDateBtn_(null);
-
-      var byLabel = {};
-      (mainRes.halls || []).forEach(function(item) { byLabel[item.label] = item; });
-
-      // ยิง sparkline ต่อ "หลัง" รู้วันที่จริงแล้วเท่านั้น (ระบุ date ตรงๆ กันคนละวันกับ main เอง)
-      var sparkUrl = API_URL + '?action=eventhallsparkline&date=' + resolvedDate + '&days=7';
-      return fetch(sparkUrl)
-        .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (sparkline)'); return res.json(); })
-        .then(function(sparkRes) {
-          if (sparkRes && sparkRes.error) throw new Error(sparkRes.error);
-          renderHallBoxes(byLabel, (sparkRes && sparkRes.byHall) ? sparkRes.byHall : null);
-        });
-    })
-    .catch(function(err) {
-      document.getElementById('planCanvas').innerHTML =
-        '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
-    });
-}
-
 function dateStrOf_(daysAgo) {
   var d = new Date();
   d.setDate(d.getDate() - daysAgo);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-function setActiveDateBtn_(id) {
-  document.getElementById('btnToday').classList.remove('active');
-  document.getElementById('btnYesterday').classList.remove('active');
-  if (id) document.getElementById(id).classList.add('active');
+// [ใหม่] คำนวณ percentile bucket (heat-1/2/3) จริงจาก kWh/m² ของฮอลที่มีข้อมูลวันนี้เท่านั้น
+// heat-0 = ไม่มี event วันนี้ (ไม่มีค่าให้จัดอันดับ)
+function computeHeatClasses_(dataByLabel) {
+  var vals = [];
+  HALL_LAYOUT.forEach(function(h) {
+    var d = dataByLabel[h.label];
+    if (d && d.hasEventToday && typeof d.kwhPerSqm === 'number') vals.push(d.kwhPerSqm);
+  });
+  vals.sort(function(a, b) { return a - b; });
+  var t1 = vals.length ? vals[Math.floor(vals.length / 3)] : null;
+  var t2 = vals.length ? vals[Math.floor(vals.length * 2 / 3)] : null;
+  var cls = {};
+  HALL_LAYOUT.forEach(function(h) {
+    var d = dataByLabel[h.label];
+    if (!d || !d.hasEventToday || typeof d.kwhPerSqm !== 'number') { cls[h.label] = 'heat-0'; return; }
+    if (t2 !== null && d.kwhPerSqm >= t2) cls[h.label] = 'heat-1';
+    else if (t1 !== null && d.kwhPerSqm >= t1) cls[h.label] = 'heat-2';
+    else cls[h.label] = 'heat-3';
+  });
+  return cls;
 }
 
-document.getElementById('btnToday').addEventListener('click', function() {
-  setActiveDateBtn_('btnToday');
-  loadEventHalls(dateStrOf_(0));
-});
-document.getElementById('btnYesterday').addEventListener('click', function() {
-  setActiveDateBtn_('btnYesterday');
-  loadEventHalls(dateStrOf_(1));
+// [ใหม่] เทรนด์วันนี้เทียบเมื่อวาน จาก sparkline จริง — ใช้ทั้งเป็น badge บนกล่อง และหา "ตัวขยับแรงสุด"
+function trendPct_(series) {
+  if (!series || series.length < 2) return null;
+  var today = series[series.length - 1].kwh, yday = series[series.length - 2].kwh;
+  if (!(yday > 0)) return null;
+  return Math.round(((today - yday) / yday) * 100);
+}
+function sparkBarsHtml_(series, cls) {
+  if (!series || !series.length) return '';
+  var vals = series.map(function(s) { return s.kwh; });
+  var max = Math.max.apply(null, vals.concat([0.0001]));
+  var bars = vals.map(function(v, i) {
+    var h = Math.max(3, Math.round((v / max) * 100));
+    return '<div class="' + cls + '-bar' + (i === vals.length - 1 ? ' today' : '') + '" style="height:' + h + '%"></div>';
+  }).join('');
+  return bars;
+}
+
+function computeCallout_(dataByLabel, sparkByHall) {
+  var best = null;
+  HALL_LAYOUT.forEach(function(h) {
+    var d = dataByLabel[h.label];
+    if (!d || !d.hasEventToday) return;
+    var pct = trendPct_(sparkByHall[h.label]);
+    if (pct === null) return;
+    if (!best || Math.abs(pct) > Math.abs(best.pct)) best = { label: h.label, pct: pct, eventName: d.eventName };
+  });
+  var el = document.getElementById('callout');
+  if (!best || Math.abs(best.pct) < 20) { el.classList.remove('show'); return; }
+  var dir = best.pct > 0 ? 'พุ่ง' : 'ลดลง';
+  document.getElementById('calloutText').innerHTML =
+    '<b>' + best.label + ' ' + dir + ' ' + Math.abs(best.pct) + '%</b> จากเมื่อวาน' + (best.eventName ? ' — ' + best.eventName : '');
+  el.classList.add('show');
+}
+
+function computeKpis_(dataByLabel) {
+  var vals = [], evCount = 0;
+  HALL_LAYOUT.forEach(function(h) {
+    var d = dataByLabel[h.label];
+    if (d && d.hasEventToday) {
+      evCount++;
+      if (typeof d.kwhPerSqm === 'number') vals.push(d.kwhPerSqm);
+    }
+  });
+  document.getElementById('kpiEventCount').textContent = evCount + ' hall';
+  document.getElementById('kpiAvgIntensity').textContent = vals.length
+    ? fmtNum_(vals.reduce(function(a, b) { return a + b; }, 0) / vals.length, 3) : '—';
+}
+
+function renderMapView() {
+  var canvas = document.getElementById('planCanvas');
+  var heatCls = computeHeatClasses_(state.dataByLabel);
+  canvas.style.minHeight = '800px';
+  var html = HALL_LAYOUT.map(function(pos) {
+    var d = state.dataByLabel[pos.label];
+    var last = state.lastSeenByHall[pos.label];
+    var phBadge = pos.phase === 'p1' ? 'P1' : 'P2';
+    var phCls = pos.phase === 'p1' ? 'ph-p1' : 'ph-p2';
+    var evFlag = (d && d.hasEventToday) ? '<div class="ev-flag">EVENT</div>' : '';
+    var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
+    var trHtml = (d && d.trPerSqm !== null) ? ('TR/m² ' + fmtNum_(d.trPerSqm, 3)) : 'TR/m² —';
+    var areaHtml = (d && d.areaSqm !== null)
+      ? ((d.hasEventToday ? fmtNum_(d.activeAreaSqm, 0) + ' / ' : '') + fmtNum_(d.areaSqm, 0) + ' m²')
+      : '—';
+    var series = state.sparkByHall[pos.label];
+    var sparkHtml = (d && d.hasEventToday && series) ? '<div class="spark" style="color:currentColor">' + sparkBarsHtml_(series, 'spark') + '</div>' : '';
+    var bodyExtra = (d && d.hasEventToday)
+      ? '<div class="ev-nm">' + (d.eventName || '—') + '</div>'
+      : '<div class="last-ev">' + (last && last.daysAgo !== null ? 'event ล่าสุด: จบไปแล้ว ' + last.daysAgo + ' วัน' : 'ยังไม่เคยมี event') + '</div>';
+
+    var searchable = (pos.label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
+    var matchesSearch = !state.search || searchable.indexOf(state.search) > -1;
+    var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
+    var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
+
+    return '<div class="blk ' + heatCls[pos.label] + dimCls + '" data-label="' + pos.label + '" style="left:' + pos.left + 'px;top:' + pos.top + 'px;width:' + pos.width + 'px;height:' + pos.height + 'px">'
+      + evFlag
+      + '<div><div class="nm">' + pos.label + '<span class="ph ' + phCls + '">' + phBadge + '</span></div>'
+      + '<div class="kw">' + kwhHtml + '<span class="u">kWh</span></div>'
+      + sparkHtml + '</div>'
+      + bodyExtra
+      + '<div class="meta"><span>' + trHtml + '</span><span>' + areaHtml + '</span></div>'
+      + '</div>';
+  }).join('');
+  canvas.innerHTML = html;
+}
+
+function renderListView() {
+  var body = document.getElementById('consoleBody');
+  var heatCls = computeHeatClasses_(state.dataByLabel);
+  var head = '<div class="console-hd"><span>Hall</span><span>Phase</span><span>Event</span><span style="text-align:right">TR/m²</span><span style="text-align:right">kWh</span><span style="text-align:right">Trend 7 วัน</span></div>';
+
+  function rowsFor(labels) {
+    return labels.map(function(label) {
+      var pos = HALL_LAYOUT.filter(function(h) { return h.label === label; })[0];
+      var d = state.dataByLabel[label];
+      var last = state.lastSeenByHall[label];
+      var hcls = heatCls[label];
+      var rcls = hcls === 'heat-1' ? 'r-hot' : hcls === 'heat-2' ? 'r-mid' : hcls === 'heat-3' ? 'r-low' : 'r-none';
+      var phBadge = pos.phase === 'p1' ? 'P1' : 'P2';
+      var phCls = pos.phase === 'p1' ? 'ph-p1' : 'ph-p2';
+      var evHtml = (d && d.hasEventToday)
+        ? '<span class="r-ev">' + (d.eventName || '—') + '</span>'
+        : '<span class="r-ev none">' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ไม่มี event') + '</span>';
+      var trHtml = (d && d.trPerSqm !== null) ? fmtNum_(d.trPerSqm, 3) : '—';
+      var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
+      var series = state.sparkByHall[label];
+      var sparkHtml = (d && d.hasEventToday && series) ? sparkBarsHtml_(series, 'r-spark') : '';
+
+      var searchable = (label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
+      var matchesSearch = !state.search || searchable.indexOf(state.search) > -1;
+      var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
+      var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
+
+      return '<div class="row ' + rcls + dimCls + '" data-label="' + label + '">'
+        + '<span class="r-nm">' + label + '</span>'
+        + '<span class="r-ph ' + phCls + '">' + phBadge + '</span>'
+        + evHtml
+        + '<span class="r-trm">' + trHtml + '</span>'
+        + '<span class="r-kw" style="color:' + (hcls === 'heat-0' ? 'var(--text-faint)' : 'inherit') + '">' + kwhHtml + '</span>'
+        + '<span class="r-spark" style="color:currentColor">' + sparkHtml + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  body.innerHTML = head
+    + '<div class="grp-label">Event Halls · Phase 1</div>' + rowsFor(PHASE_LABELS.p1)
+    + '<div class="grp-label">Event Halls · Phase 2</div>' + rowsFor(PHASE_LABELS.p2);
+}
+
+function renderAll_() {
+  if (state.view === 'map') renderMapView(); else renderListView();
+}
+
+function loadEventHalls(dateStr) {
+  document.getElementById('planCanvas').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
+  document.getElementById('consoleBody').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
+
+  var mainUrl = API_URL + '?action=eventhalls' + (dateStr ? ('&date=' + dateStr) : '');
+  fetch(mainUrl)
+    .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (eventhalls)'); return res.json(); })
+    .then(function(mainRes) {
+      if (mainRes && mainRes.error) throw new Error(mainRes.error);
+      var resolvedDate = mainRes.date;
+      var dateLabel = '· ' + fmtDateThai_(resolvedDate);
+      document.getElementById('mapDateLabel').textContent = dateLabel;
+      document.getElementById('listDateLabel').textContent = dateLabel;
+      document.getElementById('topbarSub').textContent = 'Exhibition Wing · ' + fmtDateThai_(resolvedDate);
+      document.getElementById('updTime').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      state.dataByLabel = {};
+      (mainRes.halls || []).forEach(function(item) { state.dataByLabel[item.label] = item; });
+      computeKpis_(state.dataByLabel);
+
+      var sparkUrl = API_URL + '?action=eventhallsparkline&date=' + resolvedDate + '&days=7';
+      var lastSeenUrl = API_URL + '?action=eventhallslastseen&date=' + resolvedDate;
+      return Promise.all([
+        fetch(sparkUrl).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (sparkline)'); return res.json(); }),
+        fetch(lastSeenUrl).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status + ' (lastseen)'); return res.json(); })
+      ]).then(function(results) {
+        var sparkRes = results[0], lastSeenRes = results[1];
+        if (sparkRes && sparkRes.error) throw new Error(sparkRes.error);
+        if (lastSeenRes && lastSeenRes.error) throw new Error(lastSeenRes.error);
+        state.sparkByHall = (sparkRes && sparkRes.byHall) ? sparkRes.byHall : {};
+        state.lastSeenByHall = (lastSeenRes && lastSeenRes.byHall) ? lastSeenRes.byHall : {};
+        renderAll_();
+        computeCallout_(state.dataByLabel, state.sparkByHall);
+      });
+    })
+    .catch(function(err) {
+      var msg = '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
+      document.getElementById('planCanvas').innerHTML = msg;
+      document.getElementById('consoleBody').innerHTML = msg;
+    });
+}
+
+// ── event wiring ──────────────────────────────────────────────
+document.getElementById('viewToggle').addEventListener('click', function(e) {
+  var btn = e.target.closest('.tg-btn');
+  if (!btn) return;
+  document.querySelectorAll('#viewToggle .tg-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.view = btn.dataset.view;
+  document.getElementById('viewMap').classList.toggle('active', state.view === 'map');
+  document.getElementById('viewList').classList.toggle('active', state.view === 'list');
+  renderAll_();
 });
 
-// [แก้ - สำคัญ] เดิม hardcode "เมื่อวาน" ตายตัว ทำให้ไม่ตรงกับ Location Zone panel (ที่ใช้วันล่าสุด
-// จริงจาก Data_Log ซึ่งอาจเป็นวันนี้แล้วถ้าข้อมูลมาครบ) ตอนนี้ไม่ส่ง date เลยตอนโหลดครั้งแรก ให้
-// backend resolve "วันล่าสุดที่มีข้อมูลจริง" เอง (logic เดียวกับ Chiller Circuit) รับประกันตรงกันเสมอ
-setActiveDateBtn_(null); // ยังไม่ไฮไลต์ปุ่มไหนไว้ก่อน เพราะยังไม่รู้ว่า backend จะเลือกวันนี้หรือเมื่อวาน
+document.getElementById('dateToggle').addEventListener('click', function(e) {
+  var btn = e.target.closest('.tg-btn');
+  if (!btn) return;
+  document.querySelectorAll('#dateToggle .tg-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.dateDays = Number(btn.dataset.days);
+  loadEventHalls(dateStrOf_(state.dateDays));
+});
+
+function togglePhaseFilter_(phase, tileId) {
+  var tile = document.getElementById(tileId);
+  if (state.phaseFilter === phase) {
+    state.phaseFilter = null;
+    tile.classList.remove('active-filter');
+  } else {
+    document.getElementById('tilePh1').classList.remove('active-filter');
+    document.getElementById('tilePh2').classList.remove('active-filter');
+    state.phaseFilter = phase;
+    tile.classList.add('active-filter');
+  }
+  renderAll_();
+}
+document.getElementById('tilePh1').addEventListener('click', function() { togglePhaseFilter_('p1', 'tilePh1'); });
+document.getElementById('tilePh2').addEventListener('click', function() { togglePhaseFilter_('p2', 'tilePh2'); });
+
+document.getElementById('searchInput').addEventListener('input', function(e) {
+  state.search = e.target.value.trim().toLowerCase();
+  renderAll_();
+});
+
+document.getElementById('calloutDismiss').addEventListener('click', function() {
+  document.getElementById('callout').classList.remove('show');
+});
+
+// [เหมือนเดิม] ไม่ hardcode วันที่ ปล่อยให้ backend resolve "วันล่าสุดที่มีข้อมูลจริง" เอง
+// รับประกันตรงกับ Location Zone panel เสมอ (logic เดียวกับที่ ahu.html เดิมทำไว้)
 loadEventHalls(null);
 </script>
 </body>
