@@ -163,11 +163,11 @@ body{font-family:'Google Sans',Arial,sans-serif;background:#0D1117;color:#E6EDF3
       <table class="yr-tbl">
         <thead>
           <tr>
-            <th>เดือน</th><th>Total Area</th><th>Total Chiller (TRH)</th><th>Total Power (Kw)</th>
+            <th>เดือน</th><th>Total Area</th><th>Total Common Area</th><th>Total Event Area</th><th>Total Chiller (TRH)</th><th>Total Power (Kw)</th>
             <th>Total Power (kWh)</th><th>TRH/ตร.ม.</th><th>kWh/ตร.ม.</th><th>Electric cost</th><th class="th-arrow"></th>
           </tr>
         </thead>
-        <tbody id="yrBody"><tr><td colspan="9" class="empty">กำลังโหลด...</td></tr></tbody>
+        <tbody id="yrBody"><tr><td colspan="11" class="empty">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
     <div class="yr-note" id="yrNote" style="display:none;"></div>
@@ -328,7 +328,7 @@ function pctChg_(cur, prev) {
 })();
 async function loadYearly() {
   var year = parseInt(document.getElementById('selYearY').value);
-  document.getElementById('yrBody').innerHTML = '<tr><td colspan="9" class="loading-msg">กำลังโหลด...</td></tr>';
+  document.getElementById('yrBody').innerHTML = '<tr><td colspan="11" class="loading-msg">กำลังโหลด...</td></tr>';
   document.getElementById('yrNote').style.display = 'none';
   collapsePanel();
   try {
@@ -340,7 +340,7 @@ async function loadYearly() {
     }
     renderYearly(year, yearlyCache);
   } catch(err) {
-    document.getElementById('yrBody').innerHTML = '<tr><td colspan="9" class="empty" style="color:#FF7B72;">Error: ' + err.message + '</td></tr>';
+    document.getElementById('yrBody').innerHTML = '<tr><td colspan="11" class="empty" style="color:#FF7B72;">Error: ' + err.message + '</td></tr>';
   }
 }
 function renderYearly(year, trend) {
@@ -362,7 +362,7 @@ function renderYearly(year, trend) {
     var isOpen = panelState.open && panelState.month === mm && panelState.year === year;
     if (!t) {
       tr.className = 'yr-row no-data';
-      tr.innerHTML = '<td>' + MONTH_SHORT_TH[mm] + '</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td></td>';
+      tr.innerHTML = '<td>' + MONTH_SHORT_TH[mm] + '</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td></td>';
       tbody.appendChild(tr);
       continue;
     }
@@ -373,13 +373,15 @@ function renderYearly(year, trend) {
     // (ต่างจาก monthlytrend เดิมที่ trPerSqm คือ TR/ตร.ม. ต้องคูณ 2 เอง) ไม่ต้องคูณ 2 ซ้ำอีก
     var trhPerM2 = (typeof t.trPerSqm === 'number') ? t.trPerSqm : null;
     var prevTrhPerM2 = prevT && typeof prevT.trPerSqm === 'number' ? prevT.trPerSqm : null;
-    latestWithData = { month: mm, chgArea: prevT ? pctChg_(t.areaUsedTotalSqm, prevT.areaUsedTotalSqm) : null,
+    latestWithData = { month: mm, chgArea: prevT ? pctChg_(t.totalAreaAllSqm, prevT.totalAreaAllSqm) : null,
       chgTRHperM2: prevT ? pctChg_(trhPerM2, prevTrhPerM2) : null };
     tr.className = 'yr-row' + (isCurrent ? ' is-current' : '') + (isOpen ? ' is-open' : '');
     tr.setAttribute('data-month', mm);
     tr.onclick = (function(mmCap){ return function(){ toggleMonthPanel(mmCap, year); }; })(mm);
     tr.innerHTML =
       '<td>' + MONTH_SHORT_TH[mm] + (isCurrent ? ' <span style="font-size:10px;font-weight:400;color:#7D8590;">(เดือนนี้)</span>' : '') + '</td>'
+      + '<td>' + fmtN(t.totalAreaAllSqm, 0) + momChip(prevT ? pctChg_(t.totalAreaAllSqm, prevT.totalAreaAllSqm) : null, null) + '</td>'
+      + '<td>' + fmtN(t.commonAreaTotalSqm, 0) + momChip(prevT ? pctChg_(t.commonAreaTotalSqm, prevT.commonAreaTotalSqm) : null, null) + '</td>'
       + '<td>' + fmtN(t.areaUsedTotalSqm, 0) + momChip(prevT ? pctChg_(t.areaUsedTotalSqm, prevT.areaUsedTotalSqm) : null, null) + '</td>'
       + '<td>' + fmtN(t.totalTrh, 2) + momChip(prevT ? pctChg_(t.totalTrh, prevT.totalTrh) : null, null) + '</td>'
       + '<td>' + fmtN(t.totalKwAll, 2) + '</td>'
