@@ -53,61 +53,41 @@
   .wing-hd .t{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px}
   .wing-hd .m{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-faint)}
 
-  /* map view — พิกัดจริงจากผังอาคาร (absolute, ตาม HALL_LAYOUT) */
-  .plan-canvas{position:relative;min-height:800px}
-  .blk{position:absolute;border-radius:8px;border:1.5px solid;display:flex;flex-direction:column;justify-content:space-between;padding:12px;cursor:pointer;transition:box-shadow .15s}
-  .blk:hover{box-shadow:0 0 0 2px rgba(255,255,255,0.15)}
-  .blk.dim{opacity:.25;pointer-events:none}
-  .blk .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px}
-  .blk .ph{font-size:8px;font-weight:700;padding:2px 6px;border-radius:20px;margin-left:4px}
-  .ph-p1{background:rgba(56,189,248,.16);color:var(--cold)}
-  .ph-p2{background:rgba(242,184,79,.16);color:var(--return)}
-  .blk .ev-flag{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(242,184,79,.16);color:var(--return)}
-  .blk .kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:22px;margin-top:6px}
-  .blk .kw .u{font-size:11px;font-weight:500;color:var(--text-faint);margin-left:3px}
-  .blk .spark{display:flex;align-items:flex-end;gap:2px;height:18px;margin-top:6px}
-  .blk .spark-bar{width:6px;border-radius:1px;background:currentColor;opacity:.5}
-  .blk .spark-bar.today{opacity:1}
-  .blk .ev-nm{font-size:10.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:6px}
-  .blk .meta{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-faint);margin-top:6px;display:flex;justify-content:space-between}
-  .blk .last-ev{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-faint);margin-top:6px}
+  /* ผังย่อ — พิกัดจริงจากผังอาคาร (ตาม HALL_LAYOUT) ย่อสัดส่วนลง ไม่ใช่ขนาดเต็มเหมือนเดิม */
+  .mini-map{position:relative;margin-bottom:18px}
+  .mini-blk{position:absolute;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:10px;cursor:pointer;transition:opacity .15s}
+  .mini-blk.dim{opacity:.2;pointer-events:none}
+  .mini-blk.heat-1{background:rgba(242,134,122,.14);color:var(--hot)}
+  .mini-blk.heat-2{background:rgba(242,184,79,.11);color:var(--return)}
+  .mini-blk.heat-3{background:rgba(52,211,153,.10);color:var(--green)}
+  .mini-blk.heat-0{background:rgba(255,255,255,.025);color:#444441}
 
-  .heat-1{background:rgba(242,134,122,.16);border-color:rgba(242,134,122,.55)}.heat-1 .kw{color:var(--hot)}
-  .heat-2{background:rgba(242,184,79,.13);border-color:rgba(242,184,79,.5)}.heat-2 .kw{color:var(--return)}
-  .heat-3{background:rgba(52,211,153,.11);border-color:rgba(52,211,153,.45)}.heat-3 .kw{color:var(--green)}
-  .heat-0{background:rgba(255,255,255,.03);border-color:var(--glass-border)}.heat-0 .kw{color:var(--text-faint)}
+  /* กลุ่มรายการฮอล — row-card แทนตาราง/การ์ดใหญ่เดิม */
+  .grp-hd{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px}
+  .grp-hd + .hall-list{margin-bottom:22px}
+  .grp-hd .t{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px}
+  .grp-hd .m{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint)}
+  .hall-list{display:flex;flex-direction:column;gap:6px}
+  .hall-row{display:flex;align-items:center;gap:14px;border-radius:10px;padding:11px 14px;cursor:pointer}
+  .hall-row.dim{display:none}
+  .hall-row .accent{width:6px;height:34px;border-radius:3px;flex-shrink:0}
+  .hall-row .info{width:64px;flex-shrink:0}
+  .hall-row .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--text)}
+  .hall-row .sub{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--text-faint);margin-top:1px}
+  .hall-row .mid{flex:1;min-width:0}
+  .hall-row .mid-ev{font-size:10.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hall-row .mid-none{font-size:10px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hall-row .row-spark{display:flex;align-items:flex-end;gap:2px;height:20px;flex-shrink:0}
+  .hall-row .row-spark-bar{width:5px;border-radius:1px;background:currentColor;opacity:.35}
+  .hall-row .row-spark-bar.today{opacity:1}
+  .hall-row .kw{width:68px;text-align:right;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+  .hall-row .kw .u{font-size:8.5px;font-weight:500;color:var(--text-faint);margin-left:2px}
+  .hall-row.heat-1{background:rgba(242,134,122,.06);color:var(--hot)}.hall-row.heat-1 .accent{background:var(--hot)}
+  .hall-row.heat-2{background:rgba(242,184,79,.05);color:var(--return)}.hall-row.heat-2 .accent{background:var(--return)}
+  .hall-row.heat-3{background:rgba(52,211,153,.045);color:var(--green)}.hall-row.heat-3 .accent{background:var(--green)}
+  .hall-row.heat-0{background:rgba(255,255,255,.015);color:var(--text-faint)}.hall-row.heat-0 .accent{background:#2c2c2a}
 
-  /* list view */
-  .console{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;overflow:hidden}
-  .console-hd{display:grid;grid-template-columns:90px 60px 1fr 80px 90px 100px;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:8.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--glass-border);letter-spacing:.5px}
-  .row{display:grid;grid-template-columns:90px 60px 1fr 80px 90px 100px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.04);border-left:3px solid;cursor:pointer}
-  .row:last-child{border-bottom:none}
-  .row.dim{display:none}
-  .r-hot{border-left-color:var(--hot)}
-  .r-mid{border-left-color:var(--return)}
-  .r-low{border-left-color:var(--green)}
-  .r-none{border-left-color:rgba(255,255,255,0.08)}
-  .r-nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px}
-  .r-ph{font-size:7.5px;font-weight:700;padding:1px 5px;border-radius:20px;width:fit-content}
-  .r-ev{font-size:10.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .r-ev.none{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:9.5px}
-  .r-kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;text-align:right}
-  .r-trm{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);text-align:right}
-  .r-spark{display:flex;align-items:flex-end;gap:2px;height:18px;justify-content:flex-end}
-  .r-spark-bar{width:5px;border-radius:1px;background:currentColor;opacity:.5}
-  .r-spark-bar.today{opacity:1}
-  .grp-label{padding:7px 14px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;background:rgba(255,255,255,0.015);border-bottom:1px solid var(--glass-border)}
-
-  .view{display:none}
-  .view.active{display:block}
   .loading-note{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:11px;padding:20px;text-align:center}
-
-  .detail-pop{position:absolute;width:230px;background:#0d1017;border:1px solid var(--glass-border);border-radius:10px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:5}
-  .detail-pop .dt{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:#fff;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .detail-pop .dclose{font-size:11px;color:var(--text-faint);cursor:pointer}
-  .detail-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-  .detail-row:last-child{border-bottom:none}
-  .detail-row b{color:var(--text)}
 </style>
 </head>
 <body>
@@ -122,10 +102,6 @@
 
   <div class="filterbar">
     <div class="fchip">🔍<input id="searchInput" placeholder="ค้นหา hall เช่น EH101"></div>
-    <div class="fchip toggle" id="viewToggle">
-      <span class="tg-btn active" data-view="map">🗺 ผังพื้นที่</span>
-      <span class="tg-btn" data-view="list">☰ รายการ</span>
-    </div>
     <div class="fchip toggle" id="dateToggle">
       <span class="tg-btn active" data-days="0">วันนี้</span>
       <span class="tg-btn" data-days="1">เมื่อวาน</span>
@@ -151,21 +127,13 @@
     <div class="heat-scale"><span class="heat-lbl">ต่ำสุด</span><div class="heat-bar"></div><span class="heat-lbl">สูงสุด</span></div>
   </div>
 
-  <div class="view active" id="viewMap">
-    <div class="wing-block">
-      <div class="wing-hd"><span class="t">Exhibition Wing — ผังพื้นที่ (EH)</span><span class="m" id="mapDateLabel"></span></div>
-      <div class="plan-canvas" id="planCanvas">
-        <div class="loading-note">กำลังโหลดข้อมูล...</div>
-      </div>
+  <div class="wing-block">
+    <div class="wing-hd"><span class="t">Exhibition Wing (EH)</span><span class="m" id="dateLabel"></span></div>
+    <div class="mini-map" id="miniMap">
+      <div class="loading-note">กำลังโหลดข้อมูล...</div>
     </div>
-  </div>
-
-  <div class="view" id="viewList">
-    <div class="wing-block">
-      <div class="wing-hd"><span class="t">Exhibition Wing — รายการ</span><span class="m" id="listDateLabel"></span></div>
-      <div class="console" id="consoleBody">
-        <div class="loading-note">กำลังโหลดข้อมูล...</div>
-      </div>
+    <div id="hallGroups">
+      <div class="loading-note">กำลังโหลดข้อมูล...</div>
     </div>
   </div>
 </div>
@@ -192,7 +160,13 @@ var PHASE_LABELS = {
   p2: HALL_LAYOUT.filter(function(h){ return h.phase === 'p2'; }).map(function(h){ return h.label; })
 };
 
-var state = { view: 'map', dateDays: 0, phaseFilter: null, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {} };
+var state = { dateDays: 0, phaseFilter: null, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {} };
+var MINI_Y_SCALE = 0.18; // ย่อสัดส่วนแนวตั้งของผังย่อ (แนวนอนใช้ % ของ container แทน ยืดหดตามจอได้)
+function miniLabel_(label) {
+  if (label.indexOf('EH') === 0) return label.slice(2);
+  if (label === 'SAMA-GARDEN') return 'SAMA';
+  return label;
+}
 
 function fmtNum_(v, digits) {
   if (v === null || v === undefined || isNaN(v)) return '—';
@@ -281,94 +255,85 @@ function computeKpis_(dataByLabel) {
     ? fmtNum_(vals.reduce(function(a, b) { return a + b; }, 0) / vals.length, 3) : '—';
 }
 
-function renderMapView() {
-  var canvas = document.getElementById('planCanvas');
+// [ใหม่] ผังย่อ — จุดประสงค์แค่ให้เห็นตำแหน่ง/สถานะสีคร่าวๆ ไม่ใช่การ์ดข้อมูลเต็ม
+// (รายละเอียดทั้งหมดย้ายไปอยู่ในลิสต์ด้านล่างแทน) แนวนอนใช้ % ของ container (ยืดหดตามจอ)
+// แนวตั้งคูณด้วย MINI_Y_SCALE คงที่ กันผังสูงเทอะทะเหมือนเดิม
+function renderMiniMap() {
+  var canvas = document.getElementById('miniMap');
   var heatCls = computeHeatClasses_(state.dataByLabel);
-  canvas.style.minHeight = '800px';
-  var html = HALL_LAYOUT.map(function(pos) {
-    var d = state.dataByLabel[pos.label];
-    var last = state.lastSeenByHall[pos.label];
-    var phBadge = pos.phase === 'p1' ? 'P1' : 'P2';
-    var phCls = pos.phase === 'p1' ? 'ph-p1' : 'ph-p2';
-    var evFlag = (d && d.hasEventToday) ? '<div class="ev-flag">EVENT</div>' : '';
-    var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
-    var trHtml = (d && d.trPerSqm !== null) ? ('TR/m² ' + fmtNum_(d.trPerSqm, 3)) : 'TR/m² —';
-    var areaHtml = (d && d.areaSqm !== null)
-      ? ((d.hasEventToday ? fmtNum_(d.activeAreaSqm, 0) + ' / ' : '') + fmtNum_(d.areaSqm, 0) + ' m²')
-      : '—';
-    var series = state.sparkByHall[pos.label];
-    var sparkHtml = (d && d.hasEventToday && series) ? '<div class="spark" style="color:currentColor">' + sparkBarsHtml_(series, 'spark') + '</div>' : '';
-    var bodyExtra = (d && d.hasEventToday)
-      ? '<div class="ev-nm">' + (d.eventName || '—') + '</div>'
-      : '<div class="last-ev">' + (last && last.daysAgo !== null ? 'event ล่าสุด: จบไปแล้ว ' + last.daysAgo + ' วัน' : 'ยังไม่เคยมี event') + '</div>';
+  var maxRight = HALL_LAYOUT.reduce(function(m, h) { return Math.max(m, h.left + h.width); }, 0);
+  var maxBottom = HALL_LAYOUT.reduce(function(m, h) { return Math.max(m, h.top + h.height); }, 0);
+  canvas.style.height = Math.round(maxBottom * MINI_Y_SCALE + 8) + 'px';
 
+  var html = HALL_LAYOUT.map(function(pos) {
+    var leftPct = (pos.left / maxRight * 100).toFixed(2);
+    var widthPct = (pos.width / maxRight * 100).toFixed(2);
+    var top = Math.round(pos.top * MINI_Y_SCALE);
+    var height = Math.round(pos.height * MINI_Y_SCALE);
+
+    var d = state.dataByLabel[pos.label];
     var searchable = (pos.label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
     var matchesSearch = !state.search || searchable.indexOf(state.search) > -1;
     var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
     var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
 
-    return '<div class="blk ' + heatCls[pos.label] + dimCls + '" data-label="' + pos.label + '" style="left:' + pos.left + 'px;top:' + pos.top + 'px;width:' + pos.width + 'px;height:' + pos.height + 'px">'
-      + evFlag
-      + '<div><div class="nm">' + pos.label + '<span class="ph ' + phCls + '">' + phBadge + '</span></div>'
-      + '<div class="kw">' + kwhHtml + '<span class="u">kWh</span></div>'
-      + sparkHtml + '</div>'
-      + bodyExtra
-      + '<div class="meta"><span>' + trHtml + '</span><span>' + areaHtml + '</span></div>'
-      + '</div>';
+    return '<div class="mini-blk ' + heatCls[pos.label] + dimCls + '" data-label="' + pos.label + '" title="' + pos.label + '" style="left:' + leftPct + '%;top:' + top + 'px;width:' + widthPct + '%;height:' + height + 'px">' + miniLabel_(pos.label) + '</div>';
   }).join('');
   canvas.innerHTML = html;
 }
 
-function renderListView() {
-  var body = document.getElementById('consoleBody');
-  var heatCls = computeHeatClasses_(state.dataByLabel);
-  var head = '<div class="console-hd"><span>Hall</span><span>Phase</span><span>Event</span><span style="text-align:right">TR/m²</span><span style="text-align:right">kWh</span><span style="text-align:right">Trend 7 วัน</span></div>';
+// [ใหม่] แถวรายละเอียดของฮอลเดียว — ใช้ร่วมกันทั้ง Phase 1/2 (โครงสร้างเดียวกันทุกฮอล
+// ไม่ว่าจะมี event หรือไม่ ต่างกันแค่เนื้อหาใน .sub/.mid/.spark ตามที่ confirm ไว้)
+function hallRowHtml_(label, heatCls) {
+  var pos = HALL_LAYOUT.filter(function(h) { return h.label === label; })[0];
+  var d = state.dataByLabel[label];
+  var last = state.lastSeenByHall[label];
+  var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
 
-  function rowsFor(labels) {
-    return labels.map(function(label) {
-      var pos = HALL_LAYOUT.filter(function(h) { return h.label === label; })[0];
-      var d = state.dataByLabel[label];
-      var last = state.lastSeenByHall[label];
-      var hcls = heatCls[label];
-      var rcls = hcls === 'heat-1' ? 'r-hot' : hcls === 'heat-2' ? 'r-mid' : hcls === 'heat-3' ? 'r-low' : 'r-none';
-      var phBadge = pos.phase === 'p1' ? 'P1' : 'P2';
-      var phCls = pos.phase === 'p1' ? 'ph-p1' : 'ph-p2';
-      var evHtml = (d && d.hasEventToday)
-        ? '<span class="r-ev">' + (d.eventName || '—') + '</span>'
-        : '<span class="r-ev none">' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ไม่มี event') + '</span>';
-      var trHtml = (d && d.trPerSqm !== null) ? fmtNum_(d.trPerSqm, 3) : '—';
-      var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
-      var series = state.sparkByHall[label];
-      var sparkHtml = (d && d.hasEventToday && series) ? sparkBarsHtml_(series, 'r-spark') : '';
-
-      var searchable = (label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
-      var matchesSearch = !state.search || searchable.indexOf(state.search) > -1;
-      var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
-      var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
-
-      return '<div class="row ' + rcls + dimCls + '" data-label="' + label + '">'
-        + '<span class="r-nm">' + label + '</span>'
-        + '<span class="r-ph ' + phCls + '">' + phBadge + '</span>'
-        + evHtml
-        + '<span class="r-trm">' + trHtml + '</span>'
-        + '<span class="r-kw" style="color:' + (hcls === 'heat-0' ? 'var(--text-faint)' : 'inherit') + '">' + kwhHtml + '</span>'
-        + '<span class="r-spark" style="color:currentColor">' + sparkHtml + '</span>'
-        + '</div>';
-    }).join('');
+  var subHtml, midHtml, sparkHtml;
+  if (d && d.hasEventToday) {
+    subHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
+    midHtml = '<div class="mid-ev">' + (d.eventName || '—') + '</div>';
+    var series = state.sparkByHall[label];
+    sparkHtml = series ? '<div class="row-spark" style="color:currentColor">' + sparkBarsHtml_(series, 'row-spark') + '</div>' : '<div class="row-spark"></div>';
+  } else {
+    subHtml = (d && d.areaSqm !== null) ? fmtNum_(d.areaSqm, 0) + ' m²' : '—';
+    midHtml = '<div class="mid-none">🌙 ' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ยังไม่เคยมี event') + '</div>';
+    sparkHtml = '';
   }
 
-  body.innerHTML = head
-    + '<div class="grp-label">Event Halls · Phase 1</div>' + rowsFor(PHASE_LABELS.p1)
-    + '<div class="grp-label">Event Halls · Phase 2</div>' + rowsFor(PHASE_LABELS.p2);
+  var searchable = (label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
+  var matchesSearch = !state.search || searchable.indexOf(state.search) > -1;
+  var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
+  var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
+
+  return '<div class="hall-row ' + heatCls[label] + dimCls + '" data-label="' + label + '" id="row-' + label + '">'
+    + '<div class="accent"></div>'
+    + '<div class="info"><div class="nm">' + label + '</div><div class="sub">' + subHtml + '</div></div>'
+    + '<div class="mid">' + midHtml + '</div>'
+    + sparkHtml
+    + '<div class="kw">' + kwhHtml + '<span class="u">kWh</span></div>'
+    + '</div>';
+}
+
+function renderHallGroups() {
+  var body = document.getElementById('hallGroups');
+  var heatCls = computeHeatClasses_(state.dataByLabel);
+  function groupHtml(labels, title) {
+    return '<div class="grp-hd"><span class="t">' + title + '</span><span class="m">' + labels.length + ' halls</span></div>'
+      + '<div class="hall-list">' + labels.map(function(l) { return hallRowHtml_(l, heatCls); }).join('') + '</div>';
+  }
+  body.innerHTML = groupHtml(PHASE_LABELS.p1, 'Event Halls · Phase 1') + groupHtml(PHASE_LABELS.p2, 'Event Halls · Phase 2');
 }
 
 function renderAll_() {
-  if (state.view === 'map') renderMapView(); else renderListView();
+  renderMiniMap();
+  renderHallGroups();
 }
 
 function loadEventHalls(dateStr) {
-  document.getElementById('planCanvas').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
-  document.getElementById('consoleBody').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
+  document.getElementById('miniMap').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
+  document.getElementById('hallGroups').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
 
   var mainUrl = API_URL + '?action=eventhalls' + (dateStr ? ('&date=' + dateStr) : '');
   fetch(mainUrl)
@@ -376,9 +341,7 @@ function loadEventHalls(dateStr) {
     .then(function(mainRes) {
       if (mainRes && mainRes.error) throw new Error(mainRes.error);
       var resolvedDate = mainRes.date;
-      var dateLabel = '· ' + fmtDateThai_(resolvedDate);
-      document.getElementById('mapDateLabel').textContent = dateLabel;
-      document.getElementById('listDateLabel').textContent = dateLabel;
+      document.getElementById('dateLabel').textContent = '· ' + fmtDateThai_(resolvedDate);
       document.getElementById('topbarSub').textContent = 'Exhibition Wing · ' + fmtDateThai_(resolvedDate);
       document.getElementById('updTime').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
@@ -403,21 +366,21 @@ function loadEventHalls(dateStr) {
     })
     .catch(function(err) {
       var msg = '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
-      document.getElementById('planCanvas').innerHTML = msg;
-      document.getElementById('consoleBody').innerHTML = msg;
+      document.getElementById('miniMap').innerHTML = msg;
+      document.getElementById('hallGroups').innerHTML = msg;
     });
 }
 
 // ── event wiring ──────────────────────────────────────────────
-document.getElementById('viewToggle').addEventListener('click', function(e) {
-  var btn = e.target.closest('.tg-btn');
-  if (!btn) return;
-  document.querySelectorAll('#viewToggle .tg-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  state.view = btn.dataset.view;
-  document.getElementById('viewMap').classList.toggle('active', state.view === 'map');
-  document.getElementById('viewList').classList.toggle('active', state.view === 'list');
-  renderAll_();
+// [ใหม่] คลิกบล็อกในผังย่อ -> เลื่อนไปแถวของฮอลนั้นในลิสต์ด้านล่าง + ไฮไลต์ชั่วครู่
+document.getElementById('miniMap').addEventListener('click', function(e) {
+  var blk = e.target.closest('.mini-blk');
+  if (!blk) return;
+  var row = document.getElementById('row-' + blk.dataset.label);
+  if (!row) return;
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  row.style.boxShadow = '0 0 0 2px rgba(255,255,255,.3)';
+  setTimeout(function() { row.style.boxShadow = ''; }, 900);
 });
 
 document.getElementById('dateToggle').addEventListener('click', function(e) {
