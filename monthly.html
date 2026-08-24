@@ -106,12 +106,12 @@ body{font-family:'Google Sans',Arial,sans-serif;background:#0D1117;color:#E6EDF3
 .ftab{padding:3px 12px;border-radius:99px;font-size:11px;font-weight:500;cursor:pointer;transition:background .15s,color .15s;}
 .ftab.active{background:#E3B341;color:#13171F;}
 .ftab.inactive{color:#7D8590;}
-.yr-tbl{width:100%;border-collapse:collapse;font-size:12px;}
-.yr-tbl th{font-size:10px;color:#7D8590;font-weight:600;padding:8px 14px;text-align:right;border-bottom:1px solid #30363D;background:#161B22;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.yr-tbl{width:100%;border-collapse:collapse;font-size:11px;table-layout:auto;}
+.yr-tbl th{font-size:9px;color:#7D8590;font-weight:600;padding:6px 6px;text-align:right;border-bottom:1px solid #30363D;background:#161B22;text-transform:uppercase;letter-spacing:.02em;white-space:normal;line-height:1.25;vertical-align:bottom;word-break:break-word;}
 .yr-tbl th:first-child{text-align:left;}
-.yr-tbl th.th-arrow{width:28px;}
-.yr-tbl td{padding:10px 14px;border-bottom:0.5px solid #21262D;color:#E6EDF3;text-align:right;white-space:nowrap;font-size:13px;}
-.yr-tbl td:first-child{text-align:left;font-weight:600;color:#F0F6FC;}
+.yr-tbl th.th-arrow{width:18px;}
+.yr-tbl td{padding:7px 6px;border-bottom:0.5px solid #21262D;color:#E6EDF3;text-align:right;white-space:nowrap;font-size:12px;}
+.yr-tbl td:first-child{text-align:left;font-weight:600;color:#F0F6FC;white-space:normal;}
 .yr-row{cursor:pointer;}
 .yr-row:hover td{background:#1C2333;}
 .yr-row.is-current td{background:#1F1500;}
@@ -120,7 +120,7 @@ body{font-family:'Google Sans',Arial,sans-serif;background:#0D1117;color:#E6EDF3
 .yr-row.no-data:hover td{background:transparent;}
 .yr-arrow{color:#4D5562;font-size:11px;}
 .yr-row.is-open .yr-arrow{color:#E3B341;}
-.mom-chip{font-size:10px;margin-left:6px;padding:1px 6px;border-radius:5px;font-weight:600;display:inline-block;background:transparent;border:0.5px solid;}
+.mom-chip{font-size:9px;margin-left:4px;padding:1px 4px;border-radius:5px;font-weight:700;display:inline-block;background:transparent;border:0.5px solid;letter-spacing:0;}
 .mom-chip.good{color:#56D364;border-color:#2EA043;}
 .mom-chip.bad{color:#FF7B72;border-color:#8B2020;}
 .mom-chip.neutral{color:#8B949E;border-color:#30363D;}
@@ -163,8 +163,8 @@ body{font-family:'Google Sans',Arial,sans-serif;background:#0D1117;color:#E6EDF3
       <table class="yr-tbl">
         <thead>
           <tr>
-            <th>เดือน</th><th>Total Area</th><th>Total Common Area</th><th>Total Event Area</th><th>Total Chiller (TRH)</th><th>Total Power (Kw)</th>
-            <th>Total Power (kWh)</th><th>TRH/ตร.ม.</th><th>kWh/ตร.ม.</th><th>Electric cost</th><th class="th-arrow"></th>
+            <th>เดือน</th><th>Area</th><th>Common<br>Area</th><th>Event<br>Area</th><th>Chiller<br>(TRH)</th><th>Power<br>(kW)</th>
+            <th>Power<br>(kWh)</th><th>TRH/<br>ตร.ม.</th><th>kWh/<br>ตร.ม.</th><th>Cost</th><th class="th-arrow"></th>
           </tr>
         </thead>
         <tbody id="yrBody"><tr><td colspan="11" class="empty">กำลังโหลด...</td></tr></tbody>
@@ -304,11 +304,11 @@ function devBar(pct) {
 }
 function momChip(val, goodWhen) {
   if (val === null || val === undefined) return '';
-  var arrow = val > 0 ? 'up' : (val < 0 ? 'down' : '-');
+  var arrow = val > 0 ? '▲' : (val < 0 ? '▼' : '–');
   var cls = 'neutral';
   if (goodWhen === 'down') cls = val < 0 ? 'good' : (val > 0 ? 'bad' : 'neutral');
   else if (goodWhen === 'up') cls = val > 0 ? 'good' : (val < 0 ? 'bad' : 'neutral');
-  return '<span class="mom-chip ' + cls + '">' + arrow + ' ' + fmtN(Math.abs(val), 1) + '%</span>';
+  return '<span class="mom-chip ' + cls + '">' + arrow + fmtN(Math.abs(val), 1) + '%</span>';
 }
 function pctChg_(cur, prev) {
   if (typeof cur !== 'number' || typeof prev !== 'number' || prev === 0) return null;
