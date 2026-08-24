@@ -42,50 +42,37 @@
   .kpi-tile .val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:#fff;margin-top:4px}
   .kpi-tile .val .unit{font-size:10px;color:var(--text-faint);margin-left:3px;font-weight:500}
 
-  .legend-row{display:flex;align-items:center;gap:16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:7px 14px;flex-wrap:wrap}
-  .legend-row .t{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px}
-  .heat-scale{flex:1;display:flex;align-items:center;gap:8px;min-width:120px}
-  .heat-bar{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#1a2f28,var(--green),var(--return),var(--hot))}
-  .heat-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint)}
-
   .wing-block{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:16px}
-  .wing-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .wing-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:8px}
   .wing-hd .t{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px}
   .wing-hd .m{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-faint)}
+  .wing-legend{display:flex;gap:16px}
+  .wing-legend .li{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--text-muted)}
+  .wing-legend .dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+  .wing-legend .dot.on{background:var(--hot)}
+  .wing-legend .dot.off{background:#8a99b3;opacity:.5}
 
-  /* ผังย่อ — พิกัดจริงจากผังอาคาร (ตาม HALL_LAYOUT) ย่อสัดส่วนลง ไม่ใช่ขนาดเต็มเหมือนเดิม */
-  .mini-map{position:relative;margin-bottom:18px}
-  .mini-blk{position:absolute;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:10px;cursor:pointer;transition:opacity .15s}
-  .mini-blk.dim{opacity:.2;pointer-events:none}
-  .mini-blk.heat-1{background:rgba(242,134,122,.14);color:var(--hot)}
-  .mini-blk.heat-2{background:rgba(242,184,79,.11);color:var(--return)}
-  .mini-blk.heat-3{background:rgba(52,211,153,.10);color:var(--green)}
-  .mini-blk.heat-0{background:rgba(255,255,255,.025);color:#444441}
-
-  /* กลุ่มรายการฮอล — row-card แทนตาราง/การ์ดใหญ่เดิม */
-  .grp-hd{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px}
-  .grp-hd + .hall-list{margin-bottom:22px}
-  .grp-hd .t{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px}
-  .grp-hd .m{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint)}
-  .hall-list{display:flex;flex-direction:column;gap:6px}
-  .hall-row{display:flex;align-items:center;gap:14px;border-radius:10px;padding:11px 14px;cursor:pointer}
-  .hall-row.dim{display:none}
-  .hall-row .accent{width:6px;height:34px;border-radius:3px;flex-shrink:0}
-  .hall-row .info{width:64px;flex-shrink:0}
-  .hall-row .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--text)}
-  .hall-row .sub{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--text-faint);margin-top:1px}
-  .hall-row .mid{flex:1;min-width:0}
-  .hall-row .mid-ev{font-size:10.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hall-row .mid-none{font-size:10px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hall-row .row-spark{display:flex;align-items:flex-end;gap:2px;height:20px;flex-shrink:0}
-  .hall-row .row-spark-bar{width:5px;border-radius:1px;background:currentColor;opacity:.35}
-  .hall-row .row-spark-bar.today{opacity:1}
-  .hall-row .kw{width:68px;text-align:right;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
-  .hall-row .kw .u{font-size:8.5px;font-weight:500;color:var(--text-faint);margin-left:2px}
-  .hall-row.heat-1{background:rgba(242,134,122,.06);color:var(--hot)}.hall-row.heat-1 .accent{background:var(--hot)}
-  .hall-row.heat-2{background:rgba(242,184,79,.05);color:var(--return)}.hall-row.heat-2 .accent{background:var(--return)}
-  .hall-row.heat-3{background:rgba(52,211,153,.045);color:var(--green)}.hall-row.heat-3 .accent{background:var(--green)}
-  .hall-row.heat-0{background:rgba(255,255,255,.015);color:var(--text-faint)}.hall-row.heat-0 .accent{background:#2c2c2a}
+  /* ผังการ์ด — เรียงตามตำแหน่งจริงซ้าย-ขวา (ไม่ใช่แบ่งกลุ่ม Phase 1/2 อีกต่อไป) แต่ละแถวคือ
+     "แถวจริง" ของอาคาร (บน/ล่าง) มีช่องว่าง (.row-gap) คั่นตรงจุดที่ผังจริงมีช่องว่างเว้น
+     ระยะห่างไม่ยึด pixel จริงของอาคารอีกต่อไป (สาเหตุที่การ์ดเคยสูง/โล่งเทอะทะ) แค่คงลำดับ
+     ซ้าย-ขวาและตำแหน่งแถวบน/ล่างไว้พอให้อ่านเป็นผังคร่าวๆ ได้ */
+  .hall-row-grid{display:flex;gap:8px;margin-bottom:8px}
+  .hall-row-grid:last-child{margin-bottom:0}
+  .row-gap{flex:0.3}
+  .hall-card{flex:1;border-radius:9px;padding:10px;min-width:0}
+  .hall-card.dim{display:none}
+  .hall-card .hd{display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .hall-card .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hall-card .badge{font-size:7px;font-weight:600;padding:1px 5px;border-radius:20px;flex-shrink:0;white-space:nowrap}
+  .hall-card .kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;margin-top:6px}
+  .hall-card .kw .u{font-size:8px;font-weight:500;color:var(--text-faint);margin-left:2px}
+  .hall-card .ev{font-size:8.5px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hall-card .ev.vacant{color:var(--text-faint)}
+  .hall-card .ft{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-faint);margin-top:6px;border-top:1px solid rgba(255,255,255,.06);padding-top:5px}
+  .hall-card.heat-1{background:rgba(242,134,122,.10)}.hall-card.heat-1 .kw{color:var(--hot)}.hall-card.heat-1 .badge{background:rgba(242,134,122,.18);color:var(--hot)}
+  .hall-card.heat-2{background:rgba(242,184,79,.08)}.hall-card.heat-2 .kw{color:var(--return)}.hall-card.heat-2 .badge{background:rgba(242,184,79,.18);color:var(--return)}
+  .hall-card.heat-3{background:rgba(52,211,153,.07)}.hall-card.heat-3 .kw{color:var(--green)}.hall-card.heat-3 .badge{background:rgba(52,211,153,.18);color:var(--green)}
+  .hall-card.heat-0{background:rgba(255,255,255,.02)}.hall-card.heat-0 .kw{color:var(--text-faint)}.hall-card.heat-0 .badge{background:rgba(255,255,255,.06);color:var(--text-faint)}
 
   .loading-note{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:11px;padding:20px;text-align:center}
 </style>
@@ -122,17 +109,16 @@
     <div class="kpi-tile"><div class="lbl">Event วันนี้</div><div class="val" id="kpiEventCount" style="color:var(--return)">—</div></div>
   </div>
 
-  <div class="legend-row">
-    <span class="t">kWh/m² percentile</span>
-    <div class="heat-scale"><span class="heat-lbl">ต่ำสุด</span><div class="heat-bar"></div><span class="heat-lbl">สูงสุด</span></div>
-  </div>
-
   <div class="wing-block">
-    <div class="wing-hd"><span class="t">Exhibition Wing (EH)</span><span class="m" id="dateLabel"></span></div>
-    <div class="mini-map" id="miniMap">
-      <div class="loading-note">กำลังโหลดข้อมูล...</div>
+    <div class="wing-hd">
+      <span class="t">Exhibition Wing (EH)</span>
+      <div class="wing-legend">
+        <span class="li"><span class="dot on"></span>กำลังใช้งาน (สีบอกระดับพลังงาน)</span>
+        <span class="li"><span class="dot off"></span>ว่าง</span>
+      </div>
+      <span class="m" id="dateLabel"></span>
     </div>
-    <div id="hallGroups">
+    <div id="hallGrid">
       <div class="loading-note">กำลังโหลดข้อมูล...</div>
     </div>
   </div>
@@ -160,13 +146,35 @@ var PHASE_LABELS = {
   p2: HALL_LAYOUT.filter(function(h){ return h.phase === 'p2'; }).map(function(h){ return h.label; })
 };
 
-var state = { dateDays: 0, phaseFilter: null, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {} };
-var MINI_Y_SCALE = 0.18; // ย่อสัดส่วนแนวตั้งของผังย่อ (แนวนอนใช้ % ของ container แทน ยืดหดตามจอได้)
-function miniLabel_(label) {
-  if (label.indexOf('EH') === 0) return label.slice(2);
-  if (label === 'SAMA-GARDEN') return 'SAMA';
-  return label;
+// [ใหม่] จัดกลุ่มฮอลตาม "แถวจริง" ของอาคาร (บน/ล่าง จาก top) แทนการแบ่ง Phase 1/2 เหมือนเดิม
+// เพราะ LIVE (P2) อยู่ติดกับ BEAT (P1) ในผังจริงโดยไม่มีช่องว่างคั่น — จัดตาม phase ล้วนๆ
+// จะทำให้ลำดับซ้าย-ขวาไม่ตรงกับผังจริง คำนวณอัตโนมัติจาก HALL_LAYOUT ไม่ hardcode
+var HALL_ROWS = (function() {
+  var sorted = HALL_LAYOUT.slice().sort(function(a, b) { return a.top - b.top; });
+  var rows = [];
+  sorted.forEach(function(h) {
+    var row = rows.filter(function(r) { return Math.abs(r.top - h.top) < 80; })[0];
+    if (!row) { row = { top: h.top, halls: [] }; rows.push(row); }
+    row.halls.push(h);
+  });
+  rows.forEach(function(r) { r.halls.sort(function(a, b) { return a.left - b.left; }); });
+  return rows;
+})();
+var ROW_GAP_THRESHOLD = 60; // ช่องว่างจริงระหว่างฮอล > ค่านี้ (px) ถือเป็นช่องว่างของผัง ไม่ใช่ระยะห่างปกติ
+function rowSegments_(halls) {
+  var segments = [], current = [];
+  halls.forEach(function(h, i) {
+    if (i > 0) {
+      var prevRight = halls[i - 1].left + halls[i - 1].width;
+      if (h.left - prevRight > ROW_GAP_THRESHOLD) { segments.push(current); current = []; }
+    }
+    current.push(h);
+  });
+  if (current.length) segments.push(current);
+  return segments;
 }
+
+var state = { dateDays: 0, phaseFilter: null, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {} };
 
 function fmtNum_(v, digits) {
   if (v === null || v === undefined || isNaN(v)) return '—';
@@ -213,16 +221,6 @@ function trendPct_(series) {
   if (!(yday > 0)) return null;
   return Math.round(((today - yday) / yday) * 100);
 }
-function sparkBarsHtml_(series, cls) {
-  if (!series || !series.length) return '';
-  var vals = series.map(function(s) { return s.kwh; });
-  var max = Math.max.apply(null, vals.concat([0.0001]));
-  var bars = vals.map(function(v, i) {
-    var h = Math.max(3, Math.round((v / max) * 100));
-    return '<div class="' + cls + '-bar' + (i === vals.length - 1 ? ' today' : '') + '" style="height:' + h + '%"></div>';
-  }).join('');
-  return bars;
-}
 
 function computeCallout_(dataByLabel, sparkByHall) {
   var best = null;
@@ -255,51 +253,23 @@ function computeKpis_(dataByLabel) {
     ? fmtNum_(vals.reduce(function(a, b) { return a + b; }, 0) / vals.length, 3) : '—';
 }
 
-// [ใหม่] ผังย่อ — จุดประสงค์แค่ให้เห็นตำแหน่ง/สถานะสีคร่าวๆ ไม่ใช่การ์ดข้อมูลเต็ม
-// (รายละเอียดทั้งหมดย้ายไปอยู่ในลิสต์ด้านล่างแทน) แนวนอนใช้ % ของ container (ยืดหดตามจอ)
-// แนวตั้งคูณด้วย MINI_Y_SCALE คงที่ กันผังสูงเทอะทะเหมือนเดิม
-function renderMiniMap() {
-  var canvas = document.getElementById('miniMap');
-  var heatCls = computeHeatClasses_(state.dataByLabel);
-  var maxRight = HALL_LAYOUT.reduce(function(m, h) { return Math.max(m, h.left + h.width); }, 0);
-  var maxBottom = HALL_LAYOUT.reduce(function(m, h) { return Math.max(m, h.top + h.height); }, 0);
-  canvas.style.height = Math.round(maxBottom * MINI_Y_SCALE + 8) + 'px';
-
-  var html = HALL_LAYOUT.map(function(pos) {
-    var leftPct = (pos.left / maxRight * 100).toFixed(2);
-    var widthPct = (pos.width / maxRight * 100).toFixed(2);
-    var top = Math.round(pos.top * MINI_Y_SCALE);
-    var height = Math.round(pos.height * MINI_Y_SCALE);
-
-    var d = state.dataByLabel[pos.label];
-    var searchable = (pos.label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
-    var matchesSearch = !state.search || searchable.indexOf(state.search) > -1;
-    var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
-    var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
-
-    return '<div class="mini-blk ' + heatCls[pos.label] + dimCls + '" data-label="' + pos.label + '" title="' + pos.label + '" style="left:' + leftPct + '%;top:' + top + 'px;width:' + widthPct + '%;height:' + height + 'px">' + miniLabel_(pos.label) + '</div>';
-  }).join('');
-  canvas.innerHTML = html;
-}
-
-// [ใหม่] แถวรายละเอียดของฮอลเดียว — ใช้ร่วมกันทั้ง Phase 1/2 (โครงสร้างเดียวกันทุกฮอล
-// ไม่ว่าจะมี event หรือไม่ ต่างกันแค่เนื้อหาใน .sub/.mid/.spark ตามที่ confirm ไว้)
-function hallRowHtml_(label, heatCls) {
+// [ใหม่] การ์ดเดียวจบต่อฮอล — มีครบทั้งชื่อ/สถานะ/kWh/event หรือล่าสุดกี่วัน/TR หรือพื้นที่
+// ไม่ต้องแยกผังย่อ+ลิสต์อีกต่อไปแบบที่เคยลองมาก่อนหน้า (ซ้ำซ้อน ต้องดู 2 ที่กว่าจะเข้าใจ)
+function hallCardHtml_(label, heatCls) {
   var pos = HALL_LAYOUT.filter(function(h) { return h.label === label; })[0];
   var d = state.dataByLabel[label];
   var last = state.lastSeenByHall[label];
   var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
+  var isActive = !!(d && d.hasEventToday);
+  var statusHtml = isActive ? '<span class="badge">ใช้งาน</span>' : '<span class="badge">ว่าง</span>';
 
-  var subHtml, midHtml, sparkHtml;
-  if (d && d.hasEventToday) {
-    subHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
-    midHtml = '<div class="mid-ev">' + (d.eventName || '—') + '</div>';
-    var series = state.sparkByHall[label];
-    sparkHtml = series ? '<div class="row-spark" style="color:currentColor">' + sparkBarsHtml_(series, 'row-spark') + '</div>' : '<div class="row-spark"></div>';
+  var subHtml, footHtml;
+  if (isActive) {
+    subHtml = '<div class="ev">' + (d.eventName || '—') + '</div>';
+    footHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
   } else {
-    subHtml = (d && d.areaSqm !== null) ? fmtNum_(d.areaSqm, 0) + ' m²' : '—';
-    midHtml = '<div class="mid-none">🌙 ' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ยังไม่เคยมี event') + '</div>';
-    sparkHtml = '';
+    subHtml = '<div class="ev vacant">' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ยังไม่เคยมี event') + '</div>';
+    footHtml = (d && d.areaSqm !== null) ? fmtNum_(d.areaSqm, 0) + ' m²' : '—';
   }
 
   var searchable = (label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
@@ -307,33 +277,35 @@ function hallRowHtml_(label, heatCls) {
   var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
   var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
 
-  return '<div class="hall-row ' + heatCls[label] + dimCls + '" data-label="' + label + '" id="row-' + label + '">'
-    + '<div class="accent"></div>'
-    + '<div class="info"><div class="nm">' + label + '</div><div class="sub">' + subHtml + '</div></div>'
-    + '<div class="mid">' + midHtml + '</div>'
-    + sparkHtml
+  return '<div class="hall-card ' + heatCls[label] + dimCls + '" data-label="' + label + '">'
+    + '<div class="hd"><span class="nm">' + label + '</span>' + statusHtml + '</div>'
     + '<div class="kw">' + kwhHtml + '<span class="u">kWh</span></div>'
+    + subHtml
+    + '<div class="ft">' + footHtml + '</div>'
     + '</div>';
 }
 
-function renderHallGroups() {
-  var body = document.getElementById('hallGroups');
+// [ใหม่] เรียงตาม HALL_ROWS (แถวจริงบน/ล่าง) แต่ละแถวคั่นช่องว่างตรงจุดที่ผังจริงมีช่องว่างเว้น
+function renderHallCards() {
+  var body = document.getElementById('hallGrid');
   var heatCls = computeHeatClasses_(state.dataByLabel);
-  function groupHtml(labels, title) {
-    return '<div class="grp-hd"><span class="t">' + title + '</span><span class="m">' + labels.length + ' halls</span></div>'
-      + '<div class="hall-list">' + labels.map(function(l) { return hallRowHtml_(l, heatCls); }).join('') + '</div>';
-  }
-  body.innerHTML = groupHtml(PHASE_LABELS.p1, 'Event Halls · Phase 1') + groupHtml(PHASE_LABELS.p2, 'Event Halls · Phase 2');
+  var html = HALL_ROWS.map(function(row) {
+    var segments = rowSegments_(row.halls);
+    var parts = segments.map(function(seg, i) {
+      var cards = seg.map(function(h) { return hallCardHtml_(h.label, heatCls); }).join('');
+      return (i > 0 ? '<div class="row-gap"></div>' : '') + cards;
+    });
+    return '<div class="hall-row-grid">' + parts.join('') + '</div>';
+  }).join('');
+  body.innerHTML = html;
 }
 
 function renderAll_() {
-  renderMiniMap();
-  renderHallGroups();
+  renderHallCards();
 }
 
 function loadEventHalls(dateStr) {
-  document.getElementById('miniMap').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
-  document.getElementById('hallGroups').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
+  document.getElementById('hallGrid').innerHTML = '<div class="loading-note">กำลังโหลดข้อมูล...</div>';
 
   var mainUrl = API_URL + '?action=eventhalls' + (dateStr ? ('&date=' + dateStr) : '');
   fetch(mainUrl)
@@ -365,24 +337,11 @@ function loadEventHalls(dateStr) {
       });
     })
     .catch(function(err) {
-      var msg = '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
-      document.getElementById('miniMap').innerHTML = msg;
-      document.getElementById('hallGroups').innerHTML = msg;
+      document.getElementById('hallGrid').innerHTML = '<div class="loading-note" style="color:var(--hot)">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</div>';
     });
 }
 
 // ── event wiring ──────────────────────────────────────────────
-// [ใหม่] คลิกบล็อกในผังย่อ -> เลื่อนไปแถวของฮอลนั้นในลิสต์ด้านล่าง + ไฮไลต์ชั่วครู่
-document.getElementById('miniMap').addEventListener('click', function(e) {
-  var blk = e.target.closest('.mini-blk');
-  if (!blk) return;
-  var row = document.getElementById('row-' + blk.dataset.label);
-  if (!row) return;
-  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  row.style.boxShadow = '0 0 0 2px rgba(255,255,255,.3)';
-  setTimeout(function() { row.style.boxShadow = ''; }, 900);
-});
-
 document.getElementById('dateToggle').addEventListener('click', function(e) {
   var btn = e.target.closest('.tg-btn');
   if (!btn) return;
