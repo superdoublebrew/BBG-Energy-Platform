@@ -466,8 +466,8 @@
           <span class="t">Location Zone</span>
           <div class="lzf-mini-filter" id="lzfFilterRow">
             <button class="active" data-f="all" onclick="window.__setLzFilter('all')">ทั้งหมด</button>
-            <button data-f="group" onclick="window.__setLzFilter('group')">Group</button>
-            <button data-f="event" onclick="window.__setLzFilter('event')">Event</button>
+            <button data-f="group" onclick="window.__setLzFilter('group')">Main-Common Area</button>
+            <button data-f="event" onclick="window.__setLzFilter('event')">Main-Event Area</button>
           </div>
         </div>
         <div id="lzfCards"></div>
@@ -960,6 +960,7 @@ document.getElementById('svgMain').innerHTML = frag.d;
       return { on: on, total: ids.length };
     }
     var rows = [
+      { label:'Chiller', c: count(CHL_IDS, perUnit.CHL) },
       { label:'Cooling Tower', c: count(CT_IDS, perUnit.CT) },
       { label:'Condenser Pump', c: count(CDP_IDS, perUnit.CDP) },
       { label:'Primary Pump', c: count(PCHP_IDS, perUnit.PCHP) },
@@ -1351,7 +1352,7 @@ document.getElementById('svgMain').innerHTML = frag.d;
     var html = '<div class="lzf-summary-card ' + (isGroup?'grp':'evt') + '" onclick="window.__toggleLzGroup(\'' + category + '\')">'
       + '<div class="sc-top">'
       +   '<span class="sc-chev' + (expanded ? '' : ' collapsed') + '">⌄</span>'
-      +   '<span class="sc-name">' + (isGroup ? 'Group — เปิดทุกวัน' : 'Event — จาก booking จริง') + '</span>'
+      +   '<span class="sc-name">' + (isGroup ? 'Main-Common Area' : 'Main-Event Area') + '</span>'
       +   '<span class="sc-kwh">' + fmtNum(kwh,1) + ' kWh</span>'
       + '</div>'
       + '<div class="sc-metrics">'
@@ -1365,7 +1366,7 @@ document.getElementById('svgMain').innerHTML = frag.d;
       if(rows.length){
         html += '<div class="lzf-subzones">' + rows.map(function(z){ return subzoneRowHtml_(z, isGroup?'grp':'evt'); }).join('') + '</div>';
       } else {
-        html += '<div class="lzf-empty-inline">' + (isGroup ? 'ไม่มีโซนกลุ่ม Group เปิดอยู่วันนี้' : 'ไม่มีโซน Event ที่มี booking จริงวันนี้ — ไม่แสดงแถว') + '</div>';
+        html += '<div class="lzf-empty-inline">' + (isGroup ? 'ไม่มีโซน Main-Common Area เปิดอยู่วันนี้' : 'ไม่มีโซน Main-Event Area ที่มี booking จริงวันนี้ — ไม่แสดงแถว') + '</div>';
       }
     }
     return '<div class="lzf-group-block" data-cat="' + category + '">' + html + '</div>';
