@@ -466,8 +466,8 @@
           <span class="t">Location Zone</span>
           <div class="lzf-mini-filter" id="lzfFilterRow">
             <button class="active" data-f="all" onclick="window.__setLzFilter('all')">ทั้งหมด</button>
-            <button data-f="group" onclick="window.__setLzFilter('group')">Main-Common Area</button>
-            <button data-f="event" onclick="window.__setLzFilter('event')">Main-Event Area</button>
+            <button data-f="group" onclick="window.__setLzFilter('group')">Group</button>
+            <button data-f="event" onclick="window.__setLzFilter('event')">Event</button>
           </div>
         </div>
         <div id="lzfCards"></div>
@@ -894,24 +894,23 @@ document.getElementById('svgMain').innerHTML = frag.d;
   };
   window.__tempAlerts = window.__tempAlerts || {};
 
-  function setTemp(idPrefix, cVal, fVal, hotThresholdF, coldBandF){
+  function setTemp(idPrefix, cVal, fVal, stdThresholdF){
     var mainEl = document.getElementById(idPrefix);
     var subEl = document.getElementById(idPrefix+'-sub');
     if(!mainEl || !subEl) return;
     var lineEl = document.getElementById('flowline-'+idPrefix.replace(/^temp-/,'')); // [ใหม่ 23/7/69] เส้นท่อที่จับคู่กับป้ายนี้
     var origColor = mainEl.getAttribute('data-color') || '#38bdf8';
-    if(fVal===null || fVal===undefined || cVal===null || cVal===undefined || typeof hotThresholdF!=='number'){
+    if(fVal===null || fVal===undefined || cVal===null || cVal===undefined || typeof stdThresholdF!=='number'){
       mainEl.textContent = '—'; subEl.textContent = '—';
       mainEl.setAttribute('fill', origColor); subEl.setAttribute('fill', 'rgba(255,255,255,.5)');
       if(lineEl) lineEl.classList.remove('flow-line'); // ไม่มีข้อมูล = เส้นนิ่ง
       window.__tempAlerts[idPrefix] = { label: TEMP_LABELS[idPrefix]||idPrefix, status:'nodata', text:'ไม่มีข้อมูล' };
       return;
     }
-    var band = (typeof coldBandF==='number') ? coldBandF : 5;
-    var coldThreshold = hotThresholdF - band;
+    // [แก้ 26/8/69] logic เดียวกันทุกเส้น — สูงกว่าค่ามาตรฐาน = ร้อนไป, ต่ำกว่า = หนาวไป (ไม่มี band แล้ว)
     var status = 'normal';
-    if(fVal > hotThresholdF) status = 'hot';
-    else if(fVal < coldThreshold) status = 'cold';
+    if(fVal > stdThresholdF) status = 'hot';
+    else if(fVal < stdThresholdF) status = 'cold';
     window.__tempAlerts[idPrefix] = { label: TEMP_LABELS[idPrefix]||idPrefix, status:status,
       text: (status==='hot' ? ('ร้อนไป '+fmtNum(fVal,1)+'°F') : status==='cold' ? ('หนาวไป '+fmtNum(fVal,1)+'°F') : ('ปกติ '+fmtNum(fVal,1)+'°F')) };
 
@@ -960,7 +959,6 @@ document.getElementById('svgMain').innerHTML = frag.d;
       return { on: on, total: ids.length };
     }
     var rows = [
-      { label:'Chiller', c: count(CHL_IDS, perUnit.CHL) },
       { label:'Cooling Tower', c: count(CT_IDS, perUnit.CT) },
       { label:'Condenser Pump', c: count(CDP_IDS, perUnit.CDP) },
       { label:'Primary Pump', c: count(PCHP_IDS, perUnit.PCHP) },
@@ -1144,10 +1142,10 @@ document.getElementById('svgMain').innerHTML = frag.d;
       // [แก้ 23/7/69] ป้ายอุณหภูมิน้ำ 4 เส้น — โชว์ 2 หน่วย + เช็ค threshold ร้อน/หนาว จาก Config
       var temps = summary.temps || {};
       var th = summary.tempThresholds || {};
-      setTemp('temp-condToCT', temps.condToCT, temps.condToCT_F, th.condToCT_hotF, th.condToCT_coldBandF);
-      setTemp('temp-cdpToCond', temps.cdpToCond, temps.cdpToCond_F, th.cdpToCond_hotF, th.cdpToCond_coldBandF);
-      setTemp('temp-evapToHsup', temps.evapToHsup, temps.evapToHsup_F, th.evapToHsup_hotF, th.evapToHsup_coldBandF);
-      setTemp('temp-pchpToEvap', temps.pchpToEvap, temps.pchpToEvap_F, th.pchpToEvap_hotF, th.pchpToEvap_coldBandF);
+      setTemp('temp-condToCT', temps.condToCT, temps.condToCT_F, th.condToCT_stdF);
+      setTemp('temp-cdpToCond', temps.cdpToCond, temps.cdpToCond_F, th.cdpToCond_stdF);
+      setTemp('temp-evapToHsup', temps.evapToHsup, temps.evapToHsup_F, th.evapToHsup_stdF);
+      setTemp('temp-pchpToEvap', temps.pchpToEvap, temps.pchpToEvap_F, th.pchpToEvap_stdF);
       renderAlerts(); // [ใหม่ 31/7/69] ข้อ2
       renderSystemStatus(perUnit); // [ใหม่ 31/7/69] ข้อ2
 
@@ -1352,7 +1350,7 @@ document.getElementById('svgMain').innerHTML = frag.d;
     var html = '<div class="lzf-summary-card ' + (isGroup?'grp':'evt') + '" onclick="window.__toggleLzGroup(\'' + category + '\')">'
       + '<div class="sc-top">'
       +   '<span class="sc-chev' + (expanded ? '' : ' collapsed') + '">⌄</span>'
-      +   '<span class="sc-name">' + (isGroup ? 'Main-Common Area' : 'Main-Event Area') + '</span>'
+      +   '<span class="sc-name">' + (isGroup ? 'Group — เปิดทุกวัน' : 'Event — จาก booking จริง') + '</span>'
       +   '<span class="sc-kwh">' + fmtNum(kwh,1) + ' kWh</span>'
       + '</div>'
       + '<div class="sc-metrics">'
@@ -1366,7 +1364,7 @@ document.getElementById('svgMain').innerHTML = frag.d;
       if(rows.length){
         html += '<div class="lzf-subzones">' + rows.map(function(z){ return subzoneRowHtml_(z, isGroup?'grp':'evt'); }).join('') + '</div>';
       } else {
-        html += '<div class="lzf-empty-inline">' + (isGroup ? 'ไม่มีโซน Main-Common Area เปิดอยู่วันนี้' : 'ไม่มีโซน Main-Event Area ที่มี booking จริงวันนี้ — ไม่แสดงแถว') + '</div>';
+        html += '<div class="lzf-empty-inline">' + (isGroup ? 'ไม่มีโซนกลุ่ม Group เปิดอยู่วันนี้' : 'ไม่มีโซน Event ที่มี booking จริงวันนี้ — ไม่แสดงแถว') + '</div>';
       }
     }
     return '<div class="lzf-group-block" data-cat="' + category + '">' + html + '</div>';
