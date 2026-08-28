@@ -383,13 +383,13 @@ function renderYearly(year, trend) {
       + '<td>' + fmtN(t.totalAreaAllSqm, 0) + momChip(prevT ? pctChg_(t.totalAreaAllSqm, prevT.totalAreaAllSqm) : null, null) + '</td>'
       + '<td>' + fmtN(t.commonAreaTotalSqm, 0) + momChip(prevT ? pctChg_(t.commonAreaTotalSqm, prevT.commonAreaTotalSqm) : null, null) + '</td>'
       + '<td>' + fmtN(t.areaUsedTotalSqm, 0) + momChip(prevT ? pctChg_(t.areaUsedTotalSqm, prevT.areaUsedTotalSqm) : null, null) + '</td>'
-      + '<td>' + fmtN(t.totalTrh, 2) + momChip(prevT ? pctChg_(t.totalTrh, prevT.totalTrh) : null, null) + '</td>'
-      + '<td>' + fmtN(t.totalKwAll, 2) + '</td>'
-      + '<td>' + fmtN(t.totalKwh, 2) + momChip(prevT ? pctChg_(t.totalKwh, prevT.totalKwh) : null, null) + '</td>'
+      + '<td>' + fmtN(t.totalTrh, 2) + momChip(prevT ? pctChg_(t.totalTrh, prevT.totalTrh) : null, 'down') + '</td>'
+      + '<td>' + fmtN(t.totalKwAll, 2) + momChip(prevT ? pctChg_(t.totalKwAll, prevT.totalKwAll) : null, 'down') + '</td>'
+      + '<td>' + fmtN(t.totalKwh, 2) + momChip(prevT ? pctChg_(t.totalKwh, prevT.totalKwh) : null, 'down') + '</td>'
       + '<td>' + fmtN(trhPerM2, 3) + momChip(prevT ? pctChg_(trhPerM2, prevTrhPerM2) : null, 'down') + '</td>'
       + '<td>' + fmtN(t.kwPerSqm, 3) + momChip(prevT ? pctChg_(t.kwPerSqm, prevT.kwPerSqm) : null, 'down') + '</td>'
       + '<td>' + fmtCost(t.costEstimateThb, 0)
-        + (typeof t.electricityRateUsed === 'number' ? '<div style="font-size:10px;margin-top:2px;color:#7D8590;">' + fmtN(t.electricityRateUsed,2) + '</div>' : '')
+        + (typeof t.electricityRateUsed === 'number' ? '<div style="font-size:10px;margin-top:2px;color:#7D8590;">฿' + fmtN(t.electricityRateUsed,2) + '/kWh</div>' : '')
         + '</td>'
       + '<td class="yr-arrow">' + (isOpen ? 'v' : '>') + '</td>';
     tbody.appendChild(tr);
