@@ -479,6 +479,7 @@ function renderChillerSchedule(){
   }).join('');
 }
 
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function renderEventTable(dayData){
   var tbody = document.getElementById('evTableBody');
   // [แก้ - ยืนยันล่าสุด] filter เหลือแค่ Type=Event เท่านั้น (Move In/Move Out ยังนับใน Booking Mix % แต่ไม่โชว์ในตารางนี้)
@@ -490,10 +491,10 @@ function renderEventTable(dayData){
     var phTag = r.phase==='1' ? '<span class="ph-tag ph1-tag">P1</span>' : (r.phase==='2' ? '<span class="ph-tag ph2-tag">P2</span>' : '');
     return '<tr>'
       + '<td>'+r.startTime+' – '+r.endTime+'</td>'
-      + '<td class="zone-name">'+r.zone+phTag+'</td>'
-      + '<td>'+r.room+'</td>'
-      + '<td>'+r.event+'</td>'
-      + '<td class="'+typeCls+'">'+r.type+'</td>'
+      + '<td class="zone-name">'+escapeHtml(r.zone)+phTag+'</td>'
+      + '<td>'+escapeHtml(r.room)+'</td>'
+      + '<td>'+escapeHtml(r.event)+'</td>'
+      + '<td class="'+typeCls+'">'+escapeHtml(r.type)+'</td>'
       + '<td style="text-align:right;" class="tr-pred">'+fmtR1(r.tonsOLS||r.tonsCalc)+'</td>'
       + '<td style="text-align:right;">'+fmtCost(r.cost)+'</td>'
       + '</tr>';
