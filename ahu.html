@@ -176,6 +176,7 @@ function rowSegments_(halls) {
 
 var state = { dateDays: 0, phaseFilter: null, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {} };
 
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmtNum_(v, digits) {
   if (v === null || v === undefined || isNaN(v)) return '—';
   return Number(v).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -235,7 +236,7 @@ function computeCallout_(dataByLabel, sparkByHall) {
   if (!best || Math.abs(best.pct) < 20) { el.classList.remove('show'); return; }
   var dir = best.pct > 0 ? 'พุ่ง' : 'ลดลง';
   document.getElementById('calloutText').innerHTML =
-    '<b>' + best.label + ' ' + dir + ' ' + Math.abs(best.pct) + '%</b> จากเมื่อวาน' + (best.eventName ? ' — ' + best.eventName : '');
+    '<b>' + escapeHtml(best.label) + ' ' + dir + ' ' + Math.abs(best.pct) + '%</b> จากเมื่อวาน' + (best.eventName ? ' — ' + escapeHtml(best.eventName) : '');
   el.classList.add('show');
 }
 
@@ -265,7 +266,7 @@ function hallCardHtml_(label, heatCls) {
 
   var subHtml, footHtml;
   if (isActive) {
-    subHtml = '<div class="ev">' + (d.eventName || '—') + '</div>';
+    subHtml = '<div class="ev">' + escapeHtml(d.eventName || '—') + '</div>';
     footHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
   } else {
     subHtml = '<div class="ev vacant">' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ยังไม่เคยมี event') + '</div>';
