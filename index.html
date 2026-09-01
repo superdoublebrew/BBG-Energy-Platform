@@ -892,6 +892,9 @@ document.getElementById('svgMain').innerHTML = frag.d;
     'temp-evapToHsup': 'Evaporator → Hsup',
     'temp-pchpToEvap': 'PCHP → Evaporator'
   };
+  // [ใหม่ 31/8/69 — ยืนยันแล้ว Option A] ต้องตรงกับ ALERT_TEMP_TOLERANCE_F ใน log_gs (backend) เป๊ะ
+  // ไม่งั้นการ์ด live (ตรงนี้) กับ Alerts_Log (backend) จะบอกสถานะไม่ตรงกัน
+  var TEMP_TOLERANCE_F = 1;
   window.__tempAlerts = window.__tempAlerts || {};
 
   function setTemp(idPrefix, cVal, fVal, stdThresholdF){
@@ -907,15 +910,18 @@ document.getElementById('svgMain').innerHTML = frag.d;
       window.__tempAlerts[idPrefix] = { label: TEMP_LABELS[idPrefix]||idPrefix, status:'nodata', text:'ไม่มีข้อมูล' };
       return;
     }
-    // [แก้ 26/8/69] logic เดียวกันทุกเส้น — สูงกว่าค่ามาตรฐาน = ร้อนไป, ต่ำกว่า = หนาวไป (ไม่มี band แล้ว)
+    // [แก้ 31/8/69 — ยืนยันแล้ว Option A] เดิมเทียบตรงๆ ไม่มีช่วงยอมรับ (เกินมาตรฐานแม้แค่ 0.1°F
+    // ก็แจ้งทันที) ทำให้แจ้งเตือนถี่เกินจริง — ตอนนี้ต้องเกิน/ต่ำกว่ามาตรฐานเกิน TEMP_TOLERANCE_F ถึงจะแจ้ง
     var status = 'normal';
-    if(fVal > stdThresholdF) status = 'hot';
-    else if(fVal < stdThresholdF) status = 'cold';
+    if(fVal > stdThresholdF + TEMP_TOLERANCE_F) status = 'hot';
+    else if(fVal < stdThresholdF - TEMP_TOLERANCE_F) status = 'cold';
     window.__tempAlerts[idPrefix] = { label: TEMP_LABELS[idPrefix]||idPrefix, status:status,
       text: (status==='hot' ? ('ร้อนไป '+fmtNum(fVal,1)+'°F') : status==='cold' ? ('หนาวไป '+fmtNum(fVal,1)+'°F') : ('ปกติ '+fmtNum(fVal,1)+'°F')) };
 
-    mainEl.textContent = fmtNum(fVal,1) + '°F';
-    subEl.textContent = '(' + fmtNum(cVal,1) + '°C)' + (status==='hot' ? ' ร้อนไป' : status==='cold' ? ' หนาวไป' : '');
+    // [แก้ 31/8/69 — ยืนยันแล้ว] สลับจาก "°F บรรทัดเดียว + (°C)สถานะ อีกบรรทัด" เป็น
+    // "°F (°C) รวมกันบรรทัดเดียว" + "สถานะเดี่ยวๆ อีกบรรทัด" ให้อ่านง่ายขึ้น ไม่ต้องต่อคำติดกัน
+    mainEl.textContent = fmtNum(fVal,1) + '°F (' + fmtNum(cVal,1) + '°C)';
+    subEl.textContent = (status==='hot' ? 'ร้อนไป' : status==='cold' ? 'หนาวไป' : '');
 
     // [แก้ 23/7/69] เส้นท่อ "หยุดนิ่ง" ตามปกติ วิ่ง (flow-line) เฉพาะตอนร้อน/หนาวเกิน threshold เท่านั้น
     if(lineEl) lineEl.classList.toggle('flow-line', status === 'hot' || status === 'cold');
