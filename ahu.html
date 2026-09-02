@@ -64,6 +64,9 @@
   .hall-card .hd{display:flex;justify-content:space-between;align-items:center;gap:6px}
   .hall-card .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .hall-card .badge{font-size:7px;font-weight:600;padding:1px 5px;border-radius:20px;flex-shrink:0;white-space:nowrap}
+  /* [ใหม่ 2/9/69] badge "เปิดพื้นฐาน" — คงที่ไม่ผูกกับ heat-N (การ์ดยังเป็น heat-0 สีจาง เพราะไม่มี event จริง
+     ให้จัดอันดับความร้อนด้วย แต่ badge ต้องแยกจาก "ว่าง" ให้เห็นชัดว่ามีพื้นที่เปิดอยู่ ไม่ใช่ปิดสนิท) */
+  .hall-card .badge.baseline{background:rgba(56,189,248,.16);color:var(--cold)}
   .hall-card .kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;margin-top:6px}
   .hall-card .kw .u{font-size:8px;font-weight:500;color:var(--text-faint);margin-left:2px}
   .hall-card .ev{font-size:8.5px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -262,11 +265,19 @@ function hallCardHtml_(label, heatCls) {
   var last = state.lastSeenByHall[label];
   var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
   var isActive = !!(d && d.hasEventToday);
-  var statusHtml = isActive ? '<span class="badge">ใช้งาน</span>' : '<span class="badge">ว่าง</span>';
+  // [ใหม่ 2/9/69] สถานะที่ 3 — "เปิดพื้นฐาน" เฉพาะฮอลที่ backend ส่ง isBaselineOpen มา (ตอนนี้คือ
+  // SAMA-GARDEN/BEAT) และวันนั้นไม่มี event จริง (ไม่งั้นจะโดน isActive คลุมไปแล้วด้านบน) — ฮอลอื่น
+  // ที่ backend ไม่เคยส่ง isBaselineOpen มาเลย (undefined) จะได้ false เสมอ ไม่กระทบพฤติกรรมเดิม
+  var isBaselineOpen = !isActive && !!(d && d.isBaselineOpen);
+  var statusHtml = isActive ? '<span class="badge">ใช้งาน</span>'
+    : (isBaselineOpen ? '<span class="badge baseline">เปิดพื้นฐาน</span>' : '<span class="badge">ว่าง</span>');
 
   var subHtml, footHtml;
   if (isActive) {
     subHtml = '<div class="ev">' + escapeHtml(d.eventName || '—') + '</div>';
+    footHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
+  } else if (isBaselineOpen) {
+    subHtml = '<div class="ev vacant">ไม่มี event จองตรง — พื้นที่เปิดพื้นฐาน</div>';
     footHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
   } else {
     subHtml = '<div class="ev vacant">' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ยังไม่เคยมี event') + '</div>';
