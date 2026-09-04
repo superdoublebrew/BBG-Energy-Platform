@@ -58,8 +58,10 @@
      CSS grid การ์ดแทนการวาด SVG ตามพิกัดจริง — grid เติมเต็มความกว้างจอได้เสมอ (auto-fill)
      ไม่ต้องเดาพิกัด ไม่มีปัญหาเรื่องลอย/เล็กเกิน/ใหญ่เกินอีกเลย ใช้ดีไซน์กล่อง "enriched" ที่ Brew
      คอนเฟิร์มแล้ว (จุดสถานะ + ตัวเลขใหญ่ + เส้นคั่น + event/สถานะ + metric รอง + แถบความเข้ม) */
-  .hall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-  .hcard{border-radius:10px;padding:14px;cursor:pointer;transition:transform .1s}
+  .hall-grid-wrap{background:#0a0a0c;border-radius:12px;padding:16px;background-image:radial-gradient(circle,#1c1c22 1px,transparent 1px);background-size:22px 22px}
+  .hall-row{display:grid;gap:3px;margin-bottom:3px}
+  .hall-row:last-child{margin-bottom:0}
+  .hcard{border-radius:6px;padding:14px;cursor:pointer;transition:transform .1s;min-width:0}
   .hcard:hover{transform:translateY(-1px)}
   .hcard.highlight{outline:2px solid var(--return);outline-offset:1px}
   .hcard .top{display:flex;align-items:center;gap:7px}
@@ -145,7 +147,7 @@
       <div class="floor-tab" id="tabFloor2">ชั้น 2 (Grand Hall / Meeting Room)</div>
     </div>
 
-    <div id="hallGrid">
+    <div id="hallGrid" class="hall-grid-wrap">
       <div class="loading-note">กำลังโหลดข้อมูล...</div>
     </div>
 
@@ -157,12 +159,37 @@
 // [สำคัญ] URL deploy จริง — เอาค่าเดียวกับไฟล์อื่นทุกไฟล์ในระบบ (index.html/ac.html/monthly.html)
 var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
 
-// [ใหม่ 4/9/69] รายชื่อฮอลแยกตามชั้น — ใช้ CSS grid แสดงผล ไม่ต้องมีพิกัด x/y/w/h แบบ SVG เดิม
-// ลำดับในนี้คือลำดับที่โชว์บนกริด (ซ้าย->ขวา, บน->ล่าง) จัดตามลำดับผังจริงคร่าวๆ
+// [ใหม่ 4/9/69 — เปลี่ยนวิธีคิดอีกรอบ] Brew บอกว่า auto-fill grid ก่อนหน้าดู "เรียงกัน" เหมือนลิสต์
+// ไม่ใช่ผังพื้นที่จริง — กลับไปให้ตำแหน่ง/ขนาดสัมพัทธ์สื่อถึงผังจริง แต่ใช้ CSS grid fr-unit
+// แทนพิกัด SVG ตายตัว (fr เติมเต็มความกว้างจอเองเสมอ ไม่มีปัญหาลอย/เกิน/เล็กแบบที่เจอตอนใช้ SVG)
+// แต่ละ "แถว" ในนี้คือแถวจริงของอาคาร (บน/ล่าง) ตามผังที่ Brew ส่งมา — ค่า fr คือสัดส่วนความกว้าง
+// จริงเทียบกัน (ยังเป็นค่าประมาณ ไม่เป๊ะ 100% แต่ตั้งใจให้ "สัดส่วน" ตรงกับผังจริงมากกว่าตำแหน่งเป๊ะ)
+// null = ช่องว่าง (ทางเดิน/พื้นที่ไม่มีข้อมูล) ไม่ใช่ห้อง
+var FLOOR_ROWS = {
+  ground: [
+    { cols: [
+      { label: 'BITEC LIVE', fr: 1.3 }, { label: 'SAMA', fr: 0.7 }, { label: 'BEAT', fr: 0.65 },
+      { label: 'EH104', fr: 0.65 }, { label: 'EH103', fr: 0.55 }, { label: 'EH102', fr: 0.6 },
+      { label: 'EH101', fr: 0.7 }, { label: 'EH100', fr: 0.95 }, { label: 'EH99', fr: 0.85 }, { label: 'EH98', fr: 1.1 }
+    ]}
+  ],
+  floor2: [
+    { cols: [
+      { label: 'MR224', fr: 1 }, { label: 'MR225', fr: 1 }, { label: null, fr: 0.4 },
+      { label: 'MR222', fr: 1 }, { label: 'MR223', fr: 1 }, { label: null, fr: 0.4 },
+      { label: 'MR220', fr: 1 }, { label: 'MR221', fr: 1 }, { label: null, fr: 0.4 },
+      { label: 'MR218', fr: 1 }, { label: 'MR219', fr: 1 }
+    ]},
+    { cols: [
+      { label: 'GH201', fr: 1.4 }, { label: 'GH202', fr: 1.4 }, { label: 'GH203', fr: 1.4 },
+      { label: 'MR210', fr: 1 }, { label: 'MR211', fr: 1 }, { label: 'MR212', fr: 1 }, { label: 'MR213', fr: 1 },
+      { label: 'MR214', fr: 1 }, { label: 'MR215', fr: 1 }, { label: 'MR216', fr: 1 }, { label: 'MR217', fr: 1 }
+    ]}
+  ]
+};
 var FLOOR_HALLS = {
-  ground: ['BITEC LIVE', 'SAMA', 'BEAT', 'EH104', 'EH103', 'EH102', 'EH101', 'EH100', 'EH99', 'EH98'],
-  floor2: ['GH201', 'GH202', 'GH203', 'MR210', 'MR211', 'MR212', 'MR213', 'MR214', 'MR215', 'MR216', 'MR217',
-           'MR218', 'MR219', 'MR220', 'MR221', 'MR222', 'MR223', 'MR224', 'MR225']
+  ground: FLOOR_ROWS.ground.reduce(function(a, r) { return a.concat(r.cols.filter(function(c){return c.label;}).map(function(c){return c.label;})); }, []),
+  floor2: FLOOR_ROWS.floor2.reduce(function(a, r) { return a.concat(r.cols.filter(function(c){return c.label;}).map(function(c){return c.label;})); }, [])
 };
 var ALL_HALL_LABELS = FLOOR_HALLS.ground.concat(FLOOR_HALLS.floor2);
 // [ใหม่] label -> ชื่อชั้น เพื่อสลับชั้นอัตโนมัติตอนค้นหาเจอห้องที่อยู่คนละชั้น
@@ -313,7 +340,14 @@ function renderAll_() {
     var d = state.dataByLabel[label];
     if (d && typeof d.kwh === 'number' && d.kwh > maxKwh) maxKwh = d.kwh;
   });
-  var html = '<div class="hall-grid">' + labels.map(function(label) { return hallCardHtml_(label, maxKwh); }).join('') + '</div>';
+  var rows = FLOOR_ROWS[state.activeFloor];
+  var html = rows.map(function(row) {
+    var template = row.cols.map(function(c) { return c.fr + 'fr'; }).join(' ');
+    var cells = row.cols.map(function(c) {
+      return c.label ? hallCardHtml_(c.label, maxKwh) : '<div></div>';
+    }).join('');
+    return '<div class="hall-row" style="grid-template-columns:' + template + '">' + cells + '</div>';
+  }).join('');
   document.getElementById('hallGrid').innerHTML = html;
   document.querySelectorAll('.hcard').forEach(function(el) {
     el.addEventListener('click', function() {
