@@ -9,6 +9,10 @@
     --text:#f3f6fb; --text-muted:#a3b0c7; --text-faint:#7c8aa3;
     --glass:rgba(255,255,255,0.035); --glass-border:rgba(255,255,255,0.10);
     --hot:#f2867a; --cold:#38bdf8; --return:#f2b84f; --green:#34d399;
+    --hall-vacant:#232329; --hall-event:#16280a; --hall-base:#0c2540;
+    --hall-event-tx:#8bc463; --hall-event-val:#c0dd97;
+    --hall-base-tx:#6ba9e0; --hall-base-val:#8fb8db;
+    --hall-vacant-tx:#7a7a86; --hall-vacant-val:#9a9aa4;
   }
   body{background:#05070c;color:var(--text);min-height:100vh}
   .main{max-width:1500px;margin:0 auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px}
@@ -20,9 +24,9 @@
   .now-pill .ndot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
 
   .filterbar{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:8px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .fchip{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
-  .fchip input{background:none;border:none;outline:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;width:120px}
-  .fchip.toggle{gap:2px;padding:3px}
+  .fchip{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;flex:1;min-width:180px}
+  .fchip input{background:none;border:none;outline:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;width:100%}
+  .fchip.toggle{gap:2px;padding:3px;flex:0 0 auto;min-width:0}
   .tg-btn{padding:4px 11px;border-radius:6px;font-size:10.5px;font-weight:600;font-family:'Space Grotesk',sans-serif;color:var(--text-muted);cursor:pointer;user-select:none}
   .tg-btn.active{color:#0a0612;background:linear-gradient(120deg,var(--p1-1),var(--p2-1))}
 
@@ -34,10 +38,7 @@
   .callout .dismiss{margin-left:auto;font-size:14px;color:var(--text-faint);cursor:pointer;padding:2px 6px;user-select:none}
 
   .kpi-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-  .kpi-tile{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:10px 12px;transition:border-color .15s}
-  .kpi-tile.filterable{cursor:pointer}
-  .kpi-tile.filterable:hover{border-color:rgba(255,255,255,.25)}
-  .kpi-tile.active-filter{border-color:var(--p1-1);background:rgba(34,211,238,.06)}
+  .kpi-tile{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:10px 12px}
   .kpi-tile .lbl{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:8.5px;text-transform:uppercase;color:var(--text-faint)}
   .kpi-tile .val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:#fff;margin-top:4px}
   .kpi-tile .val .unit{font-size:10px;color:var(--text-faint);margin-left:3px;font-weight:500}
@@ -49,33 +50,35 @@
   .wing-legend{display:flex;gap:16px}
   .wing-legend .li{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--text-muted)}
   .wing-legend .dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-  .wing-legend .dot.on{background:var(--hot)}
-  .wing-legend .dot.off{background:#8a99b3;opacity:.5}
+  .wing-legend .dot.ev{background:var(--hall-event-tx)}
+  .wing-legend .dot.base{background:var(--hall-base-tx)}
+  .wing-legend .dot.off{background:var(--hall-vacant-tx);opacity:.7}
 
-  /* ผังการ์ด — เรียงตามตำแหน่งจริงซ้าย-ขวา (ไม่ใช่แบ่งกลุ่ม Phase 1/2 อีกต่อไป) แต่ละแถวคือ
-     "แถวจริง" ของอาคาร (บน/ล่าง) มีช่องว่าง (.row-gap) คั่นตรงจุดที่ผังจริงมีช่องว่างเว้น
-     ระยะห่างไม่ยึด pixel จริงของอาคารอีกต่อไป (สาเหตุที่การ์ดเคยสูง/โล่งเทอะทะ) แค่คงลำดับ
-     ซ้าย-ขวาและตำแหน่งแถวบน/ล่างไว้พอให้อ่านเป็นผังคร่าวๆ ได้ */
-  .hall-row-grid{display:flex;gap:8px;margin-bottom:8px}
-  .hall-row-grid:last-child{margin-bottom:0}
-  .row-gap{flex:0.3}
-  .hall-card{flex:1;border-radius:9px;padding:10px;min-width:0}
-  .hall-card.dim{display:none}
-  .hall-card .hd{display:flex;justify-content:space-between;align-items:center;gap:6px}
-  .hall-card .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hall-card .badge{font-size:7px;font-weight:600;padding:1px 5px;border-radius:20px;flex-shrink:0;white-space:nowrap}
-  /* [ใหม่ 2/9/69] badge "เปิดพื้นฐาน" — คงที่ไม่ผูกกับ heat-N (การ์ดยังเป็น heat-0 สีจาง เพราะไม่มี event จริง
-     ให้จัดอันดับความร้อนด้วย แต่ badge ต้องแยกจาก "ว่าง" ให้เห็นชัดว่ามีพื้นที่เปิดอยู่ ไม่ใช่ปิดสนิท) */
-  .hall-card .badge.baseline{background:rgba(56,189,248,.16);color:var(--cold)}
-  .hall-card .kw{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;margin-top:6px}
-  .hall-card .kw .u{font-size:8px;font-weight:500;color:var(--text-faint);margin-left:2px}
-  .hall-card .ev{font-size:8.5px;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hall-card .ev.vacant{color:var(--text-faint)}
-  .hall-card .ft{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-faint);margin-top:6px;border-top:1px solid rgba(255,255,255,.06);padding-top:5px}
-  .hall-card.heat-1{background:rgba(242,134,122,.10)}.hall-card.heat-1 .kw{color:var(--hot)}.hall-card.heat-1 .badge{background:rgba(242,134,122,.18);color:var(--hot)}
-  .hall-card.heat-2{background:rgba(242,184,79,.08)}.hall-card.heat-2 .kw{color:var(--return)}.hall-card.heat-2 .badge{background:rgba(242,184,79,.18);color:var(--return)}
-  .hall-card.heat-3{background:rgba(52,211,153,.07)}.hall-card.heat-3 .kw{color:var(--green)}.hall-card.heat-3 .badge{background:rgba(52,211,153,.18);color:var(--green)}
-  .hall-card.heat-0{background:rgba(255,255,255,.02)}.hall-card.heat-0 .kw{color:var(--text-faint)}.hall-card.heat-0 .badge{background:rgba(255,255,255,.06);color:var(--text-faint)}
+  .floor-tabs{display:flex;gap:8px;margin-bottom:14px}
+  .floor-tab{flex:1;padding:9px;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--text-muted);font-size:12.5px;font-weight:600;font-family:'Space Grotesk',sans-serif;cursor:pointer;text-align:center;user-select:none}
+  .floor-tab.active{background:#e4e4ea;color:#14141a;border-color:#e4e4ea}
+
+  .floor-plan-wrap{background:#0a0a0d;border-radius:12px;padding:14px}
+  .floor-plan-wrap.hidden{display:none}
+  .fp-room{cursor:pointer}
+  .fp-room rect{transition:filter .12s}
+  .fp-room:hover rect{filter:brightness(1.25)}
+  .fp-room.highlight rect{stroke:#facd75;stroke-width:3}
+
+  .hall-detail{margin-top:12px;background:#151519;border-radius:12px;padding:14px 16px;display:none}
+  .hall-detail.show{display:block}
+  .hall-detail .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .hall-detail .hd .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--text)}
+  .hall-detail .badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px}
+  .hall-detail .badge.ev{background:rgba(139,196,99,.18);color:var(--hall-event-val)}
+  .hall-detail .badge.base{background:rgba(107,169,224,.18);color:var(--hall-base-val)}
+  .hall-detail .badge.off{background:rgba(122,122,134,.18);color:var(--text-faint)}
+  .hall-detail .evname{font-size:12.5px;color:var(--hall-event-val);margin-bottom:10px}
+  .hall-detail .evname.vacant{color:var(--text-faint)}
+  .hall-detail .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px}
+  .hall-detail .grid .g-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-faint);text-transform:uppercase}
+  .hall-detail .grid .g-val{font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--text);font-weight:700;margin-top:2px}
+  .hall-detail .close{cursor:pointer;color:var(--text-faint);font-size:14px;padding:2px 6px}
 
   .loading-note{color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-size:11px;padding:20px;text-align:center}
 </style>
@@ -91,7 +94,7 @@
   </div>
 
   <div class="filterbar">
-    <div class="fchip">🔍<input id="searchInput" placeholder="ค้นหา hall เช่น EH101"></div>
+    <div class="fchip">🔍<input id="searchInput" placeholder="ค้นหา hall เช่น EH101, MR210"></div>
     <div class="fchip toggle" id="dateToggle">
       <span class="tg-btn active" data-days="0">วันนี้</span>
       <span class="tg-btn" data-days="1">เมื่อวาน</span>
@@ -106,24 +109,33 @@
 
   <div class="kpi-tiles">
     <div class="kpi-tile"><div class="lbl">Total AHU</div><div class="val">58<span class="unit">หน่วย</span></div></div>
-    <div class="kpi-tile filterable" id="tilePh1" data-phase="p1"><div class="lbl">Phase 1</div><div class="val">36<span class="unit">หน่วย</span></div></div>
-    <div class="kpi-tile filterable" id="tilePh2" data-phase="p2"><div class="lbl">Phase 2</div><div class="val">22<span class="unit">หน่วย</span></div></div>
+    <div class="kpi-tile"><div class="lbl">Phase 1</div><div class="val">36<span class="unit">หน่วย</span></div></div>
+    <div class="kpi-tile"><div class="lbl">Phase 2</div><div class="val">22<span class="unit">หน่วย</span></div></div>
     <div class="kpi-tile"><div class="lbl">kWh/m² เฉลี่ย</div><div class="val" id="kpiAvgIntensity">—</div></div>
     <div class="kpi-tile"><div class="lbl">Event วันนี้</div><div class="val" id="kpiEventCount" style="color:var(--return)">—</div></div>
   </div>
 
   <div class="wing-block">
     <div class="wing-hd">
-      <span class="t">Exhibition Wing (EH)</span>
+      <span class="t">Exhibition Hall Monitor</span>
       <div class="wing-legend">
-        <span class="li"><span class="dot on"></span>กำลังใช้งาน (สีบอกระดับพลังงาน)</span>
+        <span class="li"><span class="dot ev"></span>มี event</span>
+        <span class="li"><span class="dot base"></span>เปิดพื้นฐาน</span>
         <span class="li"><span class="dot off"></span>ว่าง</span>
       </div>
       <span class="m" id="dateLabel"></span>
     </div>
+
+    <div class="floor-tabs">
+      <div class="floor-tab active" id="tabGround">ชั้นล่าง (Exhibition)</div>
+      <div class="floor-tab" id="tabFloor2">ชั้น 2 (Grand Hall / Meeting Room)</div>
+    </div>
+
     <div id="hallGrid">
       <div class="loading-note">กำลังโหลดข้อมูล...</div>
     </div>
+
+    <div class="hall-detail" id="hallDetail"></div>
   </div>
 </div>
 
@@ -131,53 +143,64 @@
 // [สำคัญ] URL deploy จริง — เอาค่าเดียวกับไฟล์อื่นทุกไฟล์ในระบบ (index.html/ac.html/monthly.html)
 var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
 
-// พิกัด/สัดส่วนจากผังจริงที่ Brew ส่งมา — เอามาจาก ahu.html เดิมตรงๆ ไม่แก้พิกัดเลย
-var HALL_LAYOUT = [
-  { label: 'EH104',        left: 0,   top: 29,  width: 154, height: 367, phase: 'p1' },
-  { label: 'EH103',        left: 181, top: 35,  width: 157, height: 357, phase: 'p1' },
-  { label: 'EH102',        left: 374, top: 35,  width: 154, height: 357, phase: 'p1' },
-  { label: 'EH101',        left: 548, top: 35,  width: 158, height: 357, phase: 'p1' },
-  { label: 'EH99',         left: 802, top: 38,  width: 154, height: 354, phase: 'p2' },
-  { label: 'EH98',         left: 989, top: 38,  width: 157, height: 354, phase: 'p2' },
-  { label: 'SAMA-GARDEN',  left: 0,   top: 421, width: 154, height: 364, phase: 'p1' },
-  { label: 'BEAT',         left: 181, top: 421, width: 157, height: 360, phase: 'p1' },
-  { label: 'LIVE',         left: 374, top: 421, width: 154, height: 360, phase: 'p2' },
-  { label: 'EH100',        left: 802, top: 415, width: 154, height: 355, phase: 'p2' }
-];
-var PHASE_LABELS = {
-  p1: HALL_LAYOUT.filter(function(h){ return h.phase === 'p1'; }).map(function(h){ return h.label; }),
-  p2: HALL_LAYOUT.filter(function(h){ return h.phase === 'p2'; }).map(function(h){ return h.label; })
+// [ใหม่ 4/9/69 — ผังใหม่ 2 ชั้น] พิกัดเป็นการประมาณจากไฟล์ผังจริง (floorplan.pptx) ที่ Brew ส่งมา
+// **ยังไม่ใช่พิกัดเป๊ะ 100%** — ต้องเทียบกับผังจริงอีกรอบแล้วปรับ left/top/width/height ให้ตรงเป๊ะ
+// ทีหลัง (จุดที่ปรับได้ง่าย เพราะข้อมูลทั้งหมดอยู่ในอาเรย์นี้ที่เดียว ไม่กระจายอยู่หลายจุด)
+// viewBox คงที่ 680x400 ทั้ง 2 ชั้น เพื่อให้ scale สม่ำเสมอ
+var FLOOR_LAYOUT = {
+  ground: {
+    viewBox: '0 0 680 400',
+    corridors: [
+      { x: 160, y: 250, w: 52, h: 18 },
+      { x: 160, y: 264, w: 18, h: 26 }
+    ],
+    halls: [
+      { label: 'SAMA',       x: 160, y: 90,  w: 52, h: 160 },
+      { label: 'BEAT',       x: 212, y: 90,  w: 49, h: 160 },
+      { label: 'EH104',      x: 261, y: 90,  w: 49, h: 160 },
+      { label: 'EH103',      x: 310, y: 90,  w: 41, h: 160 },
+      { label: 'EH102',      x: 351, y: 90,  w: 44, h: 160 },
+      { label: 'EH101',      x: 395, y: 90,  w: 49, h: 160 },
+      { label: 'EH100',      x: 444, y: 90,  w: 66, h: 160 },
+      { label: 'EH99',       x: 510, y: 90,  w: 57, h: 160 },
+      { label: 'EH98',       x: 567, y: 90,  w: 73, h: 160 },
+      { label: 'BITEC LIVE', x: 75,  y: 290, w: 180, h: 60 }
+    ]
+  },
+  floor2: {
+    viewBox: '0 0 680 400',
+    corridors: [],
+    halls: [
+      { label: 'MR224', x: 27,  y: 88,  w: 34, h: 44 },
+      { label: 'MR225', x: 68,  y: 88,  w: 34, h: 44 },
+      { label: 'MR222', x: 197, y: 88,  w: 34, h: 44 },
+      { label: 'MR223', x: 238, y: 88,  w: 34, h: 44 },
+      { label: 'MR220', x: 340, y: 88,  w: 34, h: 44 },
+      { label: 'MR221', x: 381, y: 88,  w: 34, h: 44 },
+      { label: 'MR218', x: 476, y: 88,  w: 34, h: 44 },
+      { label: 'MR219', x: 517, y: 88,  w: 34, h: 44 },
+      { label: 'MR210', x: 286, y: 176, w: 34, h: 96 },
+      { label: 'MR211', x: 333, y: 152, w: 31, h: 48 },
+      { label: 'MR212', x: 367, y: 152, w: 31, h: 48 },
+      { label: 'MR213', x: 401, y: 152, w: 31, h: 48 },
+      { label: 'MR214', x: 442, y: 152, w: 31, h: 48 },
+      { label: 'MR215', x: 476, y: 152, w: 31, h: 48 },
+      { label: 'MR216', x: 510, y: 152, w: 31, h: 48 },
+      { label: 'MR217', x: 544, y: 152, w: 31, h: 48 },
+      { label: 'GH201', x: 116, y: 208, w: 48, h: 104 },
+      { label: 'GH202', x: 170, y: 208, w: 48, h: 104 },
+      { label: 'GH203', x: 224, y: 208, w: 48, h: 104 }
+    ]
+  }
 };
+var ALL_HALL_LABELS = FLOOR_LAYOUT.ground.halls.map(function(h){ return h.label; })
+  .concat(FLOOR_LAYOUT.floor2.halls.map(function(h){ return h.label; }));
+// [ใหม่] label -> ชื่อชั้น เพื่อสลับชั้นอัตโนมัติตอนค้นหาเจอห้องที่อยู่คนละชั้น
+var LABEL_TO_FLOOR = {};
+FLOOR_LAYOUT.ground.halls.forEach(function(h){ LABEL_TO_FLOOR[h.label] = 'ground'; });
+FLOOR_LAYOUT.floor2.halls.forEach(function(h){ LABEL_TO_FLOOR[h.label] = 'floor2'; });
 
-// [ใหม่] จัดกลุ่มฮอลตาม "แถวจริง" ของอาคาร (บน/ล่าง จาก top) แทนการแบ่ง Phase 1/2 เหมือนเดิม
-// เพราะ LIVE (P2) อยู่ติดกับ BEAT (P1) ในผังจริงโดยไม่มีช่องว่างคั่น — จัดตาม phase ล้วนๆ
-// จะทำให้ลำดับซ้าย-ขวาไม่ตรงกับผังจริง คำนวณอัตโนมัติจาก HALL_LAYOUT ไม่ hardcode
-var HALL_ROWS = (function() {
-  var sorted = HALL_LAYOUT.slice().sort(function(a, b) { return a.top - b.top; });
-  var rows = [];
-  sorted.forEach(function(h) {
-    var row = rows.filter(function(r) { return Math.abs(r.top - h.top) < 80; })[0];
-    if (!row) { row = { top: h.top, halls: [] }; rows.push(row); }
-    row.halls.push(h);
-  });
-  rows.forEach(function(r) { r.halls.sort(function(a, b) { return a.left - b.left; }); });
-  return rows;
-})();
-var ROW_GAP_THRESHOLD = 60; // ช่องว่างจริงระหว่างฮอล > ค่านี้ (px) ถือเป็นช่องว่างของผัง ไม่ใช่ระยะห่างปกติ
-function rowSegments_(halls) {
-  var segments = [], current = [];
-  halls.forEach(function(h, i) {
-    if (i > 0) {
-      var prevRight = halls[i - 1].left + halls[i - 1].width;
-      if (h.left - prevRight > ROW_GAP_THRESHOLD) { segments.push(current); current = []; }
-    }
-    current.push(h);
-  });
-  if (current.length) segments.push(current);
-  return segments;
-}
-
-var state = { dateDays: 0, phaseFilter: null, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {} };
+var state = { dateDays: 0, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {}, activeFloor: 'ground', selectedLabel: null };
 
 function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmtNum_(v, digits) {
@@ -196,57 +219,10 @@ function dateStrOf_(daysAgo) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-// [ใหม่] คำนวณ percentile bucket (heat-1/2/3) จริงจาก kWh/m² ของฮอลที่มีข้อมูลวันนี้เท่านั้น
-// heat-0 = ไม่มี event วันนี้ (ไม่มีค่าให้จัดอันดับ)
-function computeHeatClasses_(dataByLabel) {
-  var vals = [];
-  HALL_LAYOUT.forEach(function(h) {
-    var d = dataByLabel[h.label];
-    if (d && d.hasEventToday && typeof d.kwhPerSqm === 'number') vals.push(d.kwhPerSqm);
-  });
-  vals.sort(function(a, b) { return a - b; });
-  var t1 = vals.length ? vals[Math.floor(vals.length / 3)] : null;
-  var t2 = vals.length ? vals[Math.floor(vals.length * 2 / 3)] : null;
-  var cls = {};
-  HALL_LAYOUT.forEach(function(h) {
-    var d = dataByLabel[h.label];
-    if (!d || !d.hasEventToday || typeof d.kwhPerSqm !== 'number') { cls[h.label] = 'heat-0'; return; }
-    if (t2 !== null && d.kwhPerSqm >= t2) cls[h.label] = 'heat-1';
-    else if (t1 !== null && d.kwhPerSqm >= t1) cls[h.label] = 'heat-2';
-    else cls[h.label] = 'heat-3';
-  });
-  return cls;
-}
-
-// [ใหม่] เทรนด์วันนี้เทียบเมื่อวาน จาก sparkline จริง — ใช้ทั้งเป็น badge บนกล่อง และหา "ตัวขยับแรงสุด"
-function trendPct_(series) {
-  if (!series || series.length < 2) return null;
-  var today = series[series.length - 1].kwh, yday = series[series.length - 2].kwh;
-  if (!(yday > 0)) return null;
-  return Math.round(((today - yday) / yday) * 100);
-}
-
-function computeCallout_(dataByLabel, sparkByHall) {
-  var best = null;
-  HALL_LAYOUT.forEach(function(h) {
-    var d = dataByLabel[h.label];
-    if (!d || !d.hasEventToday) return;
-    var pct = trendPct_(sparkByHall[h.label]);
-    if (pct === null) return;
-    if (!best || Math.abs(pct) > Math.abs(best.pct)) best = { label: h.label, pct: pct, eventName: d.eventName };
-  });
-  var el = document.getElementById('callout');
-  if (!best || Math.abs(best.pct) < 20) { el.classList.remove('show'); return; }
-  var dir = best.pct > 0 ? 'พุ่ง' : 'ลดลง';
-  document.getElementById('calloutText').innerHTML =
-    '<b>' + escapeHtml(best.label) + ' ' + dir + ' ' + Math.abs(best.pct) + '%</b> จากเมื่อวาน' + (best.eventName ? ' — ' + escapeHtml(best.eventName) : '');
-  el.classList.add('show');
-}
-
 function computeKpis_(dataByLabel) {
   var vals = [], evCount = 0;
-  HALL_LAYOUT.forEach(function(h) {
-    var d = dataByLabel[h.label];
+  ALL_HALL_LABELS.forEach(function(label) {
+    var d = dataByLabel[label];
     if (d && d.hasEventToday) {
       evCount++;
       if (typeof d.kwhPerSqm === 'number') vals.push(d.kwhPerSqm);
@@ -257,63 +233,111 @@ function computeKpis_(dataByLabel) {
     ? fmtNum_(vals.reduce(function(a, b) { return a + b; }, 0) / vals.length, 3) : '—';
 }
 
-// [ใหม่] การ์ดเดียวจบต่อฮอล — มีครบทั้งชื่อ/สถานะ/kWh/event หรือล่าสุดกี่วัน/TR หรือพื้นที่
-// ไม่ต้องแยกผังย่อ+ลิสต์อีกต่อไปแบบที่เคยลองมาก่อนหน้า (ซ้ำซ้อน ต้องดู 2 ที่กว่าจะเข้าใจ)
-function hallCardHtml_(label, heatCls) {
-  var pos = HALL_LAYOUT.filter(function(h) { return h.label === label; })[0];
-  var d = state.dataByLabel[label];
-  var last = state.lastSeenByHall[label];
-  var kwhHtml = (d && d.kwh !== null) ? fmtNum_(d.kwh, 0) : '0';
-  var isActive = !!(d && d.hasEventToday);
-  // [ใหม่ 2/9/69] สถานะที่ 3 — "เปิดพื้นฐาน" เฉพาะฮอลที่ backend ส่ง isBaselineOpen มา (ตอนนี้คือ
-  // SAMA-GARDEN/BEAT) และวันนั้นไม่มี event จริง (ไม่งั้นจะโดน isActive คลุมไปแล้วด้านบน) — ฮอลอื่น
-  // ที่ backend ไม่เคยส่ง isBaselineOpen มาเลย (undefined) จะได้ false เสมอ ไม่กระทบพฤติกรรมเดิม
-  var isBaselineOpen = !isActive && !!(d && d.isBaselineOpen);
-  var statusHtml = isActive ? '<span class="badge">ใช้งาน</span>'
-    : (isBaselineOpen ? '<span class="badge baseline">เปิดพื้นฐาน</span>' : '<span class="badge">ว่าง</span>');
-
-  var subHtml, footHtml;
-  if (isActive) {
-    subHtml = '<div class="ev">' + escapeHtml(d.eventName || '—') + '</div>';
-    footHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
-  } else if (isBaselineOpen) {
-    subHtml = '<div class="ev vacant">ไม่มี event จองตรง — พื้นที่เปิดพื้นฐาน</div>';
-    footHtml = 'TR/m² ' + (d.trPerSqm !== null ? fmtNum_(d.trPerSqm, 3) : '—');
-  } else {
-    subHtml = '<div class="ev vacant">' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ยังไม่เคยมี event') + '</div>';
-    footHtml = (d && d.areaSqm !== null) ? fmtNum_(d.areaSqm, 0) + ' m²' : '—';
-  }
-
-  var searchable = (label + ' ' + (d && d.eventName ? d.eventName : '')).toLowerCase();
-  var matchesSearch = !state.search || searchable.indexOf(state.search) > -1;
-  var matchesPhase = !state.phaseFilter || state.phaseFilter === pos.phase;
-  var dimCls = (matchesSearch && matchesPhase) ? '' : ' dim';
-
-  return '<div class="hall-card ' + heatCls[label] + dimCls + '" data-label="' + label + '">'
-    + '<div class="hd"><span class="nm">' + label + '</span>' + statusHtml + '</div>'
-    + '<div class="kw">' + kwhHtml + '<span class="u">kWh</span></div>'
-    + subHtml
-    + '<div class="ft">' + footHtml + '</div>'
-    + '</div>';
+function trendPct_(series) {
+  if (!series || series.length < 2) return null;
+  var today = series[series.length - 1].kwh, yday = series[series.length - 2].kwh;
+  if (!(yday > 0)) return null;
+  return Math.round(((today - yday) / yday) * 100);
 }
 
-// [ใหม่] เรียงตาม HALL_ROWS (แถวจริงบน/ล่าง) แต่ละแถวคั่นช่องว่างตรงจุดที่ผังจริงมีช่องว่างเว้น
-function renderHallCards() {
-  var body = document.getElementById('hallGrid');
-  var heatCls = computeHeatClasses_(state.dataByLabel);
-  var html = HALL_ROWS.map(function(row) {
-    var segments = rowSegments_(row.halls);
-    var parts = segments.map(function(seg, i) {
-      var cards = seg.map(function(h) { return hallCardHtml_(h.label, heatCls); }).join('');
-      return (i > 0 ? '<div class="row-gap"></div>' : '') + cards;
-    });
-    return '<div class="hall-row-grid">' + parts.join('') + '</div>';
+function computeCallout_(dataByLabel, sparkByHall) {
+  var best = null;
+  ALL_HALL_LABELS.forEach(function(label) {
+    var d = dataByLabel[label];
+    if (!d || !d.hasEventToday) return;
+    var pct = trendPct_(sparkByHall[label]);
+    if (pct === null) return;
+    if (!best || Math.abs(pct) > Math.abs(best.pct)) best = { label: label, pct: pct, eventName: d.eventName };
+  });
+  var el = document.getElementById('callout');
+  if (!best || Math.abs(best.pct) < 20) { el.classList.remove('show'); return; }
+  var dir = best.pct > 0 ? 'พุ่ง' : 'ลดลง';
+  document.getElementById('calloutText').innerHTML =
+    '<b>' + escapeHtml(best.label) + ' ' + dir + ' ' + Math.abs(best.pct) + '%</b> จากเมื่อวาน' + (best.eventName ? ' — ' + escapeHtml(best.eventName) : '');
+  el.classList.add('show');
+}
+
+// [ใหม่] สถานะของห้อง 1 ห้อง -> { fill, textColor, valColor, status: 'ev'|'base'|'off' }
+function roomVisualState_(label) {
+  var d = state.dataByLabel[label];
+  var isActive = !!(d && d.hasEventToday);
+  var isBaselineOpen = !isActive && !!(d && d.isBaselineOpen);
+  var status = isActive ? 'ev' : (isBaselineOpen ? 'base' : 'off');
+  var fillVar = status === 'ev' ? 'var(--hall-event)' : (status === 'base' ? 'var(--hall-base)' : 'var(--hall-vacant)');
+  var txVar = status === 'ev' ? 'var(--hall-event-tx)' : (status === 'base' ? 'var(--hall-base-tx)' : 'var(--hall-vacant-tx)');
+  var valVar = status === 'ev' ? 'var(--hall-event-val)' : (status === 'base' ? 'var(--hall-base-val)' : 'var(--hall-vacant-val)');
+  return { status: status, fill: fillVar, tx: txVar, val: valVar, d: d };
+}
+
+// [ใหม่] วาดผังชั้นเดียวเป็น SVG จาก FLOOR_LAYOUT[floorKey] — ใช้ร่วมกันทั้ง 2 ชั้น ไม่แยกฟังก์ชัน
+function renderFloorSvg_(floorKey) {
+  var layout = FLOOR_LAYOUT[floorKey];
+  var corridorRects = layout.corridors.map(function(c) {
+    return '<rect x="' + c.x + '" y="' + c.y + '" width="' + c.w + '" height="' + c.h + '" fill="#17171b"/>';
   }).join('');
-  body.innerHTML = html;
+  var roomEls = layout.halls.map(function(h) {
+    var vs = roomVisualState_(h.label);
+    var kwh = (vs.d && vs.d.kwh !== null && vs.d.kwh !== undefined) ? fmtNum_(vs.d.kwh, 0) : '0';
+    var cx = h.x + h.w / 2, cy = h.y + h.h / 2;
+    var fontSize = h.w < 40 ? '9' : '12';
+    var isHi = state.selectedLabel === h.label;
+    return '<g class="fp-room' + (isHi ? ' highlight' : '') + '" data-label="' + h.label + '">'
+      + '<rect x="' + h.x + '" y="' + h.y + '" width="' + h.w + '" height="' + h.h + '" fill="' + vs.fill + '"/>'
+      + '<text x="' + cx + '" y="' + (cy - 8) + '" text-anchor="middle" fill="' + vs.tx + '" font-size="' + fontSize + '" font-weight="500">' + escapeHtml(h.label) + '</text>'
+      + '<text x="' + cx + '" y="' + (cy + 10) + '" text-anchor="middle" fill="' + vs.val + '" font-size="14" font-weight="500">' + kwh + '</text>'
+      + '</g>';
+  }).join('');
+  return '<svg width="100%" viewBox="' + layout.viewBox + '" role="img">'
+    + '<defs><pattern id="gridpat-' + floorKey + '" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#17171b" stroke-width="1"/></pattern></defs>'
+    + '<rect x="0" y="0" width="680" height="400" fill="url(#gridpat-' + floorKey + ')"/>'
+    + corridorRects + roomEls
+    + '</svg>';
+}
+
+function renderHallDetail_(label) {
+  var box = document.getElementById('hallDetail');
+  if (!label) { box.classList.remove('show'); box.innerHTML=''; return; }
+  var vs = roomVisualState_(label);
+  var d = vs.d;
+  var last = state.lastSeenByHall[label];
+  var badgeCls = vs.status === 'ev' ? 'ev' : (vs.status === 'base' ? 'base' : 'off');
+  var badgeText = vs.status === 'ev' ? 'ใช้งาน' : (vs.status === 'base' ? 'เปิดพื้นฐาน' : 'ว่าง');
+  var evLine;
+  if (vs.status === 'ev') evLine = '<div class="evname">' + escapeHtml((d && d.eventName) || '—') + '</div>';
+  else if (vs.status === 'base') evLine = '<div class="evname vacant">ไม่มี event จองตรง — พื้นที่เปิดพื้นฐาน</div>';
+  else evLine = '<div class="evname vacant">' + (last && last.daysAgo !== null ? 'ล่าสุด ' + last.daysAgo + ' วันก่อน' : 'ยังไม่เคยมี event') + '</div>';
+
+  box.innerHTML =
+    '<div class="hd"><span class="nm">' + escapeHtml(label) + '</span><span style="display:flex;align-items:center;gap:10px"><span class="badge ' + badgeCls + '">' + badgeText + '</span><span class="close" id="hdClose">✕</span></span></div>'
+    + evLine
+    + '<div class="grid">'
+    + '<div><div class="g-lbl">kWh วันนี้</div><div class="g-val">' + ((d && d.kwh !== null && d.kwh !== undefined) ? fmtNum_(d.kwh, 0) : '0') + '</div></div>'
+    + '<div><div class="g-lbl">kWh/m²</div><div class="g-val">' + ((d && typeof d.kwhPerSqm === 'number') ? fmtNum_(d.kwhPerSqm, 3) : '—') + '</div></div>'
+    + '<div><div class="g-lbl">TR ประมาณ</div><div class="g-val">' + ((d && d.trApprox !== null && d.trApprox !== undefined) ? fmtNum_(d.trApprox, 1) : '—') + '</div></div>'
+    + '<div><div class="g-lbl">TR/m²</div><div class="g-val">' + ((d && typeof d.trPerSqm === 'number') ? fmtNum_(d.trPerSqm, 3) : '—') + '</div></div>'
+    + '<div><div class="g-lbl">พื้นที่เต็ม</div><div class="g-val">' + ((d && d.areaSqm !== null && d.areaSqm !== undefined) ? fmtNum_(d.areaSqm, 0) + ' m²' : '—') + '</div></div>'
+    + '<div><div class="g-lbl">พื้นที่ใช้จริง</div><div class="g-val">' + ((d && d.activeAreaSqm !== null && d.activeAreaSqm !== undefined) ? fmtNum_(d.activeAreaSqm, 0) + ' m²' : '—') + '</div></div>'
+    + '</div>';
+  box.classList.add('show');
+  document.getElementById('hdClose').addEventListener('click', function(){ state.selectedLabel = null; renderAll_(); });
+}
+
+function switchFloor_(floorKey) {
+  state.activeFloor = floorKey;
+  document.getElementById('tabGround').classList.toggle('active', floorKey === 'ground');
+  document.getElementById('tabFloor2').classList.toggle('active', floorKey === 'floor2');
+  renderAll_();
 }
 
 function renderAll_() {
-  renderHallCards();
+  document.getElementById('hallGrid').innerHTML = renderFloorSvg_(state.activeFloor);
+  document.querySelectorAll('.fp-room').forEach(function(el) {
+    el.addEventListener('click', function() {
+      state.selectedLabel = el.getAttribute('data-label');
+      renderAll_();
+    });
+  });
+  renderHallDetail_(state.selectedLabel);
 }
 
 function loadEventHalls(dateStr) {
@@ -363,24 +387,22 @@ document.getElementById('dateToggle').addEventListener('click', function(e) {
   loadEventHalls(dateStrOf_(state.dateDays));
 });
 
-function togglePhaseFilter_(phase, tileId) {
-  var tile = document.getElementById(tileId);
-  if (state.phaseFilter === phase) {
-    state.phaseFilter = null;
-    tile.classList.remove('active-filter');
-  } else {
-    document.getElementById('tilePh1').classList.remove('active-filter');
-    document.getElementById('tilePh2').classList.remove('active-filter');
-    state.phaseFilter = phase;
-    tile.classList.add('active-filter');
-  }
-  renderAll_();
-}
-document.getElementById('tilePh1').addEventListener('click', function() { togglePhaseFilter_('p1', 'tilePh1'); });
-document.getElementById('tilePh2').addEventListener('click', function() { togglePhaseFilter_('p2', 'tilePh2'); });
+document.getElementById('tabGround').addEventListener('click', function(){ switchFloor_('ground'); });
+document.getElementById('tabFloor2').addEventListener('click', function(){ switchFloor_('floor2'); });
 
+// [ใหม่] ค้นหา -> ถ้าเจอห้องที่ตรงชื่อ (ตรงเป๊ะหรือขึ้นต้นด้วยคำค้น) และอยู่คนละชั้นกับที่เปิดอยู่
+// สลับชั้นให้อัตโนมัติ + highlight กล่องนั้นไว้ ไม่ต้องให้ผู้ใช้เดาว่าห้องอยู่ชั้นไหนเอง
 document.getElementById('searchInput').addEventListener('input', function(e) {
-  state.search = e.target.value.trim().toLowerCase();
+  var q = e.target.value.trim().toUpperCase();
+  state.search = q;
+  if (!q) { state.selectedLabel = null; renderAll_(); return; }
+  var match = ALL_HALL_LABELS.filter(function(l) { return l.toUpperCase().indexOf(q) === 0; })[0]
+    || ALL_HALL_LABELS.filter(function(l) { return l.toUpperCase().indexOf(q) > -1; })[0];
+  if (match) {
+    state.selectedLabel = match;
+    var floor = LABEL_TO_FLOOR[match];
+    if (floor && floor !== state.activeFloor) { switchFloor_(floor); return; }
+  }
   renderAll_();
 });
 
