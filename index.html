@@ -521,6 +521,14 @@
 </div>
 
 <script>
+// [ใหม่ 09/9/69 — เจอระหว่าง audit] index.html เป็นไฟล์เดียวที่ยังไม่มี escapeHtml() เลย
+// ต่างจาก ac.html/ahu.html/zone.html/monthly.html ที่แก้ XSS ไปแล้วก่อนหน้า — เพิ่มให้ตรงกัน
+// ประกาศไว้ top-level ของ <script> ตัวนี้ ใช้ได้จากทุก IIFE ข้างในไฟล์เดียวกัน (closure)
+function escapeHtml(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
 document.getElementById('sbToggle').addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('collapsed'); });
 // [ข้อ F] 23/7/69 — นาฬิกา live ที่ topbar (ยืมมาจาก Option B ตามที่ตกลง)
 (function(){
@@ -990,7 +998,7 @@ document.getElementById('svgMain').innerHTML = frag.d;
     var colors = ['#f2867a','#f2b84f','#34d399','#38bdf8'];
     body.innerHTML = data.map(function(z, i){
       var pct = max ? Math.round((z.kwPerSqm/max)*100) : 0;
-      return '<div class="gc-trend-row"><div class="lbl"><span>'+z.schpZone+'</span><span>'+fmtNum(z.kwPerSqm*2,3)+'</span></div><div class="gc-trend-bar"><i style="width:'+pct+'%;background:'+colors[i%colors.length]+';"></i></div></div>';
+      return '<div class="gc-trend-row"><div class="lbl"><span>'+escapeHtml(z.schpZone)+'</span><span>'+fmtNum(z.kwPerSqm*2,3)+'</span></div><div class="gc-trend-bar"><i style="width:'+pct+'%;background:'+colors[i%colors.length]+';"></i></div></div>';
     }).join('');
   }
   window.__renderTopZones = renderTopZones; // [ใหม่ 31/7/69] ข้อ2 — expose ให้ loadLocationZone() (คนละ IIFE) เรียกใช้ได้
@@ -1334,11 +1342,14 @@ document.getElementById('svgMain').innerHTML = frag.d;
   };
 
   function subzoneRowHtml_(z, catClass){
-    var name = (z && z.locationZone) ? String(z.locationZone) : 'ไม่ทราบชื่อโซน'; // [กันปัญหา] locationZone หาย
+    // [แก้ XSS 09/9/69] name/triggeredBy มาจากชื่อโซน/ชื่อห้องที่พิมพ์ในชีต (Config_LocationMap /
+    // Booked Spaces) ไม่ใช่ค่าคงที่ตายตัว — escape ก่อน interpolate ทุกจุด ทั้งใน HTML text และ
+    // attribute title=" " (กัน attribute-breakout ด้วย ไม่ใช่แค่ tag injection)
+    var name = escapeHtml((z && z.locationZone) ? String(z.locationZone) : 'ไม่ทราบชื่อโซน'); // [กันปัญหา] locationZone หาย
     var areaTxt = (z && typeof z.areaSqm === 'number') ? fmtNum(z.areaSqm,0) : '—';
     var trPerM2 = (z && typeof z.trApprox === 'number' && typeof z.areaSqm === 'number' && z.areaSqm > 0) ? fmtNum(z.trApprox/z.areaSqm,3) : '—';
     var kwhPerM2 = (z && typeof z.kwhAreaBased === 'number' && typeof z.areaSqm === 'number' && z.areaSqm > 0) ? fmtNum(z.kwhAreaBased/z.areaSqm,2) : '—'; // [กันปัญหา] area=0 กันหารด้วยศูนย์
-    var trigHtml = (z && z.triggeredBy) ? '<span class="trig">← ' + String(z.triggeredBy) + '</span>' : ''; // [ใหม่] ป้ายตัวกระตุ้น (โผล่เมื่อ backend มีข้อมูลให้)
+    var trigHtml = (z && z.triggeredBy) ? '<span class="trig">← ' + escapeHtml(z.triggeredBy) + '</span>' : ''; // [ใหม่] ป้ายตัวกระตุ้น (โผล่เมื่อ backend มีข้อมูลให้)
     return '<div class="lzf-subzone-row ' + catClass + '" title="' + name + '">'
       + '<div class="zn">' + name + trigHtml + '</div>'
       + '<div class="stats"><span class="area">' + areaTxt + ' m²</span><span class="tr">' + trPerM2 + '</span><span class="kwhm2">' + kwhPerM2 + '</span></div>'
