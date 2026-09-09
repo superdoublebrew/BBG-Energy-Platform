@@ -265,6 +265,10 @@ body{font-family:'Google Sans',Arial,sans-serif;background:#0D1117;color:#E6EDF3
 </div>
 <script>
 var API_URL = "https://script.google.com/macros/s/AKfycbzMKaY7odRqUEu5CBZoTbnekcLBoVlG0NWjW-GqnrcizQPeSFjJYDU6ebV-MZRZi9tJTw/exec";
+// [ใหม่ 09/9/69] ต้องตรงกับค่า Script Property "WRITE_TOKEN" ที่ตั้งไว้ใน Apps Script Editor
+// (Project Settings > Script Properties) ของ code.gs ไม่งั้นปุ่มบันทึก comment จะขึ้น unauthorized
+// [แก้ตรงนี้] ใส่ค่า token เดียวกับที่ตั้งไว้ฝั่ง Script Properties
+var WRITE_TOKEN = "แก้ตรงนี้ให้ตรงกับ Script Property WRITE_TOKEN";
 var allData = [];
 var threshold = 20;
 var currentFilter = 'all';
@@ -673,7 +677,8 @@ async function submitComment() {
   document.getElementById('modalErr').className = 'modal-err';
   try {
     var url = API_URL + '?action=savecomment&rowIndex=' + currentRowIndex +
-      '&commentedBy=' + encodeURIComponent(name) + '&comment=' + encodeURIComponent(comment);
+      '&commentedBy=' + encodeURIComponent(name) + '&comment=' + encodeURIComponent(comment) +
+      '&token=' + encodeURIComponent(WRITE_TOKEN);
     var res = await fetch(url);
     var json = await res.json();
     btnSave.disabled = false; btnSave.textContent = 'บันทึก';
