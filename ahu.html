@@ -22,9 +22,6 @@
   .filterbar{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:8px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .fchip{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;flex:1;min-width:180px}
   .fchip input{background:none;border:none;outline:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;width:100%}
-  .fchip.toggle{gap:2px;padding:3px;flex:0 0 auto;min-width:0}
-  .tg-btn{padding:4px 11px;border-radius:6px;font-size:10.5px;font-weight:600;font-family:'Space Grotesk',sans-serif;color:var(--text-muted);cursor:pointer;user-select:none}
-  .tg-btn.active{color:#0a0612;background:linear-gradient(120deg,var(--p1-1),var(--p2-1))}
 
   .callout{display:none;align-items:center;gap:10px;background:rgba(242,134,122,.08);border:1px solid rgba(242,134,122,.3);border-radius:10px;padding:9px 14px}
   .callout.show{display:flex}
@@ -111,9 +108,8 @@
 
   <div class="filterbar">
     <div class="fchip">🔍<input id="searchInput" placeholder="ค้นหา hall เช่น EH101, MR210"></div>
-    <div class="fchip toggle" id="dateToggle">
-      <span class="tg-btn active" data-days="0">วันนี้</span>
-      <span class="tg-btn" data-days="1">เมื่อวาน</span>
+    <div class="fchip" id="dateFilterChip" style="flex:0 0 auto;min-width:150px">
+      📅<input type="date" id="dateInput" style="color-scheme:dark">
     </div>
   </div>
 
@@ -197,7 +193,7 @@ var LABEL_TO_FLOOR = {};
 FLOOR_HALLS.ground.forEach(function(l){ LABEL_TO_FLOOR[l] = 'ground'; });
 FLOOR_HALLS.floor2.forEach(function(l){ LABEL_TO_FLOOR[l] = 'floor2'; });
 
-var state = { dateDays: 0, search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {}, activeFloor: 'ground', selectedLabel: null };
+var state = { search: '', dataByLabel: {}, sparkByHall: {}, lastSeenByHall: {}, activeFloor: 'ground', selectedLabel: null };
 
 function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmtNum_(v, digits) {
@@ -210,11 +206,13 @@ function fmtDateThai_(dateStr) {
   var months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   return 'วัน' + days[d.getDay()] + 'ที่ ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
 }
-function dateStrOf_(daysAgo) {
-  var d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
+// [แก้ 10/9/69 — ตามที่ขอ] เปลี่ยนจาก toggle วันนี้/เมื่อวาน เป็น date picker เลือกวันไหนก็ได้
+// กัน user เลือกวันในอนาคต (ยังไม่มีข้อมูลแน่นอน) ด้วย max = วันนี้ตามเครื่อง user
+(function () {
+  var today = new Date();
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  document.getElementById('dateInput').max = todayStr;
+})();
 
 function computeKpis_(dataByLabel) {
   var vals = [], evCount = 0;
@@ -367,6 +365,7 @@ function loadEventHalls(dateStr) {
     .then(function(mainRes) {
       if (mainRes && mainRes.error) throw new Error(mainRes.error);
       var resolvedDate = mainRes.date;
+      document.getElementById('dateInput').value = resolvedDate; // [แก้ 10/9/69] sync ช่อง date picker ให้ตรงกับวันที่ backend resolve จริง (สำคัญตอนโหลดครั้งแรกที่ส่ง date=null แล้ว backend เลือก "วันล่าสุดที่มีข้อมูล" เอง)
       document.getElementById('dateLabel').textContent = '· ' + fmtDateThai_(resolvedDate);
       document.getElementById('topbarSub').textContent = 'Exhibition Wing · ' + fmtDateThai_(resolvedDate);
       document.getElementById('updTime').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -396,13 +395,9 @@ function loadEventHalls(dateStr) {
 }
 
 // ── event wiring ──────────────────────────────────────────────
-document.getElementById('dateToggle').addEventListener('click', function(e) {
-  var btn = e.target.closest('.tg-btn');
-  if (!btn) return;
-  document.querySelectorAll('#dateToggle .tg-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  state.dateDays = Number(btn.dataset.days);
-  loadEventHalls(dateStrOf_(state.dateDays));
+document.getElementById('dateInput').addEventListener('change', function(e) {
+  if (!e.target.value) return; // เคลียร์ช่อง — ไม่ทำอะไร ปล่อยค่าที่โหลดล่าสุดค้างไว้
+  loadEventHalls(e.target.value);
 });
 
 document.getElementById('tabGround').addEventListener('click', function(){ switchFloor_('ground'); });
