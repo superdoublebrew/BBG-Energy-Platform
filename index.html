@@ -133,10 +133,10 @@
      (max-height ชนเพดานแต่ width ไม่หดตาม) SVG เลย letterbox หดเข้ากลาง แต่ .hz (% ของกรอบเต็ม) ไม่ตรงกับภาพที่เห็นจริง
      แก้ด้วยการเพิ่ม max-width ที่คำนวณสัมพันธ์กับ max-height แบบเดียวกันเป๊ะ (955/502 เท่ากันทั้งคู่) บังคับสัดส่วนจริงเสมอ */
   .svg-wrap{ flex:1 1 auto; width:100%; min-height:0; min-width:0; max-width:min(100%, clamp(722.9px, 104.63vh, 1293.6px)); max-height:clamp(380px, 55vh, 680px); aspect-ratio:955/502; position:relative; margin:0; align-self:flex-start; }
-  /* [ใหม่ 18/9/69 — ตามที่ตกลง] ย้าย Outdoor Temp/Humidity/Wet Bulb จากแถว KPI มาไว้มุมล่างซ้ายของผังวงจรแทน
-     มุมนี้ไม่มี .hz hitbox ไหนอยู่เลย (ตัวใกล้สุดคือ pchp ที่ left:30.79% top:73.41%) เว้นระยะพอสมควรแล้ว
-     ถ้าเปิดดูจริงแล้วชนกับเส้นท่อ/กล่องในผัง ให้ปรับ left/bottom ตรงนี้ */
-  .diagram-kpi-inset{ position:absolute; left:6px; bottom:6px; display:flex; gap:6px; z-index:2; }
+  /* [แก้ 18/9/69 — เจอปัญหาจริงว่าชนกล่อง Primary Water Pump/Header Return ที่มุมล่างซ้ายของ SVG
+     ตอนลองวางแบบ position:absolute ซ้อนทับในผัง] ย้ายมาเป็นแถวปกติต่อท้ายผังแทน — ไม่มีทางชนกับ
+     เส้นท่อ/กล่องในผังได้อีกเลยไม่ว่าจอจะเล็กแค่ไหน เพราะไม่ได้ซ้อนทับพื้นที่วาดผังอีกต่อไป */
+  .diagram-kpi-inset{ display:flex; gap:6px; flex-shrink:0; margin-top:6px; }
   .diagram-kpi-inset .kpi-tile{ padding:6px 8px; width:132px; box-sizing:border-box; }
   .diagram-kpi-inset .kpi-tile .val{ font-size:15px; }
   svg#svgMain{ width:100%; height:100%; display:block; }
@@ -466,12 +466,11 @@
           <div class="hz" data-key="support" style="left:72.88%; top:73.41%; width:7.54%; height:7.97%;"></div>
           <div class="hz" data-key="sale" style="left:81.57%; top:73.41%; width:7.54%; height:7.97%;"></div>
           <div class="hz" data-key="exhibition" style="left:90.37%; top:73.41%; width:7.54%; height:7.97%;"></div>
-
-          <div class="diagram-kpi-inset">
-            <div class="kpi-tile c-outdoor"><div class="lbl">Outdoor Temp</div><div class="val"><span id="kpi-oat">—</span><span class="unit">C</span></div></div>
-            <div class="kpi-tile c-outdoor"><div class="lbl">Outdoor Humidity</div><div class="val"><span id="kpi-rh">—</span><span class="unit">%</span></div></div>
-            <div class="kpi-tile c-outdoor"><div class="lbl">Wet Bulb</div><div class="val"><span id="kpi-wetbulb">—</span><span class="unit">F</span></div></div>
-          </div>
+        </div>
+        <div class="diagram-kpi-inset">
+          <div class="kpi-tile c-outdoor"><div class="lbl">Outdoor Temp</div><div class="val"><span id="kpi-oat">—</span><span class="unit">C</span></div></div>
+          <div class="kpi-tile c-outdoor"><div class="lbl">Outdoor Humidity</div><div class="val"><span id="kpi-rh">—</span><span class="unit">%</span></div></div>
+          <div class="kpi-tile c-outdoor"><div class="lbl">Wet Bulb</div><div class="val"><span id="kpi-wetbulb">—</span><span class="unit">F</span></div></div>
         </div>
       </div>
       <div class="lzf-col">
